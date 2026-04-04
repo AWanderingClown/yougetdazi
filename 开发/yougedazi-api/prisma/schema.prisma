@@ -18,6 +18,8 @@ enum OrderStatus {
   pending_accept   // 待接单（15min 超时全额退款）
   waiting_grab     // 等待抢单（悬赏单专用）
   accepted         // 已接单
+  preparing        // 准备中（出发前）
+  departed         // 已出发（路上）
   serving          // 服务中（Redis 倒计时权威）
   completed        // 已完成（终态）
   cancelled        // 已取消（终态）
@@ -282,6 +284,7 @@ model Order {
   operation_logs  OrderOperationLog[]
   renewals        OrderRenewal[]
   payment_records PaymentRecord[]
+  review          Review?
 
   @@index([user_id, status])
   @@index([companion_id, status])
@@ -369,6 +372,7 @@ model PaymentRecord {
 
 model RefundRecord {
   id              String   @id @default(uuid())
+  order_id        String                        // 关联订单，便于快速查询
   payment_id      String
   out_refund_no   String   @unique              // 商户退款单号
   refund_id       String?                       // 微信退款单号
@@ -381,6 +385,7 @@ model RefundRecord {
 
   payment PaymentRecord @relation(fields: [payment_id], references: [id])
 
+  @@index([order_id])
   @@index([payment_id])
   @@map("refund_records")
 }
@@ -622,6 +627,9 @@ model Review {
 
   created_at DateTime @default(now()) @db.Timestamptz
   updated_at DateTime @updatedAt @db.Timestamptz
+
+  // 关联
+  order Order @relation(fields: [order_id], references: [id])
 
   @@index([user_id])
   @@index([companion_id])

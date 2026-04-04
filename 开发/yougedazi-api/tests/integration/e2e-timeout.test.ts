@@ -6,6 +6,7 @@ import { signUserToken, signCompanionToken } from '../helpers/auth'
 import { mockPushServer } from '../helpers/push-mock'
 import { prisma } from '../../src/lib/prisma'
 import { orderService } from '../../src/services/order.service'
+import { dispatchPushEvents } from '../../src/utils/push-helper'
 
 /**
  * E2E 全链路测试：订单超时自动取消
@@ -78,6 +79,8 @@ describe('E2E: 订单超时自动取消', () => {
         'system',
         '支付超时，系统自动取消'
       )
+      // 手动触发推送事件分发（测试中直接调用服务层，需要手动处理推送）
+      await dispatchPushEvents(result)
 
       expect(result).toBeDefined()
       expect(result.status).toBe('cancelled')
@@ -153,6 +156,8 @@ describe('E2E: 订单超时自动取消', () => {
         '超时未接单，系统自动取消',
         100 // 全额退款
       )
+      // 手动触发推送事件分发
+      await dispatchPushEvents(result)
 
       expect(result.status).toBe('cancelled')
     })
@@ -240,6 +245,8 @@ describe('E2E: 订单超时自动取消', () => {
         'system',
         'system'
       )
+      // 手动触发推送事件分发
+      await dispatchPushEvents(result)
 
       expect(result.status).toBe('completed')
 

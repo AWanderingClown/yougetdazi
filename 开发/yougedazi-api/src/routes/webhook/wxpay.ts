@@ -257,11 +257,16 @@ export async function webhookRoutes(app: FastifyInstance) {
             return reply.status(404).send({ code: ErrorCode.NOT_FOUND, message: '支付记录不存在' })
           }
 
-          await orderService.handlePaymentSuccess(
+          const result = await orderService.handlePaymentSuccess(
             body.out_trade_no,
             body.amount ?? record.amount,
             body.transaction_id ?? `TEST_${Date.now()}`
           )
+
+          // 发送 push 事件
+          if (result && 'pushEvents' in result && Array.isArray(result.pushEvents)) {
+            await pushBridgeService.sendPushEvents(result.pushEvents as PushEvent[], 'payment_service')
+          }
         } else if (body.out_trade_no.startsWith('RENEW_')) {
           // 续费支付测试
           await handleRenewalPayment(

@@ -47,6 +47,7 @@ describe('Admin 财务管理', () => {
       await prisma.refundRecord.create({
         data: {
           payment_id: payment.id,
+          order_id: order.id,
           out_refund_no: `REFUND_${Date.now()}`,
           refund_amount: 5000,
           status: 'success',

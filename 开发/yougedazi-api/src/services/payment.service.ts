@@ -82,12 +82,14 @@ export class PaymentService {
     originalAmount: number   // 原始支付金额（退款接口必传，单位：分）
     refundAmount:   number   // 本次退款金额，分
     reason:         string
+    orderId:        string   // 订单 ID（用于关联退款记录）
   }) {
     const outRefundNo = `REFUND_${crypto.randomUUID().replace(/-/g, '')}`
 
     await prisma.refundRecord.create({
       data: {
         payment_id:    params.paymentId,
+        order_id:      params.orderId,
         out_refund_no: outRefundNo,
         refund_amount: params.refundAmount,
         reason:        params.reason,

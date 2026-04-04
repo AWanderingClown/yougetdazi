@@ -4,6 +4,7 @@ import { bullmqConnection } from '../lib/bullmq'
 import { prisma } from '../lib/prisma'
 import { orderService } from './order.service'
 import { pushBridgeService, PushEvent } from './push-bridge.service'
+import { dispatchPushEvents } from '../utils/push-helper.js'
 
 /**
  * TimerService / BullMQ Worker
@@ -30,27 +31,21 @@ export function startOrderTimeoutWorker(logger: FastifyBaseLogger) {
         case 'payment_timeout': {
           // 支付超时取消（pending_payment → cancelled，无需退款）
           const r1 = await orderService.cancelOrder(orderId, 'system', 'system', '支付超时，系统自动取消')
-          if (r1 && 'pushEvents' in r1 && Array.isArray(r1.pushEvents) && r1.pushEvents.length > 0) {
-            await pushBridgeService.sendPushEvents(r1.pushEvents as PushEvent[], 'order_service')
-          }
+          await dispatchPushEvents(r1)
           break
         }
 
         case 'accept_timeout': {
           // 待接单超时取消（pending_accept/waiting_grab → cancelled，全额退款）
           const r2 = await orderService.cancelOrder(orderId, 'system', 'system', '超时未接单，系统自动取消', 100)
-          if (r2 && 'pushEvents' in r2 && Array.isArray(r2.pushEvents) && r2.pushEvents.length > 0) {
-            await pushBridgeService.sendPushEvents(r2.pushEvents as PushEvent[], 'order_service')
-          }
+          await dispatchPushEvents(r2)
           break
         }
 
         case 'service_timeout': {
           // 服务时长到期，自动完成
           const r3 = await orderService.completeOrder(orderId, 'system', 'system')
-          if (r3 && 'pushEvents' in r3 && Array.isArray(r3.pushEvents) && r3.pushEvents.length > 0) {
-            await pushBridgeService.sendPushEvents(r3.pushEvents as PushEvent[], 'order_service')
-          }
+          await dispatchPushEvents(r3)
           break
         }
 

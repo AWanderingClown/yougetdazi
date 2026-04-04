@@ -1,10 +1,13 @@
 import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
+import type { Order } from '@prisma/client'
 import { authenticate, requireCompanion } from '../../middleware/auth'
 import { ErrorCode } from '../../types/index'
 import { orderService } from '../../services/order.service'
 import { pushBridgeService, PushEvent } from '../../services/push-bridge.service'
 import { prisma } from '../../lib/prisma'
+import { PUSH_EVENTS, CANCEL_FEE, CANCEL_FREE_PERIOD_MS, CANCEL_15MIN_MS } from '../../constants/order.js'
+import { dispatchPushEvents } from '../../utils/push-helper.js'
 
 
 const OrderListQuerySchema = z.object({
@@ -173,12 +176,8 @@ export async function bOrderRoutes(app: FastifyInstance) {
 
     try {
       const result = await orderService.acceptOrder(id, companionId)
-      
-      // 转发推送事件给管理后台
-      if (result && 'pushEvents' in result && Array.isArray(result.pushEvents)) {
-        await pushBridgeService.sendPushEvents(result.pushEvents as PushEvent[], 'order_service')
-      }
-      
+      await dispatchPushEvents(result)
+
       return reply.status(200).send({
         code:    ErrorCode.SUCCESS,
         message: '接单成功',
@@ -218,12 +217,8 @@ export async function bOrderRoutes(app: FastifyInstance) {
 
     try {
       const result = await orderService.grabOrder(id, companionId)
-      
-      // 转发推送事件给管理后台
-      if (result && 'pushEvents' in result && Array.isArray(result.pushEvents)) {
-        await pushBridgeService.sendPushEvents(result.pushEvents as PushEvent[], 'order_service')
-      }
-      
+      await dispatchPushEvents(result)
+
       return reply.status(200).send({
         code:    ErrorCode.SUCCESS,
         message: '抢单成功',
@@ -265,19 +260,58 @@ export async function bOrderRoutes(app: FastifyInstance) {
   }, async (request, reply) => {
     const { id } = request.params
     const companionId = request.currentUser!.id
+    const { event } = (request.body as { event?: string } | null) ?? {}
 
     try {
-      const result = await orderService.startService(id, companionId)
-      
-      // 转发推送事件给管理后台
-      if (result && 'pushEvents' in result && Array.isArray(result.pushEvents)) {
-        await pushBridgeService.sendPushEvents(result.pushEvents as PushEvent[], 'order_service')
+      const order = await prisma.order.findUnique({ where: { id } })
+      if (!order) {
+        return reply.status(404).send({
+          code:     ErrorCode.ORDER_NOT_FOUND,
+          message:  '订单不存在',
+          errorKey: 'ORDER_NOT_FOUND',
+        })
       }
-      
+      if (order.companion_id !== companionId) {
+        return reply.status(403).send({
+          code:     ErrorCode.FORBIDDEN,
+          message:  '无权操作此订单',
+          errorKey: 'FORBIDDEN',
+        })
+      }
+
+      // 处理中间状态（preparing、departed）或直接开始服务
+      let resultOrder: Order
+      let message = '订单已更新'
+
+      if (event === 'preparing' || event === 'departed') {
+        // 更新为中间状态
+        resultOrder = await prisma.order.update({
+          where: { id },
+          data: { status: event as 'preparing' | 'departed' },
+        })
+      } else {
+        // 默认开始服务
+        const serviceResult = await orderService.startService(id, companionId)
+        // 后台发送推送事件，不阻塞响应
+        void dispatchPushEvents(serviceResult).catch(err => {
+          app.log.error(err, '分发推送事件失败')
+        })
+        const updated = await prisma.order.findUnique({ where: { id } })
+        if (!updated) {
+          return reply.status(404).send({
+            code:     ErrorCode.ORDER_NOT_FOUND,
+            message:  '订单不存在',
+            errorKey: 'ORDER_NOT_FOUND',
+          })
+        }
+        resultOrder = updated
+        message = '服务已开始'
+      }
+
       return reply.status(200).send({
         code:    ErrorCode.SUCCESS,
-        message: '服务已开始',
-        data:    result,
+        message,
+        data:    resultOrder,
       })
     } catch (err: unknown) {
       const error = err as { name?: string; code?: number; errorKey?: string; message?: string }
@@ -318,16 +352,12 @@ export async function bOrderRoutes(app: FastifyInstance) {
 
     try {
       const result = await orderService.completeOrder(id, companionId, 'companion')
-      
-      // 转发推送事件给管理后台
-      if (result && 'pushEvents' in result && Array.isArray(result.pushEvents)) {
-        await pushBridgeService.sendPushEvents(result.pushEvents as PushEvent[], 'order_service')
-      }
-      
+      await dispatchPushEvents(result)
+
       return reply.status(200).send({
         code:    ErrorCode.SUCCESS,
         message: '服务已完成',
-        data:    null,
+        data:    result.order,
       })
     } catch (err: unknown) {
       const error = err as { name?: string; code?: number; errorKey?: string; message?: string }

@@ -157,6 +157,10 @@ describe('E2E: 直单完整流程', () => {
       payload: { event: 'preparing' },
     })
 
+    if (res.statusCode !== 200) {
+      const errorBody = JSON.parse(res.body)
+      console.log('出发操作错误:', { status: res.statusCode, code: errorBody.code, message: errorBody.message, errorKey: errorBody.errorKey })
+    }
     expect(res.statusCode).toBe(200)
     const body = JSON.parse(res.body)
     expect(body.code).toBe(0)

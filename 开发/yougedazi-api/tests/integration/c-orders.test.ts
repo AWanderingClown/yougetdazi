@@ -224,7 +224,7 @@ describe('C端订单流程', () => {
         payload: { rating: 5, content: '服务很好' },
       })
 
-      expect(res.statusCode).toBe(200)
+      expect(res.statusCode).toBe(201)
       const body = JSON.parse(res.body)
       expect(body.code).toBe(0)
     })

@@ -7,6 +7,8 @@ export type OrderStatus =
   | 'pending_accept'
   | 'waiting_grab'
   | 'accepted'
+  | 'preparing'
+  | 'departed'
   | 'serving'
   | 'completed'
   | 'cancelled'
@@ -116,8 +118,10 @@ export const ORDER_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   pending_payment: ['pending_accept', 'waiting_grab', 'cancelled'],
   pending_accept:  ['accepted', 'cancelled'],
   waiting_grab:    ['accepted', 'cancelled'],
-  accepted:        ['serving', 'cancelled'],
-  serving:         ['completed', 'cancelled'],
+  accepted:        ['preparing', 'serving', 'cancelled'],
+  preparing:       ['departed', 'cancelled'],
+  departed:        ['serving', 'cancelled'],
+  serving:         ['completed'],
   completed:       [],
   cancelled:       [],
 }

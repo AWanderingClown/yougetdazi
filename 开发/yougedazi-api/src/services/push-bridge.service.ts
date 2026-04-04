@@ -9,7 +9,7 @@
 
 // PushEvent 是全项目唯一权威类型定义，push-server/src/app.ts 与此保持一致
 export interface PushEvent {
-  type:       'new_order' | 'new_reward_order' | 'order_status_changed' | 'companion_order_status_changed' | 'service_started' | 'new_message'
+  type:       'new_order' | 'new_reward_order' | 'order_status_changed' | 'order_completed' | 'companion_order_status_changed' | 'service_started' | 'new_message'
   targetType: 'user' | 'companion' | 'broadcast'
   targetId:   string
   payload:    Record<string, unknown>

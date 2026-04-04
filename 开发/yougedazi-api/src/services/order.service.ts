@@ -1,3 +1,4 @@
+import crypto from 'crypto'
 import { prisma } from '../lib/prisma'
 import { redis, RedisKey } from '../lib/redis'
 import { orderTimeoutQueue } from '../lib/bullmq'
@@ -10,6 +11,7 @@ import {
 } from '../types/index'
 import type { PushEvent } from './push-bridge.service'
 import { paymentService } from './payment.service'
+import { PUSH_EVENTS, CANCEL_FEE, CANCEL_FREE_PERIOD_MS, CANCEL_15MIN_MS } from '../constants/order.js'
 
 export type { PushEvent }
 
@@ -296,7 +298,7 @@ export class OrderService {
     if (order.order_type === 'direct' && order.companion_id) {
       // 指定单：通知对应陪玩师
       pushEvents.push({
-        type: 'new_order',
+        type: PUSH_EVENTS.NEW_ORDER,
         targetType: 'companion',
         targetId: order.companion_id,
         payload: {
@@ -310,7 +312,7 @@ export class OrderService {
     } else {
       // 悬赏单：广播给所有在线陪玩师
       pushEvents.push({
-        type: 'new_reward_order',
+        type: PUSH_EVENTS.NEW_REWARD_ORDER,
         targetType: 'broadcast',
         targetId: 'companions_online',
         payload: {
@@ -326,7 +328,7 @@ export class OrderService {
 
     // C端用户支付成功通知
     pushEvents.push({
-      type: 'order_status_changed',
+      type: PUSH_EVENTS.ORDER_STATUS_CHANGED,
       targetType: 'user',
       targetId: order.user_id,
       payload: {
@@ -386,7 +388,7 @@ export class OrderService {
 
     // 通知 C端用户陪玩师已接单
     pushEvents.push({
-      type: 'order_status_changed',
+      type: PUSH_EVENTS.ORDER_STATUS_CHANGED,
       targetType: 'user',
       targetId: order.user_id,
       payload: {
@@ -450,7 +452,7 @@ export class OrderService {
     // 通知 C端用户悬赏单被接
     if (order) {
       pushEvents.push({
-        type: 'order_status_changed',
+        type: PUSH_EVENTS.ORDER_STATUS_CHANGED,
         targetType: 'user',
         targetId: order.user_id,
         payload: {
@@ -531,7 +533,7 @@ export class OrderService {
 
     // 通知 C端用户服务已开始
     pushEvents.push({
-      type: 'order_status_changed',
+      type: PUSH_EVENTS.ORDER_STATUS_CHANGED,
       targetType: 'user',
       targetId: order.user_id,
       payload: {
@@ -585,8 +587,8 @@ export class OrderService {
       userNickname = user?.nickname || '匿名用户'
     }
 
-    await prisma.$transaction(async (tx) => {
-      await tx.order.update({
+    const completedOrder = await prisma.$transaction(async (tx) => {
+      const updated = await tx.order.update({
         where: { id: orderId },
         data: {
           status:       'completed',
@@ -615,7 +617,7 @@ export class OrderService {
 
       // 结算记录与订单状态变更同在一个事务：要么全部成功，要么全部回滚
       if (order.companion_id && companionIncome > 0) {
-        const updated = await tx.companion.update({
+        const companionUpdated = await tx.companion.update({
           where:  { id: order.companion_id },
           data:   { deposited_amount: { increment: companionIncome } },
           select: { deposited_amount: true },
@@ -627,8 +629,8 @@ export class OrderService {
             type:           'order_income',
             amount:         companionIncome,
             description:    `订单${order.order_no}收入结算`,
-            balance_before: updated.deposited_amount - companionIncome,
-            balance_after:  updated.deposited_amount,
+            balance_before: companionUpdated.deposited_amount - companionIncome,
+            balance_after:  companionUpdated.deposited_amount,
             order_no:       order.order_no,
             service_name:   order.service_name,
             customer_name:  userNickname,
@@ -636,6 +638,8 @@ export class OrderService {
           },
         })
       }
+
+      return updated
     })
 
     await Promise.all([
@@ -649,7 +653,7 @@ export class OrderService {
 
     // 通知 C端用户订单完成
     pushEvents.push({
-      type: 'order_status_changed',
+      type: PUSH_EVENTS.ORDER_COMPLETED,
       targetType: 'user',
       targetId: order.user_id,
       payload: {
@@ -664,7 +668,7 @@ export class OrderService {
     // 通知 B端搭子订单完成（系统/Admin 操作时）
     if (operatorType !== 'companion' && order.companion_id) {
       pushEvents.push({
-        type: 'companion_order_status_changed',
+        type: PUSH_EVENTS.COMPANION_ORDER_STATUS_CHANGED,
         targetType: 'companion',
         targetId: order.companion_id,
         payload: {
@@ -687,7 +691,7 @@ export class OrderService {
       }
     )
 
-    return { pushEvents }
+    return { order: completedOrder, status: 'completed', pushEvents }
   }
 
   /**
@@ -730,17 +734,24 @@ export class OrderService {
     } else {
       if (order.status === 'pending_payment') {
         refundAmount = 0
-      } else if (['pending_accept', 'waiting_grab', 'accepted'].includes(order.status)) {
+      } else if (order.status === 'pending_accept' || order.status === 'waiting_grab') {
         refundAmount = paidAmount
+      } else if (order.status === 'accepted') {
+        // 接单后2分钟内全额退款，2分钟外扣50元违约金
+        const timeSinceCreated = Date.now() - order.created_at.getTime()
+
+        if (timeSinceCreated <= CANCEL_FREE_PERIOD_MS) {
+          refundAmount = paidAmount
+        } else {
+          refundAmount = Math.max(0, paidAmount - CANCEL_FEE)
+        }
       } else if (order.status === 'serving') {
         // 服务中取消：≤15分钟扣50元违约金，>15分钟不可取消（canCancelOrder已拦截）
         const serviceStartAt = order.service_start_at
         if (serviceStartAt) {
           const serviceDuration = Date.now() - serviceStartAt.getTime()
-          const FIFTEEN_MINUTES = 15 * 60 * 1000
-          const CANCEL_FEE = 5000  // 50元 = 5000分
 
-          if (serviceDuration <= FIFTEEN_MINUTES) {
+          if (serviceDuration <= CANCEL_15MIN_MS) {
             refundAmount = Math.max(0, paidAmount - CANCEL_FEE)
           } else {
             // 超过15分钟理论上不会走到这里（canCancelOrder会拦截）
@@ -802,7 +813,7 @@ export class OrderService {
 
     // 通知 C端用户
     pushEvents.push({
-      type: 'order_status_changed',
+      type: PUSH_EVENTS.ORDER_STATUS_CHANGED,
       targetType: 'user',
       targetId: order.user_id,
       payload: {
@@ -819,7 +830,7 @@ export class OrderService {
     // 通知 B端陪玩师（已接单以后取消才需要通知）
     if (['accepted', 'serving'].includes(order.status) && order.companion_id) {
       pushEvents.push({
-        type: 'companion_order_status_changed',
+        type: PUSH_EVENTS.COMPANION_ORDER_STATUS_CHANGED,
         targetType: 'companion',
         targetId: order.companion_id,
         payload: {
@@ -847,19 +858,36 @@ export class OrderService {
           : Math.floor(rec.amount / paidAmount * refundAmount)
         distributed += share
         if (share <= 0) continue
+
+        // 直接创建 RefundRecord，包含 order_id
+        const outRefundNo = `REFUND_${crypto.randomUUID().replace(/-/g, '')}`
+        await prisma.refundRecord.create({
+          data: {
+            order_id:      orderId,
+            payment_id:    rec.id,
+            out_refund_no: outRefundNo,
+            refund_amount: share,
+            reason:        reason,
+            status:        'pending',
+          },
+        })
+
         void paymentService.refund({
           paymentId:      rec.id,
           outTradeNo:     rec.out_trade_no,
           originalAmount: rec.amount,
           refundAmount:   share,
           reason:         reason,
+          orderId:        orderId,
         }).catch(err => {
           console.error(`[OrderService] 退款失败，订单 ${orderId} / 支付记录 ${rec.id}:`, err)
         })
       }
     }
 
-    return { refund_amount: refundAmount, pushEvents }
+    // 返回更新后的订单信息，方便后续使用
+    const cancelledOrder = await prisma.order.findUnique({ where: { id: orderId } })
+    return { status: 'cancelled', refund_amount: refundAmount, pushEvents, order: cancelledOrder }
   }
 
   /**

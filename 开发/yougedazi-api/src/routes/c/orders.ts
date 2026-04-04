@@ -6,6 +6,8 @@ import { orderService, calculateRenewal } from '../../services/order.service'
 import { paymentService } from '../../services/payment.service'
 import { pushBridgeService, PushEvent } from '../../services/push-bridge.service'
 import { prisma } from '../../lib/prisma'
+import { PUSH_EVENTS, CANCEL_FEE, CANCEL_FREE_PERIOD_MS, CANCEL_15MIN_MS } from '../../constants/order.js'
+import { dispatchPushEvents } from '../../utils/push-helper.js'
 
 const PAYMENT_NOTIFY_URL = `${process.env.API_BASE_URL || ''}/webhook/wx-pay`
 
@@ -198,6 +200,7 @@ export async function cOrderRoutes(app: FastifyInstance) {
           select: { added_hours: true, added_amount: true, status: true, created_at: true },
           orderBy: { created_at: 'asc' },
         },
+        review: true,
       },
     })
 
@@ -259,16 +262,12 @@ export async function cOrderRoutes(app: FastifyInstance) {
 
     try {
       const result = await orderService.cancelOrder(id, 'user', userId, '用户主动取消')
-      
-      // 转发推送事件给管理后台
-      if (result && 'pushEvents' in result && Array.isArray(result.pushEvents)) {
-        await pushBridgeService.sendPushEvents(result.pushEvents as PushEvent[], 'order_service')
-      }
-      
+      await dispatchPushEvents(result)
+
       return reply.status(200).send({
         code:    ErrorCode.SUCCESS,
         message: '订单已取消',
-        data:    result,
+        data:    result.order,
       })
     } catch (err: unknown) {
       const error = err as { name?: string; code?: number; errorKey?: string; message?: string }
@@ -551,11 +550,17 @@ export async function cOrderRoutes(app: FastifyInstance) {
         data:  { rating: avgRating },
       })
 
+      // Step 7: 获取刚创建的评价记录
+      const review = await prisma.review.findUnique({
+        where: { order_id: id },
+      })
+
       app.log.info(`订单评价创建: 订单 ${id}, 用户 ${userId}, 评分 ${rating}`)
 
-      return reply.status(200).send({
+      return reply.status(201).send({
         code:    ErrorCode.SUCCESS,
         message: '评价成功',
+        data:    { review },
       })
     } catch (err: unknown) {
       const error = err as { name?: string; code?: number; errorKey?: string; message?: string }
@@ -622,10 +627,6 @@ export async function cOrderRoutes(app: FastifyInstance) {
       }
 
       // Step 2: 检查能否取消
-      const CANCEL_FEE = 5000  // 50元 = 5000分
-      const TWO_MINUTES = 2 * 60 * 1000  // 2分钟
-      const FIFTEEN_MINUTES = 15 * 60 * 1000
-
       let canCancel = false
       let refundAmount = 0
       let cancelReason = ''
@@ -663,7 +664,7 @@ export async function cOrderRoutes(app: FastifyInstance) {
           
           if (acceptedAt) {
             const timeSinceAccept = Date.now() - acceptedAt.getTime()
-            if (timeSinceAccept <= TWO_MINUTES) {
+            if (timeSinceAccept <= CANCEL_FREE_PERIOD_MS) {
               // 2分钟内：全额退款
               canCancel = true
               refundAmount = paidAmount
@@ -686,7 +687,7 @@ export async function cOrderRoutes(app: FastifyInstance) {
         case 'serving':
           if (order.service_start_at) {
             const serviceDuration = Date.now() - order.service_start_at.getTime()
-            if (serviceDuration <= FIFTEEN_MINUTES) {
+            if (serviceDuration <= CANCEL_15MIN_MS) {
               canCancel = true
               const paidAmount = order.payment_records.reduce((sum, r) => sum + r.amount, 0)
               refundAmount = Math.max(0, paidAmount - CANCEL_FEE)
