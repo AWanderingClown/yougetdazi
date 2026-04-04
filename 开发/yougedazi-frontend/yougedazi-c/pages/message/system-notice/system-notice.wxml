@@ -1,0 +1,34 @@
+<!-- pages/message/system-notice/system-notice.wxml -->
+<view class="container">
+  <!-- 顶部导航 - 蓝紫渐变 -->
+  <view class="nav-bar" style="padding-top: {{statusBarHeight}}px; height: {{navBarHeight}}px;">
+    <view class="back-btn" bindtap="goBack">
+      <text class="back-icon">‹</text>
+    </view>
+    <view class="nav-title">系统通知</view>
+    <view class="right-placeholder"></view>
+  </view>
+
+  <!-- 通知列表 -->
+  <scroll-view class="notice-list" scroll-y>
+    <view 
+      class="notice-item {{item.isRead ? 'read' : ''}}"
+      wx:for="{{noticeList}}"
+      wx:key="id"
+      bindtap="onNoticeTap"
+      data-id="{{item.id}}"
+    >
+      <view class="notice-header">
+        <view class="notice-dot {{item.isRead ? '' : 'unread'}}"></view>
+        <text class="notice-title">{{item.title}}</text>
+        <text class="notice-time">{{item.time}}</text>
+      </view>
+      <view class="notice-content">{{item.content}}</view>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{noticeList.length === 0}}">
+      <text class="empty-text">暂无系统通知</text>
+    </view>
+  </scroll-view>
+</view>

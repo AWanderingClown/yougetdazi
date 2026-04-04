@@ -1,0 +1,182 @@
+{
+  "companions": [
+    {
+      "id": "comp-001",
+      "nickname": "小花",
+      "avatar": "https://example.com/avatar1.jpg",
+      "gender": "female",
+      "age": 24,
+      "city": "上海",
+      "bio": "性格开朗，喜欢逛街探店，熟悉上海各大商圈",
+      "is_online": true,
+      "is_verified": true,
+      "rating": 4.9,
+      "total_orders": 128,
+      "distance": 520,
+      "services": [
+        {
+          "id": "svc-001",
+          "name": "陪逛街",
+          "price": 100,
+          "unit": "小时",
+          "description": "陪同逛街、推荐店铺、帮忙拎包"
+        },
+        {
+          "id": "svc-002",
+          "name": "陪探店",
+          "price": 120,
+          "unit": "小时",
+          "description": "探店打卡、拍照修图、写评价"
+        },
+        {
+          "id": "svc-003",
+          "name": "陪看电影",
+          "price": 80,
+          "unit": "小时",
+          "description": "陪同看电影、讨论剧情"
+        }
+      ],
+      "photos": [
+        "https://example.com/photo1.jpg",
+        "https://example.com/photo2.jpg",
+        "https://example.com/photo3.jpg"
+      ]
+    },
+    {
+      "id": "comp-002",
+      "nickname": "阿杰",
+      "avatar": "https://example.com/avatar2.jpg",
+      "gender": "male",
+      "age": 26,
+      "city": "上海",
+      "bio": "运动达人，健身教练，可以陪你健身、打球",
+      "is_online": true,
+      "is_verified": true,
+      "rating": 4.8,
+      "total_orders": 85,
+      "distance": 1200,
+      "services": [
+        {
+          "id": "svc-004",
+          "name": "陪健身",
+          "price": 150,
+          "unit": "小时",
+          "description": "健身房陪同、动作指导、训练计划"
+        },
+        {
+          "id": "svc-005",
+          "name": "陪运动",
+          "price": 100,
+          "unit": "小时",
+          "description": "跑步、打球、户外运动"
+        }
+      ],
+      "photos": [
+        "https://example.com/photo4.jpg",
+        "https://example.com/photo5.jpg"
+      ]
+    },
+    {
+      "id": "comp-003",
+      "nickname": "美食家小王",
+      "avatar": "https://example.com/avatar3.jpg",
+      "gender": "male",
+      "age": 28,
+      "city": "上海",
+      "bio": "吃货一枚，熟悉上海各种美食，从街边小吃到米其林",
+      "is_online": false,
+      "is_verified": true,
+      "rating": 5.0,
+      "total_orders": 256,
+      "distance": 3500,
+      "services": [
+        {
+          "id": "svc-006",
+          "name": "陪吃饭",
+          "price": 120,
+          "unit": "小时",
+          "description": "推荐餐厅、陪同用餐、美食点评"
+        },
+        {
+          "id": "svc-007",
+          "name": "陪探店",
+          "price": 130,
+          "unit": "小时",
+          "description": "网红店打卡、美食摄影"
+        }
+      ],
+      "photos": [
+        "https://example.com/photo6.jpg",
+        "https://example.com/photo7.jpg",
+        "https://example.com/photo8.jpg"
+      ]
+    },
+    {
+      "id": "comp-004",
+      "nickname": "甜甜",
+      "avatar": "https://example.com/avatar4.jpg",
+      "gender": "female",
+      "age": 22,
+      "city": "北京",
+      "bio": "爱看电影、爱旅行，可以陪你一起做有趣的事",
+      "is_online": true,
+      "is_verified": true,
+      "rating": 4.7,
+      "total_orders": 64,
+      "distance": 880,
+      "services": [
+        {
+          "id": "svc-008",
+          "name": "陪看电影",
+          "price": 90,
+          "unit": "小时",
+          "description": "看电影、讨论剧情、推荐影片"
+        },
+        {
+          "id": "svc-009",
+          "name": "陪旅行",
+          "price": 200,
+          "unit": "天",
+          "description": "一日游陪同、景点讲解、拍照"
+        }
+      ],
+      "photos": [
+        "https://example.com/photo9.jpg"
+      ]
+    },
+    {
+      "id": "comp-005",
+      "nickname": "学霸小李",
+      "avatar": "https://example.com/avatar5.jpg",
+      "gender": "male",
+      "age": 25,
+      "city": "上海",
+      "bio": "985硕士，可以陪你学习、考研辅导、英语陪练",
+      "is_online": true,
+      "is_verified": true,
+      "rating": 4.9,
+      "total_orders": 42,
+      "distance": 2800,
+      "services": [
+        {
+          "id": "svc-010",
+          "name": "陪学习",
+          "price": 110,
+          "unit": "小时",
+          "description": "图书馆陪同、学习监督、答疑解惑"
+        },
+        {
+          "id": "svc-011",
+          "name": "陪遛狗",
+          "price": 60,
+          "unit": "小时",
+          "description": "遛狗、喂狗、宠物陪伴"
+        }
+      ],
+      "photos": [
+        "https://example.com/photo10.jpg",
+        "https://example.com/photo11.jpg"
+      ]
+    }
+  ]
+}

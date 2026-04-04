@@ -1,0 +1,24 @@
+<view class="container">
+  <!-- 步骤1：输入新手机号 -->
+  <view class="form-section" wx:if="{{step === 1}}">
+    <view class="step-title">请输入新手机号</view>
+    <view class="input-group">
+      <text class="input-prefix">+86</text>
+      <input class="input-field" type="number" maxlength="11" placeholder="请输入手机号" bindinput="onPhoneInput" value="{{phone}}" />
+    </view>
+    <button class="btn-primary" disabled="{{phone.length !== 11}}" bindtap="onSendCode">获取验证码</button>
+  </view>
+
+  <!-- 步骤2：输入验证码 -->
+  <view class="form-section" wx:if="{{step === 2}}">
+    <view class="step-title">请输入验证码</view>
+    <view class="step-desc">验证码已发送至 {{phoneMasked}}</view>
+    <view class="input-group">
+      <input class="input-field code-input" type="number" maxlength="6" placeholder="请输入6位验证码" bindinput="onCodeInput" value="{{code}}" focus="{{true}}" />
+      <view class="code-btn {{countdown > 0 ? 'disabled' : ''}}" bindtap="onResendCode">
+        {{countdown > 0 ? countdown + 's' : '重新获取'}}
+      </view>
+    </view>
+    <button class="btn-primary" disabled="{{code.length !== 6}}" bindtap="onConfirm">确认修改</button>
+  </view>
+</view>

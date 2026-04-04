@@ -1,0 +1,38 @@
+<!-- 发布页 - 选择下单方式 -->
+<view class="container">
+  <view class="hero-section">
+    <view class="hero-icon">📢</view>
+    <view class="hero-title">发布您的需求</view>
+    <view class="hero-desc">选择适合的方式，找到满意的搭子</view>
+  </view>
+
+  <view class="mode-list">
+    <!-- 定向下单 -->
+    <view class="mode-card" bindtap="onDirectModeTap">
+      <view class="mode-icon direct-icon">🎯</view>
+      <view class="mode-content">
+        <view class="mode-title">定向下单</view>
+        <view class="mode-desc">已有心仪搭子，直接预约TA</view>
+      </view>
+      <text class="mode-arrow">›</text>
+    </view>
+
+    <!-- 悬赏下单 -->
+    <view class="mode-card" bindtap="onRewardModeTap">
+      <view class="mode-icon reward-icon">💰</view>
+      <view class="mode-content">
+        <view class="mode-title">发布悬赏</view>
+        <view class="mode-desc">发布需求，等待搭子抢单</view>
+        <view class="mode-tag">先抢先得</view>
+      </view>
+      <text class="mode-arrow">›</text>
+    </view>
+  </view>
+
+  <view class="tips">
+    <text class="tips-text">💡 悬赏下单可自定义价格和人数，发布后同步至任务广场</text>
+  </view>
+
+  <!-- 底部安全区域 -->
+  <view class="safe-area-bottom"></view>
+</view>

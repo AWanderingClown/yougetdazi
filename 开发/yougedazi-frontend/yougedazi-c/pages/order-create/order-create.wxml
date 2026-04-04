@@ -1,0 +1,119 @@
+<!-- 有个搭子 下单页 -->
+<view class="container">
+  
+  <!-- 背景装饰 -->
+  <view class="bg-shape shape-1"></view>
+  <view class="bg-shape shape-2"></view>
+  <view class="bg-shape shape-3"></view>
+  
+  <!-- 搭子信息卡片 -->
+  <view class="companion-card">
+    <image class="companion-avatar" src="{{companionInfo.avatar}}" mode="aspectFill"/>
+    <view class="companion-info">
+      <view class="companion-name-row">
+        <text class="companion-name">{{companionInfo.nickname}}</text>
+        <view class="companion-gender-age {{companionInfo.gender === '女' ? 'female' : 'male'}}">
+          <text>{{companionInfo.gender === '女' ? '♀' : '♂'}}</text>
+          <text>{{companionInfo.age}}岁</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 已选服务 -->
+  <view class="service-section">
+    <view class="section-header">
+      <text class="section-title">已选服务</text>
+    </view>
+    <view class="selected-service">
+      <image class="service-image" src="{{selectedService.icon}}" mode="aspectFit"/>
+      <view class="service-info">
+        <text class="service-name">{{selectedService.name}}</text>
+        <view class="service-price-row">
+          <text class="service-price">¥{{selectedService.price}}</text>
+          <text class="service-unit">/60分钟</text>
+        </view>
+      </view>
+      <view class="duration-control">
+        <view class="duration-btn minus" bindtap="onDecreaseDuration">−</view>
+        <text class="duration-value">{{duration}}小时</text>
+        <view class="duration-btn plus" bindtap="onIncreaseDuration">+</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 预约时间 -->
+  <view class="time-section">
+    <view class="section-header">
+      <text class="section-title">预约时间</text>
+    </view>
+    <view class="time-picker-row">
+      <!-- 日期选择 -->
+      <picker mode="date" value="{{selectedDateValue}}" start="{{today}}" end="{{maxDate}}" bindchange="onDateChange" class="date-picker">
+        <view class="picker-display">
+          <text class="picker-icon"></text>
+          <text class="picker-text" wx:if="{{selectedDate}}">{{selectedDate}}</text>
+          <text class="picker-placeholder" wx:else>选择日期</text>
+          <text class="picker-arrow">›</text>
+        </view>
+      </picker>
+      <!-- 时间选择 -->
+      <picker mode="time" value="{{selectedTime}}" bindchange="onTimeChange" class="time-picker">
+        <view class="picker-display">
+          <text class="picker-icon"></text>
+          <text class="picker-text" wx:if="{{selectedTime}}">{{selectedTime}}</text>
+          <text class="picker-placeholder" wx:else>选择时间</text>
+          <text class="picker-arrow">›</text>
+        </view>
+      </picker>
+    </view>
+  </view>
+
+  <!-- 服务地址 -->
+  <view class="address-section">
+    <view class="section-header">
+      <text class="section-title">服务地址</text>
+    </view>
+    <view class="address-selector" bindtap="onSelectAddress">
+      <view class="address-display">
+        <text class="address-icon">📍</text>
+        <text class="address-text" wx:if="{{selectedAddress}}">{{selectedAddress}}</text>
+        <text class="address-placeholder" wx:else>请选择您的位置</text>
+      </view>
+      <text class="address-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 备注 -->
+  <view class="remark-section">
+    <view class="section-header">
+      <text class="section-title">备注</text>
+    </view>
+    <textarea 
+      class="remark-input" 
+      placeholder="请输入特殊需求，如：穿着要求、见面方式等（选填）"
+      maxlength="200"
+      bindinput="onRemarkInput"
+      value="{{remark}}"
+    />
+    <view class="remark-count">{{remark.length || 0}}/200</view>
+  </view>
+
+  <!-- 底部占位 -->
+  <view style="height: 140rpx;"></view>
+
+</view>
+
+<!-- 底部合计栏 -->
+<view class="bottom-bar">
+  <view class="total-section">
+    <text class="total-label">合计：</text>
+    <view class="total-price">
+      <text class="currency">¥</text>
+      <text>{{totalAmount}}</text>
+    </view>
+  </view>
+  <view class="submit-btn {{canSubmit ? '' : 'disabled'}}" bindtap="onSubmit">
+    <text>提交订单</text>
+  </view>
+</view>

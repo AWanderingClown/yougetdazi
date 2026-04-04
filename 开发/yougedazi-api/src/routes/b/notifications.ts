@@ -1,0 +1,241 @@
+import { FastifyInstance } from 'fastify'
+import { z } from 'zod'
+import { authenticate, requireCompanion } from '../../middleware/auth'
+import { ErrorCode } from '../../types/index'
+import { prisma } from '../../lib/prisma'
+
+// ============================================================
+// Zod 输入验证 Schema
+// ============================================================
+
+const NotificationListQuerySchema = z.object({
+  page:      z.coerce.number().int().min(1).default(1),
+  page_size: z.coerce.number().int().min(1).max(50).default(20),
+  is_read:   z.enum(['true', 'false']).transform(val => val === 'true').optional(),
+})
+
+// ============================================================
+// B端通知路由
+// ============================================================
+
+export async function bNotificationRoutes(app: FastifyInstance) {
+  /**
+   * GET /api/b/notifications
+   * B端通知列表（新订单、订单状态变更、审核结果、公告）
+   * 
+   * 功能：
+   * - 获取当前陪玩师的通知列表
+   * - 支持分页
+   * - 按时间倒序排列
+   * - 支持已读/未读筛选
+   */
+  app.get('/api/b/notifications', {
+    preHandler: [authenticate, requireCompanion],
+  }, async (request, reply) => {
+    const parseResult = NotificationListQuerySchema.safeParse(request.query)
+    if (!parseResult.success) {
+      return reply.status(400).send({
+        code:    ErrorCode.VALIDATION_ERROR,
+        message: '参数校验失败',
+        details: parseResult.error.flatten(),
+      })
+    }
+
+    const { page, page_size, is_read } = parseResult.data
+    const companionId = request.currentUser!.id
+    const skip = (page - 1) * page_size
+
+    // 构建查询条件
+    const whereCondition: any = {
+      companion_id: companionId,
+    }
+
+    if (is_read !== undefined) {
+      whereCondition.is_read = is_read
+    }
+
+    const [notifications, total] = await Promise.all([
+      prisma.notification.findMany({
+        where: whereCondition,
+        orderBy: { created_at: 'desc' },
+        skip,
+        take: page_size,
+      }),
+      prisma.notification.count({
+        where: whereCondition,
+      }),
+    ])
+
+    const formattedNotifications = notifications.map(n => ({
+      id:          n.id,
+      type:        n.type,
+      title:       n.title,
+      content:     n.content,
+      is_read:     n.is_read,
+      related_id:  n.related_id,
+      created_at:  n.created_at.toISOString(),
+    }))
+
+    return reply.send({
+      code:    ErrorCode.SUCCESS,
+      message: 'ok',
+      data:    {
+        list:      formattedNotifications,
+        total,
+        page,
+        page_size,
+        has_more:  skip + notifications.length < total,
+      },
+    })
+  })
+
+  /**
+   * POST /api/b/notifications/:id/read
+   * 标记通知已读
+   */
+  app.post<{ Params: { id: string } }>('/api/b/notifications/:id/read', {
+    preHandler: [authenticate, requireCompanion],
+  }, async (request, reply) => {
+    const { id } = request.params
+    const companionId = request.currentUser!.id
+
+    // 验证通知归属
+    const notification = await prisma.notification.findFirst({
+      where: {
+        id,
+        companion_id: companionId,
+      },
+    })
+
+    if (!notification) {
+      return reply.status(404).send({
+        code:     ErrorCode.NOTIFICATION_NOT_FOUND,
+        message:  '通知不存在',
+        errorKey: 'NOTIFICATION_NOT_FOUND',
+      })
+    }
+
+    // 标记已读
+    await prisma.notification.update({
+      where: { id },
+      data: {
+        is_read: true,
+        read_at: new Date(),
+      },
+    })
+
+    return reply.send({
+      code:    ErrorCode.SUCCESS,
+      message: '标记已读成功',
+      data:    null,
+    })
+  })
+
+  /**
+   * GET /api/b/notifications/unread-count
+   * 获取未读通知数
+   */
+  app.get('/api/b/notifications/unread-count', {
+    preHandler: [authenticate, requireCompanion],
+  }, async (request, reply) => {
+    const companionId = request.currentUser!.id
+
+    const count = await prisma.notification.count({
+      where: {
+        companion_id: companionId,
+        is_read:      false,
+      },
+    })
+
+    return reply.send({
+      code:    ErrorCode.SUCCESS,
+      message: 'ok',
+      data:    { count },
+    })
+  })
+
+  /**
+   * POST /api/b/notifications/read-all
+   * 标记所有通知已读
+   */
+  app.post('/api/b/notifications/read-all', {
+    preHandler: [authenticate, requireCompanion],
+  }, async (request, reply) => {
+    const companionId = request.currentUser!.id
+
+    const result = await prisma.notification.updateMany({
+      where: {
+        companion_id: companionId,
+        is_read:      false,
+      },
+      data: {
+        is_read: true,
+        read_at: new Date(),
+      },
+    })
+
+    return reply.send({
+      code:    ErrorCode.SUCCESS,
+      message: '全部标记已读成功',
+      data:    { updated_count: result.count },
+    })
+  })
+
+  /**
+   * GET /api/b/announcements
+   * B端公告（target_audience = all 或 companion）
+   * 
+   * 功能：
+   * - 获取当前有效的公告列表
+   * - 只返回已开始且未过期的公告
+   */
+  app.get('/api/b/announcements', {
+    preHandler: [authenticate, requireCompanion],
+  }, async (_request, reply) => {
+    const now = new Date()
+
+    const announcements = await prisma.announcement.findMany({
+      where: {
+        target_audience: { in: ['all', 'companion'] },
+        is_active:       true,
+        AND: [
+          {
+            OR: [
+              { published_at: null },
+              { published_at: { lte: now } },
+            ],
+          },
+          {
+            OR: [
+              { expires_at: null },
+              { expires_at: { gte: now } },
+            ],
+          },
+        ],
+      },
+      orderBy: [
+        { sort_order: 'desc' },
+        { created_at: 'desc' },
+      ],
+      select: {
+        id:         true,
+        title:      true,
+        content:    true,
+        created_at: true,
+      },
+    })
+
+    const formattedAnnouncements = announcements.map(a => ({
+      id:         a.id,
+      title:      a.title,
+      content:    a.content,
+      created_at: a.created_at.toISOString(),
+    }))
+
+    return reply.send({
+      code:    ErrorCode.SUCCESS,
+      message: 'ok',
+      data:    { list: formattedAnnouncements },
+    })
+  })
+}

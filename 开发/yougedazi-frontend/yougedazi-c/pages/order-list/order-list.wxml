@@ -1,0 +1,232 @@
+<!-- pages/order-list/order-list.wxml -->
+<view class="container">
+  
+  <!-- 背景装饰 -->
+  <view class="bg-shape shape-1"></view>
+  <view class="bg-shape shape-2"></view>
+  <view class="bg-shape shape-3"></view>
+  
+  <!-- Tab栏 -->
+  <view class="tab-bar">
+    <view 
+      class="tab-item {{currentTab === index ? 'active' : ''}}"
+      wx:for="{{tabs}}"
+      wx:key="*this"
+      bindtap="onTabChange"
+      data-index="{{index}}"
+    >
+      <text>{{item}}</text>
+    </view>
+  </view>
+
+  <!-- 订单列表 -->
+  <view class="order-list">
+    <view
+      class="order-card"
+      wx:for="{{orders}}"
+      wx:key="id"
+      bindtap="onOrderTap"
+      bindlongpress="onOrderLongPress"
+      data-id="{{item.id}}"
+    >
+      <!-- 状态色条 -->
+      <view class="card-status-strip {{item.statusClass}}"></view>
+      <view class="card-content">
+      <!-- 订单头部 -->
+      <view class="order-header">
+        <!-- 悬赏订单头部（waiting_grab状态） -->
+        <block wx:if="{{item.type === 'reward' && item.status === 'waiting_grab'}}">
+          <view class="reward-icon">
+            <text class="reward-icon-text">悬赏</text>
+          </view>
+          <view class="companion-info">
+            <view class="info-row">
+              <text class="companion-name reward-name">{{item.serviceType}}</text>
+              <view class="reward-tag">
+                <text class="reward-tag-text">¥{{item.hourlyRate}}/时</text>
+              </view>
+            </view>
+            <view class="service-row">
+              <text class="service-name">需{{item.requiredCount}}人 · {{item.duration}}小时</text>
+              <text class="service-duration">总额¥{{item.totalAmount}}</text>
+            </view>
+          </view>
+        </block>
+        <!-- 普通订单头部 -->
+        <block wx:else>
+          <image class="companion-avatar" src="{{item.companion.avatar}}" mode="aspectFill"/>
+          <view class="companion-info">
+            <view class="info-row">
+              <text class="companion-name">{{item.companion.nickname}}</text>
+              <view class="gender-tag {{item.companion.gender === '女' ? 'female' : 'male'}}">
+                {{item.companion.gender === '女' ? '♀' : '♂'}} {{item.companion.age}}岁
+              </view>
+            </view>
+            <view class="service-row">
+              <text class="service-name">{{item.serviceType}}</text>
+              <text class="service-duration">{{item.duration}}小时</text>
+            </view>
+          </view>
+        </block>
+        <view class="status-badge {{item.statusClass}}">
+          {{item.statusText}}
+        </view>
+      </view>
+      
+      <!-- 订单信息 -->
+      <view class="order-info" bindtap="onDetailTap" data-id="{{item.id}}">
+        <view class="info-left">
+          <view class="info-item">
+            <text class="info-label">预约时间</text>
+            <text class="info-value">{{item.appointmentDate}} {{item.appointmentTime}}</text>
+          </view>
+          <view class="info-item">
+            <text class="info-label">服务地址</text>
+            <text class="info-value address">{{item.address}}</text>
+          </view>
+        </view>
+        <view class="info-price-block">
+          <text class="price-label">合计</text>
+          <text class="price-value">¥{{item.totalAmount}}</text>
+        </view>
+      </view>
+
+      <!-- 订单底部 -->
+      <view class="order-footer">
+        <view class="action-btns">
+          <view
+            class="btn {{btn.type}}"
+            wx:for="{{item.actions}}"
+            wx:for-item="btn"
+            wx:key="action"
+            catchtap="onActionTap"
+            data-orderid="{{item.id}}"
+            data-action="{{btn.action}}"
+          >{{btn.text}}</view>
+        </view>
+      </view>
+      
+      <!-- 订单展开详情 -->
+      <view class="expand-section-wrapper">
+        <!-- 服务中/已接单订单 -->
+        <block wx:if="{{(item.status === 'accepted' || item.status === 'serving') && expandedOrderId === item.id}}">
+          <view class="order-detail-expand">
+            <view class="expand-section">
+              <view class="expand-title">搭子位置</view>
+              <view class="map-container">
+                <view class="map-mock">
+                  <view class="map-bg">
+                    <view class="map-grid"></view>
+                    <view class="map-route"></view>
+                    <view class="location-marker user-marker">
+                      <view class="marker-dot"></view>
+                      <text class="marker-label">我</text>
+                    </view>
+                    <view class="location-marker companion-marker">
+                      <view class="marker-dot companion"></view>
+                      <text class="marker-label">搭子</text>
+                    </view>
+                  </view>
+                  <view class="map-info">
+                    <text class="map-distance">距离您 {{item.companion.distance || 2.5}}km</text>
+                    <text class="map-eta">预计 {{item.appointmentTime}} 到达</text>
+                  </view>
+                </view>
+              </view>
+            </view>
+            
+            <view class="expand-section">
+              <view class="expand-title">服务进度</view>
+              <view class="timer-display">
+                <view class="timer-item">
+                  <text class="timer-value">{{timerDisplay}}</text>
+                  <text class="timer-label">剩余时间</text>
+                </view>
+              </view>
+              <view class="progress-bar">
+                <view class="progress-fill" style="width: {{item.progress || 30}}%;"></view>
+              </view>
+              <view class="progress-info">
+                <text class="progress-text">服务进行中</text>
+                <text class="progress-time">预计{{item.appointmentTime}}结束</text>
+              </view>
+            </view>
+            
+            <view class="expand-section">
+              <view class="expand-title">快捷操作</view>
+              <view class="quick-actions">
+                <view class="quick-btn" catchtap="onActionTap" data-orderid="{{item.id}}" data-action="urge">
+                  <text class="quick-icon">⏰</text>
+                  <text class="quick-text">催一催</text>
+                </view>
+                <view class="quick-btn" catchtap="onActionTap" data-orderid="{{item.id}}" data-action="contact">
+                  <text class="quick-icon">📞</text>
+                  <text class="quick-text">联系客服</text>
+                </view>
+              </view>
+            </view>
+            
+            <view class="expand-toggle" catchtap="onToggleExpand" data-id="{{item.id}}">
+              <text class="toggle-text">收起订单状态</text>
+              <text class="toggle-icon">▲</text>
+            </view>
+          </view>
+        </block>
+        
+        <!-- 悬赏订单（waiting_grab状态） -->
+        <block wx:if="{{item.type === 'reward' && item.status === 'waiting_grab' && expandedOrderId === item.id}}">
+          <view class="order-detail-expand">
+            <view class="expand-section">
+              <view class="expand-title">任务描述</view>
+              <view class="reward-description">
+                <text class="desc-text">{{item.description || '暂无描述'}}</text>
+              </view>
+            </view>
+            
+            <view class="expand-section">
+              <view class="expand-title">抢单倒计时</view>
+              <view class="grab-countdown-section">
+                <view class="grab-countdown-display">
+                  <text class="grab-countdown-value">{{item.grabCountdown || '25:00'}}</text>
+                  <text class="grab-countdown-label">后自动取消并退款</text>
+                </view>
+                <view class="grab-progress-bar">
+                  <view class="grab-progress-fill" style="width: {{(item.grabRemainingTime || 1500) / 1800 * 100}}%;"></view>
+                </view>
+              </view>
+            </view>
+            
+            <view class="expand-toggle" catchtap="onToggleExpand" data-id="{{item.id}}">
+              <text class="toggle-text">收起详情</text>
+              <text class="toggle-icon">▲</text>
+            </view>
+          </view>
+        </block>
+        
+        <!-- 展开提示（未展开时显示） -->
+        <view class="expand-toggle" wx:if="{{(item.status === 'accepted' || item.status === 'serving' || (item.type === 'reward' && item.status === 'waiting_grab')) && expandedOrderId !== item.id}}" catchtap="onToggleExpand" data-id="{{item.id}}">
+          <text class="toggle-text">点击展开</text>
+          <text class="toggle-icon">▼</text>
+        </view>
+      </view>
+      </view><!-- /card-content -->
+    </view><!-- /order-card -->
+
+    <!-- 加载状态 -->
+    <view class="loading-state" wx:if="{{isLoading}}">
+      <view class="loading-spinner"></view>
+      <text class="loading-text">加载中...</text>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{orders.length === 0 && !isLoading}}">
+      <text class="empty-emoji">📭</text>
+      <text class="empty-text">暂无{{tabs[currentTab]}}订单</text>
+      <text class="empty-subtext">去首页看看有什么好玩的~</text>
+      <view class="empty-btn" bindtap="goToHome">去逛逛</view>
+    </view>
+  </view>
+
+  <!-- 底部安全区域 -->
+  <view class="safe-area-bottom"></view>
+</view>

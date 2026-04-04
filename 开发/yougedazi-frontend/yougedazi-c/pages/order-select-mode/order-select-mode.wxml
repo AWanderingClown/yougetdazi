@@ -1,0 +1,35 @@
+<view class="container">
+  <view class="title">选择下单方式</view>
+  <view class="subtitle">请选择适合您的预约方式</view>
+
+  <view class="mode-list">
+    <!-- 定向下单 -->
+    <view class="mode-card" bindtap="onDirectModeTap">
+      <view class="mode-icon direct-icon">🎯</view>
+      <view class="mode-content">
+        <view class="mode-title">定向下单</view>
+        <view class="mode-desc">已有心仪搭子，直接预约TA</view>
+      </view>
+      <view class="mode-arrow">
+        <text class="icon-arrow">›</text>
+      </view>
+    </view>
+
+    <!-- 悬赏下单 -->
+    <view class="mode-card" bindtap="onRewardModeTap">
+      <view class="mode-icon reward-icon">📢</view>
+      <view class="mode-content">
+        <view class="mode-title">发布悬赏</view>
+        <view class="mode-desc">发布需求，等待搭子抢单</view>
+        <view class="mode-highlight">先抢先得</view>
+      </view>
+      <view class="mode-arrow">
+        <text class="icon-arrow">›</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="tips">
+    <text class="tips-text">💡 小提示：悬赏下单可自定义价格和人数</text>
+  </view>
+</view>

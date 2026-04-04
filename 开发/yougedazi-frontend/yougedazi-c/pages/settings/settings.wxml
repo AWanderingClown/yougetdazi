@@ -1,0 +1,175 @@
+<!--pages/settings/settings.wxml-->
+<view class="container">
+  <!-- 账号安全设置 -->
+  <view class="setting-group">
+    <view class="group-title">账号安全</view>
+    <view class="group-content">
+      <view class="setting-item" bindtap="onChangePhone">
+        <view class="item-left">
+          <text class="item-label">修改手机号</text>
+        </view>
+        <view class="item-right">
+          <text class="item-value">{{userInfo.phone || '未绑定'}}</text>
+          <text class="item-arrow">></text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 消息通知设置 -->
+  <view class="setting-group">
+    <view class="group-title">消息通知</view>
+    <view class="group-content">
+      <view class="setting-item">
+        <view class="item-left">
+          <text class="item-label">订单消息推送</text>
+        </view>
+        <view class="item-right">
+          <switch checked="{{notification.order}}" bindchange="onSwitchChange" data-type="order" color="#07c160"/>
+        </view>
+      </view>
+      <view class="setting-item">
+        <view class="item-left">
+          <text class="item-label">活动通知</text>
+        </view>
+        <view class="item-right">
+          <switch checked="{{notification.activity}}" bindchange="onSwitchChange" data-type="activity" color="#07c160"/>
+        </view>
+      </view>
+      <view class="setting-item">
+        <view class="item-left">
+          <text class="item-label">系统通知</text>
+        </view>
+        <view class="item-right">
+          <switch checked="{{notification.system}}" bindchange="onSwitchChange" data-type="system" color="#07c160"/>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 隐私设置 -->
+  <view class="setting-group">
+    <view class="group-title">隐私设置</view>
+    <view class="group-content">
+      <view class="setting-item" bindtap="onProfileVisibility">
+        <view class="item-left">
+          <text class="item-label">个人资料可见性</text>
+        </view>
+        <view class="item-right">
+          <text class="item-value">{{privacy.profileVisibility}}</text>
+          <text class="item-arrow">></text>
+        </view>
+      </view>
+      <view class="setting-item">
+        <view class="item-left">
+          <text class="item-label">位置权限</text>
+        </view>
+        <view class="item-right">
+          <switch checked="{{privacy.location}}" bindchange="onLocationChange" color="#07c160"/>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 其他设置 -->
+  <view class="setting-group">
+    <view class="group-title">其他</view>
+    <view class="group-content">
+      <view class="setting-item" bindtap="onClearCache">
+        <view class="item-left">
+          <text class="item-label">清除缓存</text>
+        </view>
+        <view class="item-right">
+          <text class="item-value">{{cacheSize}}</text>
+          <text class="item-arrow">></text>
+        </view>
+      </view>
+      <view class="setting-item" bindtap="onAboutUs">
+        <view class="item-left">
+          <text class="item-label">关于我们</text>
+        </view>
+        <view class="item-right">
+          <text class="item-arrow">></text>
+        </view>
+      </view>
+      <view class="setting-item" bindtap="onUserAgreement">
+        <view class="item-left">
+          <text class="item-label">用户协议</text>
+        </view>
+        <view class="item-right">
+          <text class="item-arrow">></text>
+        </view>
+      </view>
+      <view class="setting-item" bindtap="onPrivacyPolicy">
+        <view class="item-left">
+          <text class="item-label">隐私政策</text>
+        </view>
+        <view class="item-right">
+          <text class="item-arrow">></text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 退出登录按钮 -->
+  <view class="logout-section">
+    <button class="logout-btn" bindtap="onLogout">退出登录</button>
+  </view>
+
+  <!-- 版本信息 -->
+  <view class="version-info">版本 {{version}}</view>
+</view>
+
+<!-- 清除缓存确认弹窗 -->
+<view class="modal-mask" wx:if="{{showClearCacheModal}}" bindtap="closeClearCacheModal"></view>
+<view class="modal-content" wx:if="{{showClearCacheModal}}">
+  <view class="modal-title">清除缓存</view>
+  <view class="modal-body">确定要清除所有缓存数据吗？</view>
+  <view class="modal-footer">
+    <view class="modal-btn cancel" bindtap="closeClearCacheModal">取消</view>
+    <view class="modal-btn confirm" bindtap="confirmClearCache">确定</view>
+  </view>
+</view>
+
+<!-- 退出登录确认弹窗 -->
+<view class="modal-mask" wx:if="{{showLogoutModal}}" bindtap="closeLogoutModal"></view>
+<view class="modal-content" wx:if="{{showLogoutModal}}">
+  <view class="modal-title">退出登录</view>
+  <view class="modal-body">确定要退出当前账号吗？</view>
+  <view class="modal-footer">
+    <view class="modal-btn cancel" bindtap="closeLogoutModal">取消</view>
+    <view class="modal-btn confirm logout-confirm" bindtap="confirmLogout">确定</view>
+  </view>
+</view>
+
+<!-- 个人资料可见性选择弹窗 -->
+<view class="modal-mask" wx:if="{{showVisibilityModal}}" bindtap="closeVisibilityModal"></view>
+<view class="modal-content visibility-modal" wx:if="{{showVisibilityModal}}">
+  <view class="modal-title">个人资料可见性</view>
+  <view class="visibility-options">
+    <view class="visibility-option {{privacy.profileVisibility === '公开' ? 'selected' : ''}}" bindtap="selectVisibility" data-value="公开">
+      <view class="option-info">
+        <text class="option-label">公开</text>
+        <text class="option-desc">所有人可见</text>
+      </view>
+      <view class="option-check" wx:if="{{privacy.profileVisibility === '公开'}}">✓</view>
+    </view>
+    <view class="visibility-option {{privacy.profileVisibility === '仅好友' ? 'selected' : ''}}" bindtap="selectVisibility" data-value="仅好友">
+      <view class="option-info">
+        <text class="option-label">仅好友</text>
+        <text class="option-desc">仅好友可见</text>
+      </view>
+      <view class="option-check" wx:if="{{privacy.profileVisibility === '仅好友'}}">✓</view>
+    </view>
+    <view class="visibility-option {{privacy.profileVisibility === '私密' ? 'selected' : ''}}" bindtap="selectVisibility" data-value="私密">
+      <view class="option-info">
+        <text class="option-label">私密</text>
+        <text class="option-desc">仅自己可见</text>
+      </view>
+      <view class="option-check" wx:if="{{privacy.profileVisibility === '私密'}}">✓</view>
+    </view>
+  </view>
+  <view class="modal-footer single-btn">
+    <view class="modal-btn cancel" bindtap="closeVisibilityModal">取消</view>
+  </view>
+</view>

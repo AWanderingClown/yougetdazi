@@ -1,0 +1,58 @@
+<!-- pages/message/message.wxml -->
+<view class="container">
+  <!-- 消息列表 -->
+  <view class="message-list">
+    <view 
+      class="message-item"
+      wx:for="{{conversationList}}"
+      wx:key="id"
+      bindtap="onConversationTap"
+      bindlongpress="onConversationLongPress"
+      data-id="{{item.id}}"
+      data-type="{{item.type}}"
+    >
+      <!-- 系统通知样式 -->
+      <block wx:if="{{item.type === 'system'}}">
+        <view class="system-avatar">
+          <image src="{{item.avatar}}" mode="aspectFill"/>
+        </view>
+        <view class="message-content">
+          <view class="message-header">
+            <text class="nickname system">{{item.title}}</text>
+            <text class="time">{{item.lastTime}}</text>
+          </view>
+          <view class="message-body">
+            <text class="last-message">{{item.lastMessage}}</text>
+            <view class="badge" wx:if="{{item.unreadCount > 0}}">{{item.unreadCount}}</view>
+          </view>
+        </view>
+      </block>
+      
+      <!-- 普通聊天样式 -->
+      <block wx:else>
+        <view class="avatar-wrapper">
+          <image class="avatar" src="{{item.avatar}}" mode="aspectFill"/>
+          <view class="online-dot" wx:if="{{item.isOnline}}"></view>
+        </view>
+        <view class="message-content">
+          <view class="message-header">
+            <text class="nickname">{{item.nickname}}</text>
+            <text class="time">{{item.lastTime}}</text>
+          </view>
+          <view class="message-body">
+            <text class="last-message">{{item.lastMessage}}</text>
+            <view class="badge" wx:if="{{item.unreadCount > 0}}">{{item.unreadCount}}</view>
+          </view>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{conversationList.length === 0}}">
+    <text class="empty-text">暂无消息</text>
+  </view>
+
+  <!-- 底部安全区域 -->
+  <view class="safe-area-bottom"></view>
+</view>

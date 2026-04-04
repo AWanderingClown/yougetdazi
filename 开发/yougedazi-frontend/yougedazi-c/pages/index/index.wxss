@@ -1,0 +1,636 @@
+/* 有个搭子 C端首页/发现页 - UI设计图匹配版 */
+
+page {
+  --primary-color: #7B68EE;
+  --primary-light: #9B89F5;
+  --primary-dark: #5A4ACF;
+  --secondary-color: #FF6B9D;
+  --bg-color: #ffffff;
+  --card-bg: #ffffff;
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --text-light: #999999;
+  --border-color: #eeeeee;
+  --male-color: #4A90E2;
+  --female-color: #FF6B9D;
+  --online-color: #52C41A;
+  --shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+  
+  background-color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.container {
+  min-height: 100vh;
+  padding-bottom: calc(100rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  position: relative;
+  background-color: #ffffff;
+}
+
+/* 背景不规则形状装饰 */
+.bg-shape {
+  position: fixed;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.6;
+}
+
+/* 形状1 - 右上角不规则紫色块 */
+.shape-1 {
+  width: 280rpx;
+  height: 320rpx;
+  background: linear-gradient(135deg, rgba(123, 104, 238, 0.15) 0%, rgba(123, 104, 238, 0.05) 100%);
+  border-radius: 60% 40% 70% 30% / 40% 60% 30% 70%;
+  top: -60rpx;
+  right: -80rpx;
+  transform: rotate(-15deg);
+}
+
+/* 形状2 - 左侧中部粉色波浪 */
+.shape-2 {
+  width: 200rpx;
+  height: 400rpx;
+  background: linear-gradient(180deg, rgba(255, 107, 157, 0.1) 0%, rgba(255, 107, 157, 0.02) 100%);
+  border-radius: 40% 60% 70% 30% / 60% 30% 70% 40%;
+  top: 400rpx;
+  left: -100rpx;
+  transform: rotate(20deg);
+}
+
+/* 形状3 - 右下角淡紫椭圆 */
+.shape-3 {
+  width: 350rpx;
+  height: 250rpx;
+  background: linear-gradient(45deg, rgba(155, 137, 245, 0.12) 0%, rgba(155, 137, 245, 0.03) 100%);
+  border-radius: 70% 30% 50% 50% / 30% 70% 50% 50%;
+  bottom: 300rpx;
+  right: -120rpx;
+  transform: rotate(-10deg);
+}
+
+/* 形状4 - 中部小装饰 */
+.shape-4 {
+  width: 150rpx;
+  height: 150rpx;
+  background: linear-gradient(135deg, rgba(255, 107, 157, 0.08) 0%, transparent 100%);
+  border-radius: 50% 50% 40% 60% / 60% 40% 60% 40%;
+  top: 800rpx;
+  right: 80rpx;
+}
+
+/* 弧形装饰线 */
+.bg-arc {
+  position: fixed;
+  pointer-events: none;
+  z-index: 0;
+  border: 4rpx solid transparent;
+  border-radius: 50%;
+  opacity: 0.4;
+}
+
+/* 弧形1 - 紫色弧线 */
+.arc-1 {
+  width: 400rpx;
+  height: 400rpx;
+  border-top-color: rgba(123, 104, 238, 0.2);
+  border-right-color: rgba(123, 104, 238, 0.1);
+  top: 200rpx;
+  left: -200rpx;
+  transform: rotate(45deg);
+}
+
+/* 弧形2 - 粉色弧线 */
+.arc-2 {
+  width: 300rpx;
+  height: 300rpx;
+  border-bottom-color: rgba(255, 107, 157, 0.15);
+  border-left-color: rgba(255, 107, 157, 0.08);
+  bottom: 400rpx;
+  right: -100rpx;
+  transform: rotate(-30deg);
+}
+
+/* ===== 顶部导航栏 ===== */
+.header {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 30rpx;
+  background: #ffffff;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+/* 城市选择 */
+.city-selector {
+  display: flex;
+  align-items: center;
+  margin-right: 24rpx;
+  flex-shrink: 0;
+}
+
+.city-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.city-arrow {
+  font-size: 22rpx;
+  color: var(--text-secondary);
+  margin-left: 8rpx;
+}
+
+/* 搜索框 */
+.search-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  height: 72rpx;
+  background: #f5f5f5;
+  border-radius: 36rpx;
+  padding: 0 24rpx;
+}
+
+.search-icon {
+  font-size: 32rpx;
+  margin-right: 12rpx;
+  color: var(--text-light);
+}
+
+.search-placeholder {
+  font-size: 28rpx;
+  color: var(--text-light);
+}
+
+/* ===== 服务分类区 ===== */
+.category-section {
+  background: #ffffff;
+  padding: 20rpx 20rpx 4rpx;
+  margin-bottom: 8rpx;
+  position: relative;
+  z-index: 1;
+}
+
+.category-grid {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.category-item {
+  width: 20%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 12rpx;
+  padding: 4rpx;
+  border-radius: 12rpx;
+}
+
+.category-item.selected {
+  background: rgba(123, 104, 238, 0.08);
+}
+
+.category-item.selected .category-icon {
+  transform: scale(1.05);
+}
+
+.category-item.selected .category-name {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+/* 分类图标 */
+.category-icon {
+  width: 84rpx;
+  height: 84rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8rpx;
+}
+
+.icon-image {
+  width: 64rpx;
+  height: 64rpx;
+  object-fit: contain;
+}
+
+/* 茶艺图标稍大一些 */
+.category-item:nth-child(8) .icon-image {
+  width: 72rpx;
+  height: 72rpx;
+}
+
+.category-name {
+  font-size: 22rpx;
+  color: var(--text-primary);
+  text-align: center;
+  line-height: 1.2;
+}
+
+.category-item.selected .category-name {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+/* ===== 筛选栏 ===== */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 30rpx 12rpx;
+  background: #ffffff;
+  margin-bottom: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.filter-title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.filter-tabs {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.filter-tab {
+  padding: 8rpx 24rpx;
+  border-radius: 24rpx;
+  font-size: 26rpx;
+  background: #f0f0f0;
+  color: var(--text-secondary);
+}
+
+.filter-tab.active {
+  background: var(--primary-color);
+  color: #ffffff;
+}
+
+.filter-tab.male {
+  background: #E3F2FD;
+  color: var(--male-color);
+}
+
+.filter-tab.male.active {
+  background: var(--male-color);
+  color: #ffffff;
+}
+
+.filter-tab.female {
+  background: #FCE4EC;
+  color: var(--female-color);
+}
+
+.filter-tab.female.active {
+  background: var(--female-color);
+  color: #ffffff;
+}
+
+/* ===== 搭子列表 ===== */
+.companion-list {
+  padding: 12rpx 30rpx 0;
+}
+
+.companion-card {
+  display: flex;
+  align-items: stretch;
+  background: #fdf7ff;
+  border-radius: 24rpx;
+  margin-bottom: 16rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  position: relative;
+  transition: all 0.3s;
+  height: 200rpx;
+  z-index: 1;
+}
+
+.companion-card:active {
+  box-shadow: 0 12rpx 32rpx rgba(0, 0, 0, 0.14);
+  transform: translateY(-2rpx);
+}
+
+/* 已收藏的卡片样式 */
+.companion-card.liked-card {
+  background: linear-gradient(135deg, #fcf0ff 0%, #fdf7ff 100%);
+  box-shadow: 0 8rpx 24rpx rgba(123, 104, 238, 0.18);
+}
+
+/* 左侧头像 - 上宽下窄斜切效果 */
+.avatar-section {
+  position: relative;
+  flex-shrink: 0;
+  width: 28%;
+  height: 100%;
+  overflow: hidden;
+  clip-path: polygon(0 0, 100% 0, 85% 100%, 0 100%);
+}
+
+.companion-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 斜切边缘阴影 - 在卡片层绘制，精准对齐 clip-path 边缘 */
+.companion-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* 从 (28%, 0) 到 (23.8%, 100%) 的斜线阴影 */
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.12) 0%,
+    rgba(0, 0, 0, 0.04) 40%,
+    transparent 100%
+  );
+  clip-path: polygon(27% 0, 29% 0, 25.2% 100%, 23% 100%);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.online-status {
+  position: absolute;
+  bottom: 16rpx;
+  right: 20%;
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  border: 3rpx solid #ffffff;
+  z-index: 10;
+}
+
+.online-status.online {
+  background: var(--online-color);
+}
+
+.online-status.offline {
+  background: var(--text-light);
+}
+
+/* 右侧信息区 */
+.info-section {
+  flex: 1;
+  min-width: 0;
+  padding: 16rpx 16rpx 16rpx 12rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* 第一行：昵称和性别年龄 */
+.info-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.nickname {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-right: 16rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200rpx;
+}
+
+/* 性别年龄标签 - 紫色背景 */
+.gender-age {
+  display: flex;
+  align-items: center;
+  padding: 4rpx 12rpx;
+  border-radius: 16rpx;
+  font-size: 22rpx;
+  background: #F3E5F5;
+  color: var(--primary-color);
+}
+
+.gender-age.female {
+  background: #FCE4EC;
+  color: var(--female-color);
+}
+
+.gender-age.male {
+  background: #E3F2FD;
+  color: var(--male-color);
+}
+
+.gender-icon {
+  font-size: 20rpx;
+  margin-right: 4rpx;
+}
+
+.age {
+  font-weight: 500;
+}
+
+/* 服务标签 */
+.service-tags {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 16rpx;
+}
+
+.tag {
+  padding: 6rpx 14rpx;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 8rpx;
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  margin-right: 10rpx;
+  margin-bottom: 8rpx;
+}
+
+/* 位置信息 */
+.location-row {
+  display: flex;
+  align-items: center;
+}
+
+.location-icon {
+  font-size: 24rpx;
+  color: var(--text-light);
+  margin-right: 6rpx;
+}
+
+.distance {
+  font-size: 24rpx;
+  color: var(--text-light);
+}
+
+/* 心动按钮 - 右侧 */
+.like-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: 4rpx;
+  margin-right: 4rpx;
+  padding: 12rpx;
+  width: 80rpx;
+  align-self: center;
+}
+
+.heart-icon {
+  width: 48rpx;
+  height: 48rpx;
+  margin-bottom: 6rpx;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.like-btn:active .heart-icon {
+  transform: scale(0.8);
+  transition: transform 0.1s ease;
+}
+
+/* 点击时按钮整体缩放 */
+.like-btn-hover {
+  transform: scale(0.8);
+  transition: transform 0.15s ease;
+}
+
+/* 心动状态的弹跳动画 */
+.heart-icon.heart-liked {
+  animation: heartBeat 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes heartBeat {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(0.8);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.like-text {
+  font-size: 22rpx;
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+/* 加载更多 */
+.load-more {
+  text-align: center;
+  padding: 40rpx;
+  color: var(--text-light);
+  font-size: 26rpx;
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 40rpx;
+}
+
+.empty-text {
+  font-size: 30rpx;
+  color: var(--text-secondary);
+  margin-bottom: 16rpx;
+}
+
+.empty-subtext {
+  font-size: 26rpx;
+  color: var(--text-light);
+}
+
+.safe-area-bottom {
+  height: calc(60rpx + env(safe-area-inset-bottom));
+}
+
+/* 搜索输入框 */
+.search-input-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  height: 72rpx;
+  background: #f5f5f5;
+  border-radius: 36rpx;
+  padding: 0 16rpx 0 24rpx;
+}
+
+.search-input {
+  flex: 1;
+  height: 72rpx;
+  font-size: 28rpx;
+  color: var(--text-primary);
+  background: transparent;
+  border: none;
+  outline: none;
+}
+
+.search-btn {
+  font-size: 28rpx;
+  color: var(--primary-color);
+  margin: 0 16rpx;
+  font-weight: 500;
+}
+
+.cancel-btn {
+  font-size: 28rpx;
+  color: var(--text-secondary);
+  margin-right: 8rpx;
+}
+
+/* 错误状态 */
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 40rpx;
+}
+
+.error-icon {
+  font-size: 80rpx;
+  margin-bottom: 24rpx;
+  opacity: 0.8;
+}
+
+.error-message {
+  font-size: 30rpx;
+  color: var(--text-secondary);
+  margin-bottom: 40rpx;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.retry-btn {
+  padding: 16rpx 48rpx;
+  background: var(--primary-color);
+  border-radius: 36rpx;
+  font-size: 30rpx;
+  color: #ffffff;
+  font-weight: 500;
+  box-shadow: 0 4rpx 16rpx rgba(123, 104, 238, 0.3);
+  transition: all 0.2s;
+}
+
+.retry-btn:active {
+  transform: scale(0.96);
+  box-shadow: 0 2rpx 8rpx rgba(123, 104, 238, 0.2);
+}

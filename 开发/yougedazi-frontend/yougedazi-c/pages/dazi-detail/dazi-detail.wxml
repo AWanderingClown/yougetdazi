@@ -1,0 +1,176 @@
+<!-- 搭子详情页 -->
+<scroll-view class="page-container" scroll-y="true" enhanced="true" show-scrollbar="false">
+  
+  <!-- 背景装饰 - 不规则形状 -->
+  <view class="bg-shape shape-1"></view>
+  <view class="bg-shape shape-2"></view>
+  <view class="bg-shape shape-3"></view>
+  <view class="bg-shape shape-4"></view>
+  <view class="bg-shape shape-5"></view>
+  <view class="bg-shape shape-6"></view>
+  <view class="bg-shape shape-7"></view>
+  <view class="bg-shape shape-8"></view>
+  
+  <!-- 顶部图片轮播 -->
+  <view class="banner-section">
+    <swiper 
+      class="banner-swiper" 
+      indicator-dots="true" 
+      autoplay="true" 
+      interval="4000" 
+      duration="500" 
+      circular="true"
+      current="{{currentBannerIndex}}"
+      bindchange="onBannerChange"
+    >
+      <swiper-item wx:for="{{companionInfo.album}}" wx:key="index">
+        <image class="banner-image" src="{{item}}" mode="aspectFill"/>
+      </swiper-item>
+    </swiper>
+    
+    <!-- 左切换按钮（显示上一张） -->
+    <view class="banner-btn banner-btn-left" bindtap="onNextImage">
+      <image class="banner-btn-icon" src="/assets/icons/btn-right.png" mode="aspectFit"/>
+    </view>
+    
+    <!-- 右切换按钮（显示下一张） -->
+    <view class="banner-btn banner-btn-right" bindtap="onPrevImage">
+      <image class="banner-btn-icon" src="/assets/icons/btn-left.png" mode="aspectFit"/>
+    </view>
+    
+    <!-- 图片指示器 -->
+    <view class="banner-indicator">{{currentBannerIndex + 1}}/{{companionInfo.album.length}}</view>
+  </view>
+
+  <!-- 基础信息区 -->
+  <view class="info-section">
+    <view class="info-header">
+      <view class="avatar-wrapper">
+        <image class="avatar" src="{{companionInfo.avatar}}" mode="aspectFill"/>
+        <view class="online-status" wx:if="{{companionInfo.isOnline}}"></view>
+      </view>
+      <view class="basic-info">
+        <view class="name-row">
+          <text class="nickname">{{companionInfo.nickname}}</text>
+          <view class="gender-age {{companionInfo.gender === '女' ? 'female' : 'male'}}">
+            <text>{{companionInfo.gender === '女' ? '♀' : '♂'}}</text>
+          </view>
+          <text class="age">{{companionInfo.age}}岁</text>
+        </view>
+        <view class="location-row">
+          <text class="location-icon">📍</text>
+          <text>{{companionInfo.location}} · {{companionInfo.distance}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 认证标识区 -->
+    <view class="cert-section">
+      <view class="cert-item share-btn" bindtap="onShareTap">
+        <image class="cert-icon" src="/assets/icons/cert/share.png" mode="aspectFit"/>
+        <text class="cert-text">推荐给朋友</text>
+      </view>
+      <view class="cert-item" wx:if="{{companionInfo.certifications.wechat}}">
+        <image class="cert-icon" src="/assets/icons/cert/wechat.png" mode="aspectFit"/>
+        <text class="cert-text">微信认证</text>
+      </view>
+      <view class="cert-item" wx:if="{{companionInfo.certifications.phone}}">
+        <image class="cert-icon" src="/assets/icons/cert/phone.png" mode="aspectFit"/>
+        <text class="cert-text">手机认证</text>
+      </view>
+      <view class="cert-item" wx:if="{{companionInfo.certifications.realname}}">
+        <image class="cert-icon" src="/assets/icons/cert/realname.png" mode="aspectFit"/>
+        <text class="cert-text">实名认证</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="divider"></view>
+
+  <!-- 服务项目区 -->
+  <view class="service-section">
+    <view class="section-title">
+      <text class="title-text">服务项目</text>
+      <text class="title-sub">最低时长：{{companionInfo.minDuration}}小时起</text>
+    </view>
+    <view class="service-list">
+      <block wx:for="{{companionInfo.services}}" wx:key="id">
+        <view 
+          class="service-item {{selectedService && selectedService.id === item.id ? 'selected' : ''}}" 
+          bindtap="onSelectService"
+          data-id="{{item.id}}"
+        >
+          <!-- 未选中状态：横向布局 -->
+          <view class="service-main" wx:if="{{!(selectedService && selectedService.id === item.id)}}">
+            <view class="service-icon-wrapper">
+              <image class="service-icon" src="{{item.icon || '/assets/icons/categories/购物车.png'}}" mode="aspectFit"/>
+            </view>
+            
+            <view class="service-content">
+              <view class="service-info">
+                <text class="service-name">{{item.name}}</text>
+                <view class="service-tags">
+                  <text class="tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="tag">{{tag}}</text>
+                </view>
+              </view>
+              <view class="service-price">
+                <text class="price-symbol">¥</text>
+                <text class="price-value">{{item.price}}</text>
+                <text class="price-unit">/小时</text>
+              </view>
+            </view>
+          </view>
+          
+          <!-- 选中状态：左侧大图标 + 右侧内容区 -->
+          <view class="selected-layout" wx:if="{{selectedService && selectedService.id === item.id}}" catchtap="onDurationControlTap">
+            <!-- 左侧大图标 -->
+            <view class="selected-icon-wrapper">
+              <image class="service-icon-large" src="{{item.icon || '/assets/icons/categories/购物车.png'}}" mode="aspectFit"/>
+            </view>
+            
+            <!-- 右侧内容区 -->
+            <view class="selected-content">
+              <!-- 服务信息 -->
+              <view class="selected-service-info">
+                <text class="service-name">{{item.name}}</text>
+                <view class="service-tags">
+                  <text class="tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="tag">{{tag}}</text>
+                </view>
+                <view class="service-price-row">
+                  <text class="price-symbol">¥</text>
+                  <text class="price-value">{{item.price}}</text>
+                  <text class="price-unit">/小时</text>
+                </view>
+              </view>
+              
+              <!-- 时长控制 -->
+              <view class="duration-control-row">
+                <view class="duration-left">
+                  <view class="duration-btn minus" catchtap="onDecreaseDuration">−</view>
+                  <text class="duration-value">{{duration}}小时</text>
+                  <view class="duration-btn plus" catchtap="onIncreaseDuration">+</view>
+                </view>
+                <view class="total-amount">
+                  <text class="total-label">合计：</text>
+                  <text class="total-price">¥{{totalAmount}}</text>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <view class="bottom-placeholder"></view>
+</scroll-view>
+
+<!-- 底部固定操作栏 -->
+<view class="bottom-action-bar">
+  <view class="action-btn chat-btn" bindtap="onChatTap">
+    <text class="btn-text">聊天</text>
+  </view>
+  <view class="action-btn order-btn" bindtap="onOrderTap">
+    <text class="btn-text">立即下单</text>
+  </view>
+</view>

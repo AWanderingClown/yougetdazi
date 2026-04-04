@@ -1,0 +1,149 @@
+<!-- 有个搭子 C端首页/发现页 -->
+<view class="container">
+  <!-- 背景装饰 - 不规则形状 -->
+  <view class="bg-shape shape-1"></view>
+  <view class="bg-shape shape-2"></view>
+  <view class="bg-shape shape-3"></view>
+  <view class="bg-shape shape-4"></view>
+  <view class="bg-arc arc-1"></view>
+  <view class="bg-arc arc-2"></view>
+  
+  <!-- 顶部导航栏 -->
+  <view class="header">
+    <view class="city-selector" bindtap="onCityTap">
+      <text class="city-name">{{currentCity || '全部'}}</text>
+      <text class="city-arrow">▼</text>
+    </view>
+    
+    <!-- 正常搜索框 -->
+    <view class="search-box" bindtap="onSearchTap" wx:if="{{!isSearching}}">
+      <text class="search-icon">🔍</text>
+      <text class="search-placeholder">搜索搭子名称或服务类型</text>
+    </view>
+    
+    <!-- 搜索输入框 -->
+    <view class="search-input-box" wx:if="{{isSearching}}">
+      <input 
+        class="search-input" 
+        placeholder="搜索搭子名称或服务类型" 
+        value="{{searchKeyword}}"
+        bindinput="onSearchInput"
+        focus="{{isSearching}}"
+        confirm-type="search"
+        bindconfirm="onSearchConfirm"
+      />
+      <text class="search-btn" bindtap="onSearchConfirm">搜索</text>
+      <text class="cancel-btn" bindtap="onSearchCancel">取消</text>
+    </view>
+  </view>
+
+  <!-- 服务分类 -->
+  <view class="category-section">
+    <view class="category-grid">
+      <view 
+        class="category-item {{selectedCategory === item.id ? 'selected' : ''}}" 
+        wx:for="{{categories}}" 
+        wx:key="id"
+        bindtap="onCategoryTap"
+        data-id="{{item.id}}"
+      >
+        <view class="category-icon">
+          <image class="icon-image" src="{{item.icon}}" mode="aspectFit"/>
+        </view>
+        <text class="category-name">{{item.name}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 筛选栏 -->
+  <view class="filter-bar">
+    <text class="filter-title">{{selectedCategory ? '筛选结果' : '推荐的人'}}</text>
+    <view class="filter-tabs">
+      <view class="filter-tab {{currentFilter === 'all' ? 'active' : ''}}" bindtap="onFilterTap" data-filter="all">
+        <text>全部</text>
+      </view>
+      <view class="filter-tab male {{currentFilter === 'male' ? 'active' : ''}}" bindtap="onFilterTap" data-filter="male">
+        <text>♂</text>
+      </view>
+      <view class="filter-tab female {{currentFilter === 'female' ? 'active' : ''}}" bindtap="onFilterTap" data-filter="female">
+        <text>♀</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 搭子列表 -->
+  <view class="companion-list">
+    <view 
+      class="companion-card {{item.isLiked ? 'liked-card' : ''}}" 
+      wx:for="{{companions}}" 
+      wx:key="_sortIndex"
+      wx:for-index="idx"
+      bindtap="onCardTap"
+      data-id="{{item.id}}"
+    >
+      <!-- 左侧头像 -->
+      <view class="avatar-section">
+        <image class="companion-avatar" src="{{item.avatar}}" mode="aspectFill"></image>
+        <view class="online-status {{item.isOnline ? 'online' : 'offline'}}"></view>
+      </view>
+      
+      <!-- 中间信息 -->
+      <view class="info-section">
+        <!-- 第一行：昵称和性别年龄 -->
+        <view class="info-row">
+          <text class="nickname">{{item.nickname}}</text>
+          <view class="gender-age {{item.gender === '男' ? 'male' : 'female'}}">
+            <text class="gender-icon">{{item.gender === '男' ? '♂' : '♀'}}</text>
+            <text class="age">{{item.age}}岁</text>
+          </view>
+        </view>
+        
+        <!-- 第二行：服务标签 -->
+        <view class="service-tags">
+          <text class="tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text>
+        </view>
+        
+        <!-- 第三行：位置距离 -->
+        <view class="location-row">
+          <text class="location-icon">📍</text>
+          <text class="distance">{{item.location || '厦门市'}} · 距离您{{item.distance}}</text>
+        </view>
+      </view>
+      
+      <!-- 右侧心动按钮 -->
+      <view class="like-btn" catchtap="onLikeTap" data-id="{{item.id}}" data-index="{{idx}}" hover-class="like-btn-hover" hover-stay-time="200"
+>
+        <image class="heart-icon {{item.isLiked ? 'heart-liked' : ''}}" src="{{item.isLiked ? '/assets/icons/heart-liked.png' : '/assets/icons/heart-default.png'}}" mode="aspectFit" />
+        <text class="like-text" wx:if="{{item.isLiked}}"
+>心动</text>
+      </view>
+    </view>
+    
+    <!-- 错误状态 -->
+    <view class="error-state" wx:if="{{isError}}">
+      <view class="error-icon">
+        <text>⚠️</text>
+      </view>
+      <text class="error-message">{{errorMessage}}</text>
+      <view class="retry-btn" bindtap="onRetryLoad">
+        <text>重试</text>
+      </view>
+    </view>
+    
+    <!-- 空状态 -->
+    <block wx:if="{{!isLoading && !isError}}">
+      <view class="empty-state" wx:if="{{companions.length === 0}}">
+        <text class="empty-text">暂无符合条件的搭子</text>
+        <text class="empty-subtext" wx:if="{{selectedCategory}}">点击其他分类或取消筛选</text>
+      </view>
+    </block>
+    
+    <view class="load-more" wx:if="{{companions.length > 0 && !isLoading && !isError}}">
+      <text wx:if="{{hasMore}}">上拉加载更多</text>
+      <text wx:else>没有更多了</text>
+    </view>
+  </view>
+
+  <!-- 底部安全区域占位 -->
+  <view class="safe-area-bottom"></view>
+</view>

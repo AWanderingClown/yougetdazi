@@ -1,0 +1,751 @@
+// This is your Prisma schema file
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// 枚举类型
+// ============================================================
+
+enum OrderStatus {
+  pending_payment  // 待支付（15min 超时自动取消）
+  pending_accept   // 待接单（15min 超时全额退款）
+  waiting_grab     // 等待抢单（悬赏单专用）
+  accepted         // 已接单
+  serving          // 服务中（Redis 倒计时权威）
+  completed        // 已完成（终态）
+  cancelled        // 已取消（终态）
+}
+
+enum OrderType {
+  direct  // 指定陪玩
+  reward  // 悬赏抢单
+}
+
+enum OperatorType {
+  user
+  companion
+  admin
+  system
+}
+
+enum AuditStatus {
+  pending   // 待审核
+  approved  // 已通过
+  rejected  // 已拒绝
+}
+
+enum UserStatus {
+  active
+  banned
+  suspended
+}
+
+enum DepositLevel {
+  none    // 未缴纳
+  basic   // 基础档
+  premium // 高级档
+}
+
+enum MessageType {
+  text
+  image
+  system
+}
+
+enum NotificationType {
+  order
+  system
+  activity
+  message
+}
+
+enum NotificationTarget {
+  all
+  user
+  companion
+}
+
+enum SettlementType {
+  order_income
+  bonus
+  penalty
+  refund
+}
+
+enum AdminRole {
+  super_admin
+  operator
+  finance
+  viewer
+}
+
+enum RenewalStatus {
+  pending
+  paid
+  failed
+}
+
+enum TransactionType {
+  deposit   // 缴纳保证金
+  refund    // 保证金退还
+  deduction // 违约扣除
+}
+
+enum WithdrawalStatus {
+  pending   // 待审核
+  approved  // 已通过
+  rejected  // 已拒绝
+  processing // 处理中
+  completed // 已完成
+  failed    // 失败
+}
+
+// ============================================================
+// 用户表（C端）
+// ============================================================
+
+model User {
+  id         String     @id @default(uuid())
+  openid     String     @unique                // 微信 C端 openid
+  nickname   String?
+  avatar     String?
+  phone      String?
+  gender     Int?                              // 0未知 1男 2女
+  status     UserStatus @default(active)
+  ban_reason String?
+  banned_by  String?                           // admin_user.id
+  banned_at  DateTime?  @db.Timestamptz
+
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @updatedAt @db.Timestamptz
+
+  // 关联
+  orders           Order[]          @relation("UserOrders")
+  message_sessions MessageSession[] @relation("UserSessions")
+  sent_messages    Message[]        @relation("UserMessages")
+  notifications    Notification[]   @relation("UserNotifications")
+
+  @@index([openid])
+  @@index([status])
+  @@map("users")
+}
+
+// ============================================================
+// 陪玩师表（B端）
+// ============================================================
+
+model Companion {
+  id               String       @id @default(uuid())
+  openid           String       @unique              // 微信 B端 openid
+  nickname         String?
+  avatar           String?
+  phone            String?
+  gender           Int?
+  real_name        String?                           // 实名（加密存储）
+  id_card_no       String?                           // 身份证号（加密存储）
+  id_card_front    String?                           // 身份证正面 COS key
+  id_card_back     String?                           // 身份证背面 COS key
+
+  audit_status     AuditStatus  @default(pending)
+  is_online        Boolean      @default(false)      // 是否在线（接单开关）
+  is_working       Boolean      @default(false)      // 是否服务中
+  deposit_level    DepositLevel @default(none)
+  deposited_amount Int          @default(0)          // 已缴保证金（分）
+  total_orders     Int          @default(0)          // 累计订单数
+  rating           Decimal      @default(5.0) @db.Decimal(2,1)  // 平均评分
+
+  reject_reason    String?                           // 审核拒绝原因
+  verified_by      String?                           // 审核人 admin_user.id
+  verified_at      DateTime?    @db.Timestamptz
+
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @updatedAt @db.Timestamptz
+
+  // 关联
+  services              CompanionService[]
+  audit_records         CompanionAuditRecord[]
+  orders                Order[]                @relation("CompanionOrders")
+  deposit_transactions  DepositTransaction[]
+  message_sessions      MessageSession[]       @relation("CompanionSessions")
+  sent_messages         Message[]              @relation("CompanionMessages")
+  notifications         Notification[]         @relation("CompanionNotifications")
+  settlements           Settlement[]
+  withdrawals           Withdrawal[]
+
+  @@index([openid])
+  @@index([audit_status])
+  @@index([is_online, audit_status])
+  @@map("companions")
+}
+
+// ============================================================
+// 陪玩师服务项目
+// ============================================================
+
+model CompanionService {
+  id           String   @id @default(uuid())
+  companion_id String
+  service_name String                       // 服务名称（如：LOL排位陪练）
+  hourly_price Int                          // 时价（分）
+  min_duration Int      @default(1)         // 最低时长（小时）
+  is_active    Boolean  @default(true)
+  description  String?
+
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @updatedAt @db.Timestamptz
+
+  companion Companion @relation(fields: [companion_id], references: [id], onDelete: Cascade)
+
+  @@index([companion_id, is_active])
+  @@map("companion_services")
+}
+
+// ============================================================
+// 陪玩师审核记录
+// ============================================================
+
+model CompanionAuditRecord {
+  id           String      @id @default(uuid())
+  companion_id String
+  admin_id     String                              // 审核人
+  action       AuditStatus                         // approved / rejected
+  reason       String?                             // 拒绝原因
+  note         String?                             // 审核备注
+  metadata     Json?       @db.JsonB               // 扩展信息
+
+  created_at DateTime @default(now()) @db.Timestamptz
+
+  companion  Companion  @relation(fields: [companion_id], references: [id])
+  admin_user AdminUser  @relation(fields: [admin_id], references: [id])
+
+  @@index([companion_id])
+  @@index([admin_id])
+  @@map("companion_audit_records")
+}
+
+// ============================================================
+// 订单主表
+// ============================================================
+
+model Order {
+  id           String      @id @default(uuid())
+  order_no     String      @unique              // 业务订单号（展示用，如：PP202401010001）
+  user_id      String
+  companion_id String?                          // 指定单有值，悬赏单接单后赋值
+  service_id   String?                          // 对应 companion_services.id 快照
+
+  order_type   OrderType   @default(direct)
+  status       OrderStatus @default(pending_payment)
+
+  // 服务信息快照（下单时锁定，不受后续改价影响）
+  service_name  String
+  hourly_price  Int                              // 时价快照（分）
+  duration      Int                              // 购买时长（小时）
+  total_amount  Int                              // 总金额（分）= hourly_price * duration
+
+  // 支付信息
+  paid_amount   Int         @default(0)          // 实付金额（分，含续费）
+  refund_amount Int         @default(0)          // 已退金额（分）
+
+  // 时间节点
+  payment_deadline  DateTime?  @db.Timestamptz   // 支付截止时间（30min）
+  accept_deadline   DateTime?  @db.Timestamptz   // 接单截止时间（15min）
+  service_start_at  DateTime?  @db.Timestamptz   // 服务开始时间
+  service_end_at    DateTime?  @db.Timestamptz   // 服务结束时间（预计）
+  completed_at      DateTime?  @db.Timestamptz   // 实际完成时间
+  cancelled_at      DateTime?  @db.Timestamptz
+
+  // 备注
+  user_remark   String?                          // 用户备注
+  admin_note    String?                          // Admin 内部备注
+
+  // Admin 干预信息
+  intervened_by       String?                    // admin_user.id
+  intervention_type   String?                    // force_cancel / force_complete
+  dispute_reason      String?
+  cancel_reason       String?
+  cancel_by           String?                    // user / companion / admin / system
+
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @updatedAt @db.Timestamptz
+
+  // 关联
+  user            User                 @relation("UserOrders", fields: [user_id], references: [id])
+  companion       Companion?           @relation("CompanionOrders", fields: [companion_id], references: [id])
+  operation_logs  OrderOperationLog[]
+  renewals        OrderRenewal[]
+  payment_records PaymentRecord[]
+
+  @@index([user_id, status])
+  @@index([companion_id, status])
+  @@index([companion_id, status, created_at])
+  @@index([status])
+  @@index([order_no])
+  @@index([created_at])
+  @@map("orders")
+}
+
+// ============================================================
+// 订单操作日志（append-only，纠纷证据）
+// ============================================================
+
+model OrderOperationLog {
+  id            String       @id @default(uuid())
+  order_id      String
+  operator_type OperatorType
+  operator_id   String?                          // userId / companionId / adminId，system 时为 null
+  action        String                           // 操作动作，如 create_order / accept / start_service / cancel
+  from_status   OrderStatus?
+  to_status     OrderStatus?
+  note          String?
+  metadata      Json?        @db.JsonB
+
+  created_at DateTime @default(now()) @db.Timestamptz
+
+  order Order @relation(fields: [order_id], references: [id])
+
+  @@index([order_id])
+  @@index([operator_type, operator_id])
+  @@map("order_operation_logs")
+}
+
+// ============================================================
+// 续费记录
+// ============================================================
+
+model OrderRenewal {
+  id            String          @id @default(uuid())
+  order_id      String
+  added_hours   Int                              // 续费时长（小时）
+  added_amount  Int                              // 续费金额（分）
+  out_trade_no  String          @unique          // 微信支付单号，保证幂等
+  status        RenewalStatus   @default(pending)  // 续费状态
+  transaction_id String?                          // 微信支付流水号
+  paid_at       DateTime?       @db.Timestamptz  // 支付时间
+
+  created_at DateTime @default(now()) @db.Timestamptz
+
+  order Order @relation(fields: [order_id], references: [id])
+
+  @@index([order_id])
+  @@index([status])
+  @@map("order_renewals")
+}
+
+// ============================================================
+// 支付记录
+// ============================================================
+
+model PaymentRecord {
+  id           String   @id @default(uuid())
+  order_id     String
+  out_trade_no String   @unique              // 商户订单号（唯一约束保证幂等）
+  transaction_id String?                    // 微信支付流水号（支付成功后写入）
+  amount       Int                          // 支付金额（分）
+  status       String   @default("pending") // pending / paid / failed / refunded
+  pay_time     DateTime? @db.Timestamptz
+
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @updatedAt @db.Timestamptz
+
+  order   Order          @relation(fields: [order_id], references: [id])
+  refunds RefundRecord[]
+
+  @@index([order_id])
+  @@index([out_trade_no])
+  @@map("payment_records")
+}
+
+// ============================================================
+// 退款记录
+// ============================================================
+
+model RefundRecord {
+  id              String   @id @default(uuid())
+  payment_id      String
+  out_refund_no   String   @unique              // 商户退款单号
+  refund_id       String?                       // 微信退款单号
+  refund_amount   Int                           // 退款金额（分）
+  reason          String?
+  status          String   @default("pending")  // pending / success / failed
+
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @updatedAt @db.Timestamptz
+
+  payment PaymentRecord @relation(fields: [payment_id], references: [id])
+
+  @@index([payment_id])
+  @@map("refund_records")
+}
+
+// ============================================================
+// 保证金流水
+// ============================================================
+
+model DepositTransaction {
+  id              String          @id @default(uuid())
+  companion_id    String
+  type            TransactionType
+  amount          Int                              // 变动金额（分，正数）
+  balance_after   Int                              // 变动后余额（分）
+  out_trade_no    String?         @unique          // 微信支付单号（缴纳时有值）
+  transaction_id  String?                          // 微信支付流水号
+  reason          String?                          // 扣除原因
+  operator_id     String?                          // 操作人（Admin 审批时）
+  note            String?
+
+  created_at DateTime @default(now()) @db.Timestamptz
+
+  companion Companion @relation(fields: [companion_id], references: [id])
+
+  @@index([companion_id])
+  @@index([type])
+  @@map("deposit_transactions")
+}
+
+// ============================================================
+// 消息会话
+// ============================================================
+
+model MessageSession {
+  id           String   @id @default(uuid())
+  user_id      String
+  companion_id String
+  last_message String?
+  last_msg_at  DateTime? @db.Timestamptz
+  unread_count_user      Int @default(0)      // 用户未读数
+  unread_count_companion Int @default(0)      // 陪玩师未读数
+
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @updatedAt @db.Timestamptz
+
+  user      User      @relation("UserSessions", fields: [user_id], references: [id])
+  companion Companion @relation("CompanionSessions", fields: [companion_id], references: [id])
+  messages  Message[]
+
+  @@unique([user_id, companion_id])
+  @@index([user_id, last_msg_at])
+  @@index([companion_id, last_msg_at])
+  @@map("message_sessions")
+}
+
+// ============================================================
+// 消息
+// ============================================================
+
+model Message {
+  id           String      @id @default(uuid())
+  session_id   String
+  msg_type     MessageType @default(text)
+
+  // 发送方（user 或 companion 二选一）
+  sender_user_id      String?
+  sender_companion_id String?
+
+  content    String
+  is_read    Boolean  @default(false)
+  read_at    DateTime? @db.Timestamptz
+
+  created_at DateTime @default(now()) @db.Timestamptz
+
+  session            MessageSession @relation(fields: [session_id], references: [id], onDelete: Cascade)
+  sender_user        User?          @relation("UserMessages", fields: [sender_user_id], references: [id])
+  sender_companion   Companion?     @relation("CompanionMessages", fields: [sender_companion_id], references: [id])
+
+  @@index([session_id, created_at])
+  @@index([sender_user_id])
+  @@index([sender_companion_id])
+  @@map("messages")
+}
+
+// ============================================================
+// 通知表（用户和陪玩师共用）
+// ============================================================
+
+model Notification {
+  id              String           @id @default(uuid())
+  user_id         String?          // C端用户ID（可选）
+  companion_id    String?          // B端陪玩师ID（可选）
+  type            NotificationType // order | system | activity | message
+  title           String
+  content         String
+  is_read         Boolean          @default(false)
+  read_at         DateTime?        @db.Timestamptz
+  related_id      String?          // 关联订单ID或消息ID等
+  related_type    String?          // 关联类型：order, message, etc.
+  extra_data      Json?            @db.JsonB // 扩展数据
+
+  created_at DateTime @default(now()) @db.Timestamptz
+
+  user      User?      @relation("UserNotifications", fields: [user_id], references: [id])
+  companion Companion? @relation("CompanionNotifications", fields: [companion_id], references: [id])
+
+  @@index([user_id, created_at])
+  @@index([companion_id, created_at])
+  @@index([user_id, is_read])
+  @@index([companion_id, is_read])
+  @@index([type])
+  @@map("notifications")
+}
+
+// ============================================================
+// 收益结算表
+// ============================================================
+
+model Settlement {
+  id              String          @id @default(uuid())
+  companion_id    String
+  order_id        String?
+  type            SettlementType  // order_income | bonus | penalty | refund
+  amount          Int                          // 金额（分，正数表示收入，负数表示支出）
+  description     String
+  balance_before  Int                          // 变动前余额
+  balance_after   Int                          // 变动后余额
+  
+  // 订单相关信息（冗余存储，方便查询）
+  order_no        String?
+  service_name    String?
+  customer_name   String?
+  duration        Int?                         // 服务时长（小时）
+  
+  created_at      DateTime @default(now()) @db.Timestamptz
+
+  companion       Companion @relation(fields: [companion_id], references: [id])
+
+  @@index([companion_id, created_at])
+  @@index([companion_id, type])
+  @@index([order_id])
+  @@index([created_at])
+  @@map("settlements")
+}
+
+// ============================================================
+// 平台配置（JSONB，存规则）
+// ============================================================
+
+model PlatformConfig {
+  id          String   @id @default(uuid())
+  config_key  String   @unique              // 如：order_timeout / fee_rate / deposit_rules
+  config_value Json    @db.JsonB
+  description String?
+
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @updatedAt @db.Timestamptz
+
+  @@map("platform_configs")
+}
+
+// ============================================================
+// 管理员账号
+// ============================================================
+
+model AdminUser {
+  id           String    @id @default(uuid())
+  username     String    @unique
+  password     String                           // bcrypt hash，cost=12
+  role         AdminRole @default(viewer)
+  display_name String?
+  is_active    Boolean   @default(true)
+  last_login_at DateTime? @db.Timestamptz
+
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @updatedAt @db.Timestamptz
+
+  // 关联
+  audit_records CompanionAuditRecord[]
+  operation_logs AdminOperationLog[]
+
+  @@map("admin_users")
+}
+
+// ============================================================
+// Admin 操作日志
+// ============================================================
+
+model AdminOperationLog {
+  id         String @id @default(uuid())
+  admin_id   String
+  action     String                            // 操作动作描述
+  target     String?                           // 操作对象（如 order:xxx, companion:xxx）
+  before     Json?  @db.JsonB                  // 操作前快照
+  after      Json?  @db.JsonB                  // 操作后快照
+  ip         String?
+  created_at DateTime @default(now()) @db.Timestamptz
+
+  admin_user AdminUser @relation(fields: [admin_id], references: [id])
+
+  @@index([admin_id])
+  @@index([created_at])
+  @@map("admin_operation_logs")
+}
+
+// ============================================================
+// 公告
+// ============================================================
+
+model Announcement {
+  id              String   @id @default(uuid())
+  title           String
+  content         String
+  target_audience NotificationTarget   @default(all)     // all / user / companion
+  is_active       Boolean  @default(true)
+  published_at    DateTime? @db.Timestamptz
+  expires_at      DateTime? @db.Timestamptz
+  sort_order      Int      @default(0)         // 排序权重
+
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @updatedAt @db.Timestamptz
+
+  @@index([target_audience, is_active, published_at])
+  @@map("announcements")
+}
+
+// ============================================================
+// 评价表（用户评价陪玩师）
+// ============================================================
+
+model Review {
+  id           String   @id @default(uuid())
+  order_id     String   @unique              // 关联订单
+  user_id      String                        // 评价用户
+  companion_id String                        // 被评价陪玩师
+  rating       Int      @default(5)          // 评分 1-5
+  content      String?                       // 评价内容
+  is_auto      Boolean  @default(false)      // 是否系统自动好评
+
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @updatedAt @db.Timestamptz
+
+  @@index([user_id])
+  @@index([companion_id])
+  @@index([created_at])
+  @@map("reviews")
+}
+
+// ============================================================
+// 每日统计
+// ============================================================
+
+model DailyStat {
+  id              String   @id @default(uuid())
+  stat_date       String                        // YYYY-MM-DD
+  stat_hour       Int?                          // 0-23，null 表示全天汇总
+
+  // 订单数据
+  order_count     Int      @default(0)
+  completed_count Int      @default(0)
+  cancelled_count Int      @default(0)
+  gmv             Int      @default(0)          // 当日 GMV（分）
+
+  // 用户数据
+  new_users       Int      @default(0)
+  active_users    Int      @default(0)
+  new_companions  Int      @default(0)
+
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @updatedAt @db.Timestamptz
+
+  @@unique([stat_date, stat_hour])
+  @@index([stat_date])
+  @@map("daily_stats")
+}
+
+// ============================================================
+// 订单实时位置表（快速查询最新位置）
+// ============================================================
+
+model OrderCurrentLocation {
+  id                  String   @id @default(uuid())
+  order_id            String   @unique              // 关联订单
+  companion_id        String                        // 搭子ID
+  latitude            Decimal  @db.Decimal(10, 8)   // 纬度
+  longitude           Decimal  @db.Decimal(11, 8)   // 经度
+  accuracy            Float?                        // GPS精度（米）
+  speed               Float    @default(0)          // 速度（米/秒）
+  distance_to_target  Int      @default(0)          // 距离目的地（米）
+  has_arrived         Boolean  @default(false)      // 是否到达100米内
+  estimated_arrival   DateTime?                     // 预计到达时间
+
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @updatedAt @db.Timestamptz
+
+  @@index([companion_id])
+  @@index([updated_at])
+  @@map("order_current_locations")
+}
+
+// ============================================================
+// 订单轨迹历史表（每5秒一个点，保留30天）
+// ============================================================
+
+model OrderLocationHistory {
+  id          String   @id @default(uuid())
+  order_id    String                              // 关联订单
+  latitude    Decimal  @db.Decimal(10, 8)         // 纬度
+  longitude   Decimal  @db.Decimal(11, 8)         // 经度
+  speed       Float    @default(0)                // 该点时的速度
+
+  recorded_at DateTime @default(now()) @db.Timestamptz
+
+  @@index([order_id, recorded_at])
+  @@index([recorded_at])
+  @@map("order_location_histories")
+}
+
+// ============================================================
+// 提现申请表
+// ============================================================
+
+model Withdrawal {
+  id                  String           @id @default(uuid())
+  companion_id        String
+  amount              Int                              // 提现金额（分，后端计算）
+  status              WithdrawalStatus @default(pending)
+  
+  // 微信企业付款信息
+  partner_trade_no    String?         @unique          // 商户订单号
+  payment_no          String?                          // 微信付款单号
+  payment_time        DateTime?     @db.Timestamptz   // 微信付款时间
+  
+  // 审核信息
+  reviewed_by         String?                          // 审核人admin_user.id
+  reviewed_at         DateTime?     @db.Timestamptz
+  review_note         String?                          // 审核备注
+  
+  // 失败信息
+  fail_reason         String?                          // 失败原因
+  
+  created_at          DateTime @default(now()) @db.Timestamptz
+  updated_at          DateTime @updatedAt @db.Timestamptz
+
+  companion           Companion @relation(fields: [companion_id], references: [id])
+
+  @@index([companion_id])
+  @@index([status])
+  @@index([created_at])
+  @@map("withdrawals")
+}
+
+// ============================================================
+// 系统配置表
+// ============================================================
+
+model SystemConfig {
+  id          String   @id @default(uuid())
+  key         String   @unique                          // 配置键名
+  value       Json     @db.JsonB                        // 配置值（JSON格式）
+  description String?                                   // 配置描述
+  updated_by  String?                                   // 最后修改人
+  created_at  DateTime @default(now()) @db.Timestamptz
+  updated_at  DateTime @updatedAt @db.Timestamptz
+
+  @@index([key])
+  @@map("system_configs")
+}

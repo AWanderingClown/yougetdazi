@@ -1,0 +1,272 @@
+/* pages/settings/settings.wxss */
+page {
+  background-color: #f5f5f5;
+}
+
+.container {
+  padding-bottom: 40rpx;
+}
+
+/* 分组样式 */
+.setting-group {
+  margin-bottom: 20rpx;
+}
+
+.group-title {
+  padding: 30rpx 30rpx 15rpx;
+  font-size: 26rpx;
+  color: #888;
+  font-weight: 500;
+}
+
+.group-content {
+  background-color: #fff;
+}
+
+/* 设置项样式 */
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.setting-item:last-child {
+  border-bottom: none;
+}
+
+.setting-item:active {
+  background-color: #f9f9f9;
+}
+
+.item-left {
+  display: flex;
+  align-items: center;
+}
+
+.item-icon {
+  font-size: 36rpx;
+  margin-right: 20rpx;
+  width: 40rpx;
+  text-align: center;
+}
+
+.item-label {
+  font-size: 30rpx;
+  color: #333;
+}
+
+.item-right {
+  display: flex;
+  align-items: center;
+}
+
+.item-value {
+  font-size: 28rpx;
+  color: #888;
+  margin-right: 15rpx;
+}
+
+.item-value.verified {
+  color: #07c160;
+}
+
+.item-value.unverified {
+  color: #ff9500;
+}
+
+.item-arrow {
+  font-size: 28rpx;
+  color: #c5c5c5;
+  font-family: Arial, sans-serif;
+}
+
+/* switch组件样式 */
+switch {
+  transform: scale(0.9);
+}
+
+/* 退出登录区域 */
+.logout-section {
+  margin-top: 40rpx;
+  padding: 0 30rpx;
+}
+
+.logout-btn {
+  width: 100%;
+  height: 90rpx;
+  line-height: 90rpx;
+  background-color: #fff;
+  color: #ff4d4f;
+  font-size: 32rpx;
+  border-radius: 12rpx;
+  border: none;
+  font-weight: 500;
+}
+
+.logout-btn::after {
+  border: none;
+}
+
+.logout-btn:active {
+  background-color: #f9f9f9;
+}
+
+/* 版本信息 */
+.version-info {
+  text-align: center;
+  font-size: 24rpx;
+  color: #bbb;
+  margin-top: 30rpx;
+}
+
+/* 弹窗样式 */
+.modal-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+.modal-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 560rpx;
+  background-color: #fff;
+  border-radius: 24rpx;
+  z-index: 1001;
+  overflow: hidden;
+}
+
+.modal-title {
+  text-align: center;
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #333;
+  padding: 35rpx 30rpx 20rpx;
+}
+
+.modal-body {
+  text-align: center;
+  font-size: 30rpx;
+  color: #666;
+  padding: 0 40rpx 35rpx;
+  line-height: 1.5;
+}
+
+.modal-footer {
+  display: flex;
+  border-top: 1rpx solid #e5e5e5;
+}
+
+.modal-footer.single-btn {
+  justify-content: center;
+}
+
+.modal-btn {
+  flex: 1;
+  text-align: center;
+  padding: 25rpx 0;
+  font-size: 32rpx;
+  font-weight: 500;
+}
+
+.modal-btn.cancel {
+  color: #333;
+  border-right: 1rpx solid #e5e5e5;
+}
+
+.modal-btn.confirm {
+  color: #576b95;
+}
+
+.modal-btn.logout-confirm {
+  color: #ff4d4f;
+}
+
+.modal-btn:active {
+  background-color: #f9f9f9;
+}
+
+/* 可见性选择弹窗 */
+.visibility-modal {
+  width: 600rpx;
+}
+
+.visibility-options {
+  padding: 10rpx 0;
+}
+
+.visibility-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 25rpx 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.visibility-option:last-child {
+  border-bottom: none;
+}
+
+.visibility-option:active {
+  background-color: #f9f9f9;
+}
+
+.visibility-option.selected {
+  background-color: #f0fff4;
+}
+
+.option-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.option-label {
+  font-size: 30rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.option-desc {
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 6rpx;
+}
+
+.option-check {
+  font-size: 32rpx;
+  color: #07c160;
+  font-weight: bold;
+}
+
+/* 加载中样式 */
+.loading-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: #666;
+}
+
+
+/* 安全区域适配 - 自动添加 */
+.safe-area-bottom {
+  height: calc(120rpx + env(safe-area-inset-bottom));
+}

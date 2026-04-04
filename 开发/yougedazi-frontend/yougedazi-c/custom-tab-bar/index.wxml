@@ -1,0 +1,28 @@
+<view class="tab-bar">
+  <view class="tab-bar-bg"></view>
+  
+  <view class="tab-bar-item {{selected === index ? 'active' : ''}}" 
+        wx:for="{{list}}" 
+        wx:key="index"
+        bindtap="switchTab" 
+        data-index="{{index}}"
+        data-path="{{item.pagePath}}">
+    
+    <!-- 普通按钮 -->
+    <block wx:if="{{index !== 2}}">
+      <view class="tab-icon-wrapper">
+        <image class="tab-icon" src="{{selected === index ? item.selectedIcon : item.icon}}" mode="aspectFit"/>
+      </view>
+      <text class="tab-text {{selected === index ? 'active' : ''}}">{{item.text}}</text>
+    </block>
+    
+    <!-- 中间突出的悬赏任务按钮 - 只放大图标 -->
+    <block wx:if="{{index === 2}}">
+      <view class="publish-icon-wrapper">
+        <image class="publish-icon {{selected === index ? 'active' : ''}}" src="{{selected === index ? item.selectedIcon : item.icon}}" mode="aspectFit"/>
+      </view>
+      <text class="publish-text {{selected === index ? 'active' : ''}}">{{item.text}}</text>
+    </block>
+    
+  </view>
+</view>

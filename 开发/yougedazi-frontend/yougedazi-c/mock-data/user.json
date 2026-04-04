@@ -1,0 +1,21 @@
+{
+  "currentUser": {
+    "id": "user-001",
+    "openid": "oG4kX5Kx8mN2pL9qR7sT",
+    "nickname": "张三",
+    "avatar": "https://example.com/user-avatar.jpg",
+    "phone": "13800138000",
+    "gender": "male",
+    "age": 28,
+    "is_banned": false,
+    "real_name_verified": true,
+    "real_name": "张三",
+    "id_card": "310101199001011234",
+    "created_at": "2026-01-15T08:00:00Z"
+  },
+  "token": {
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test",
+    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.refresh",
+    "expires_in": 86400
+  }
+}

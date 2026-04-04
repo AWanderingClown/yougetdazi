@@ -1,0 +1,31 @@
+{
+  "name": "yougedazi-c",
+  "version": "1.0.0",
+  "description": "有个搭子 C端微信小程序单元测试",
+  "scripts": {
+    "test": "jest --verbose",
+    "test:coverage": "jest --coverage --verbose",
+    "test:watch": "jest --watch"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/tests/**/*.test.js",
+      "**/test/**/*.test.js"
+    ],
+    "collectCoverageFrom": [
+      "utils/constants.js"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 80,
+        "functions": 80,
+        "lines": 80,
+        "statements": 80
+      }
+    }
+  }
+}

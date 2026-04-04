@@ -1,0 +1,19 @@
+<view class="container">
+  <!-- 加载中 -->
+  <view class="loading" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <!-- 内容区域 -->
+  <view class="content" wx:if="{{!loading && content}}">
+    <view class="update-time" wx:if="{{updateTime}}">最后更新：{{updateTime}}</view>
+    <rich-text nodes="{{content}}"></rich-text>
+  </view>
+
+  <!-- 加载失败 -->
+  <view class="error" wx:if="{{!loading && !content}}">
+    <text class="error-text">内容加载失败</text>
+    <button class="btn-retry" bindtap="loadContent">重新加载</button>
+  </view>
+</view>

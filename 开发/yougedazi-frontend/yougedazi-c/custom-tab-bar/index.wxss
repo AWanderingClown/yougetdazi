@@ -1,0 +1,103 @@
+.tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: calc(144rpx + constant(safe-area-inset-bottom));
+  height: calc(144rpx + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  padding-bottom: constant(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 9999;
+}
+
+.tab-bar-bg {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: calc(144rpx + constant(safe-area-inset-bottom));
+  height: calc(144rpx + env(safe-area-inset-bottom));
+  background: #ffffff;
+  border-top: 1rpx solid #e8e8e8;
+}
+
+.tab-bar-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 144rpx;
+  padding-bottom: 12rpx;
+  position: relative;
+  z-index: 1;
+}
+
+/* 普通按钮样式 */
+.tab-icon-wrapper {
+  width: 80rpx;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 6rpx;
+}
+
+.tab-icon {
+  width: 64rpx;
+  height: 64rpx;
+  opacity: 0.7;
+  transition: all 0.3s;
+}
+
+.tab-bar-item.active .tab-icon {
+  opacity: 1;
+}
+
+.tab-text {
+  font-size: 22rpx;
+  color: #999;
+  transition: all 0.3s;
+  line-height: 1;
+}
+
+.tab-text.active {
+  color: #7B68EE;
+  font-weight: 500;
+}
+
+/* 中间悬赏任务按钮 */
+.publish-icon-wrapper {
+  width: 108rpx;
+  height: 108rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rpx;
+  margin-top: -24rpx;
+}
+
+.publish-icon {
+  width: 96rpx;
+  height: 96rpx;
+  transition: all 0.3s;
+}
+
+.publish-icon.active {
+  transform: scale(1.05);
+}
+
+.publish-text {
+  font-size: 22rpx;
+  color: #999;
+  line-height: 1;
+  margin-top: 2rpx;
+}
+
+.publish-text.active {
+  color: #7B68EE;
+  font-weight: 500;
+}

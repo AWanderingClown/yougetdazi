@@ -1,0 +1,35 @@
+<!-- pages/profile/profile.wxml -->
+<view class="container">
+  <!-- 用户信息卡片 -->
+  <view class="user-card">
+    <view class="user-info" bindtap="onEditProfile">
+      <image class="user-avatar" src="{{userInfo.avatar}}" mode="aspectFill"/>
+      <view class="user-meta">
+        <text class="user-nickname">{{userInfo.nickname}}</text>
+        <text class="user-phone">{{userInfo.phone}}</text>
+        <text class="edit-hint">点击编辑个人资料</text>
+      </view>
+      <text class="edit-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 功能菜单 -->
+  <view class="menu-section">
+    <view 
+      class="menu-item" 
+      wx:for="{{menuList}}" 
+      wx:key="id"
+      bindtap="onMenuTap"
+      data-id="{{item.id}}"
+      data-url="{{item.url}}"
+      data-name="{{item.name}}"
+    >
+      <text class="menu-icon">{{item.icon}}</text>
+      <text class="menu-name">{{item.name}}</text>
+      <text class="menu-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 底部安全区域 -->
+  <view class="safe-area-bottom"></view>
+</view>

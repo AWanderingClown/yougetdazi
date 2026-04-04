@@ -1,0 +1,72 @@
+<!-- pages/task-detail/task-detail.wxml - 任务详情（从分享进入） -->
+<view class="container">
+  <!-- 顶部渐变背景 -->
+  <view class="header-gradient">
+    <view class="header-content">
+      <text class="header-title">悬赏任务</text>
+      <text class="header-subtitle">来自好友分享</text>
+    </view>
+  </view>
+
+  <!-- 任务信息卡片 -->
+  <view class="task-card" wx:if="{{taskInfo}}">
+    <view class="task-header">
+      <view class="service-type">{{taskInfo.serviceType}}</view>
+      <view class="price-tag">¥{{taskInfo.hourlyRate}}/小时</view>
+    </view>
+    
+    <view class="task-info">
+      <view class="info-item">
+        <text class="info-label">服务时长</text>
+        <text class="info-value">{{taskInfo.duration}}小时</text>
+      </view>
+      <view class="info-item">
+        <text class="info-label">需要人数</text>
+        <text class="info-value">{{taskInfo.requiredCount}}人</text>
+      </view>
+      <view class="info-item">
+        <text class="info-label">预约时间</text>
+        <text class="info-value">{{taskInfo.appointmentDate}} {{taskInfo.appointmentTime}}</text>
+      </view>
+      <view class="info-item">
+        <text class="info-label">服务地址</text>
+        <text class="info-value">{{taskInfo.address}}</text>
+      </view>
+    </view>
+    
+    <view class="task-description" wx:if="{{taskInfo.description}}">
+      <text class="desc-label">任务描述</text>
+      <text class="desc-content">{{taskInfo.description}}</text>
+    </view>
+    
+    <view class="task-status">
+      <text class="status-text">{{taskInfo.statusText}}</text>
+    </view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view class="loading-state" wx:if="{{isLoading}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <!-- 底部操作区 -->
+  <view class="bottom-section" wx:if="{{!isLoading && taskInfo}}">
+    <view class="tips">
+      <text class="tips-icon">💡</text>
+      <text class="tips-text">此任务需要搭子身份才能抢单</text>
+    </view>
+    
+    <view class="btn-group">
+      <button class="btn-primary" bindtap="onGoToOrderDetail">查看订单详情</button>
+      <button class="btn-secondary" bindtap="onGoHome">返回首页</button>
+    </view>
+  </view>
+
+  <!-- 错误状态 -->
+  <view class="error-state" wx:if="{{!isLoading && !taskInfo}}">
+    <text class="error-icon">⚠️</text>
+    <text class="error-text">任务不存在或已过期</text>
+    <button class="btn-secondary" bindtap="onGoHome">返回首页</button>
+  </view>
+</view>

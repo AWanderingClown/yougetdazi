@@ -1,0 +1,171 @@
+<view class="container">
+  <view class="header">
+    <view class="header-title">发布悬赏</view>
+    <view class="header-desc">填写需求，等待搭子抢单</view>
+  </view>
+
+  <view class="form-card">
+    <!-- 服务类型 -->
+    <view class="form-item">
+      <view class="form-label required">服务类型</view>
+      <view class="form-value" bindtap="onSelectServiceType">
+        <text class="placeholder {{serviceType ? 'hidden' : ''}}">请选择服务类型</text>
+        <text class="value-text">{{serviceType}}</text>
+        <text class="icon-arrow">›</text>
+      </view>
+    </view>
+
+    <!-- 每小时金额 -->
+    <view class="form-item">
+      <view class="form-label required">每小时金额</view>
+      <view class="form-input-group">
+        <input class="form-input price-input" type="digit" placeholder="请输入金额" value="{{hourlyRate}}" bindinput="onHourlyRateInput"/>
+        <text class="input-unit">元/小时</text>
+      </view>
+    </view>
+
+    <!-- 服务时长 -->
+    <view class="form-item">
+      <view class="form-label required">服务时长</view>
+      <view class="form-input-group">
+        <input class="form-input duration-input" type="number" placeholder="请输入时长" value="{{duration}}" bindinput="onDurationInput"/>
+        <text class="input-unit">小时</text>
+      </view>
+    </view>
+
+    <!-- 需要人数 -->
+    <view class="form-item">
+      <view class="form-label required">需要人数</view>
+      <view class="count-selector">
+        <view class="count-btn {{requiredCount <= 1 ? 'disabled' : ''}}" bindtap="onDecreaseCount">-</view>
+        <view class="count-value">{{requiredCount}}人</view>
+        <view class="count-btn {{requiredCount >= 10 ? 'disabled' : ''}}" bindtap="onIncreaseCount">+</view>
+      </view>
+    </view>
+
+    <!-- 分割线 -->
+    <view class="divider"></view>
+
+    <!-- 预约时间 -->
+    <view class="form-item">
+      <view class="form-label required">预约时间</view>
+      <picker mode="multiSelector" range="{{timeRange}}" value="{{timeIndex}}" bindchange="onTimeChange">
+        <view class="form-value">
+          <text class="placeholder {{appointmentTime ? 'hidden' : ''}}">请选择预约时间</text>
+          <text class="value-text">{{appointmentTime}}</text>
+          <text class="icon-arrow">›</text>
+        </view>
+      </picker>
+    </view>
+
+    <!-- 服务地址 -->
+    <view class="form-item">
+      <view class="form-label required">服务地址</view>
+      <view class="form-value" bindtap="onSelectAddress">
+        <text class="placeholder {{address ? 'hidden' : ''}}">请选择服务地址</text>
+        <text class="value-text">{{address}}</text>
+        <text class="icon-arrow">›</text>
+      </view>
+    </view>
+
+    <!-- 详细需求 -->
+    <view class="form-item block">
+      <view class="form-label">详细需求</view>
+      <textarea class="form-textarea" placeholder="请描述您的具体需求，例如：需要搭子会玩什么游戏、性格要求等（选填）" value="{{description}}" bindinput="onDescriptionInput" maxlength="200"/>
+      <view class="textarea-count">{{description.length || 0}}/200</view>
+    </view>
+
+    <!-- 分割线 -->
+    <view class="divider"></view>
+
+    <!-- 性别要求 -->
+    <view class="form-item">
+      <view class="form-label">性别要求</view>
+      <view class="radio-group">
+        <view class="radio-item {{gender === 'any' ? 'active' : ''}}" bindtap="onGenderChange" data-value="any">不限</view>
+        <view class="radio-item {{gender === 'male' ? 'active' : ''}}" bindtap="onGenderChange" data-value="male">男</view>
+        <view class="radio-item {{gender === 'female' ? 'active' : ''}}" bindtap="onGenderChange" data-value="female">女</view>
+      </view>
+    </view>
+
+    <!-- 金额预览 -->
+    <view class="amount-preview">
+      <view class="amount-label">预计支付</view>
+      <view class="amount-value">
+        <text class="amount-symbol">¥</text>
+        <text class="amount-number">{{totalAmount || 0}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 发布按钮 -->
+  <view class="btn-section">
+    <view class="submit-btn {{canSubmit ? '' : 'disabled'}}" bindtap="onSubmit">发布悬赏</view>
+    <view class="submit-tip">发布后将同步至任务广场，先抢先得</view>
+  </view>
+</view>
+
+<!-- 服务类型选择弹窗 -->
+<view class="popup {{showServicePopup ? 'show' : ''}}" bindtap="onClosePopup">
+  <view class="popup-content" catchtap="onPopupContentTap">
+    <view class="popup-header">
+      <view class="popup-title">选择服务类型</view>
+      <view class="popup-close" bindtap="onClosePopup">×</view>
+    </view>
+    <scroll-view class="popup-body" scroll-y>
+      <view class="service-list">
+        <view class="service-item {{serviceType === item.name ? 'active' : ''}}" wx:for="{{serviceTypes}}" wx:key="id" bindtap="onSelectService" data-item="{{item}}">
+          <image class="service-icon" src="{{item.icon}}" mode="aspectFit"/>
+          <text class="service-name">{{item.name}}</text>
+          <text class="service-check {{serviceType === item.name ? 'show' : ''}}">✓</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+</view>
+
+<!-- 支付确认弹窗 -->
+<view class="modal {{showPayModal ? 'show' : ''}}" bindtap="onClosePayModal">
+  <view class="modal-mask"></view>
+  <view class="modal-content" catchtap="onPopupContentTap">
+    <view class="modal-header">
+      <view class="modal-title">确认支付</view>
+      <view class="modal-close" bindtap="onClosePayModal">×</view>
+    </view>
+    <view class="modal-body">
+      <view class="pay-amount">
+        <text class="pay-label">支付金额</text>
+        <view class="pay-value">
+          <text class="pay-symbol">¥</text>
+          <text class="pay-number">{{totalAmount}}</text>
+        </view>
+      </view>
+      <view class="pay-info">
+        <text class="pay-item">{{serviceType}} · {{duration}}小时 · {{requiredCount}}人</text>
+        <text class="pay-tip">发布后资金将冻结，接单成功后支付给搭子</text>
+      </view>
+    </view>
+    <view class="modal-footer">
+      <view class="modal-btn cancel" bindtap="onClosePayModal">取消</view>
+      <view class="modal-btn confirm" bindtap="onConfirmPay">确认支付</view>
+    </view>
+  </view>
+</view>
+
+<!-- 发布成功弹窗 -->
+<view class="modal {{showSuccessModal ? 'show' : ''}}">
+  <view class="modal-mask"></view>
+  <view class="modal-content success-content">
+    <view class="success-icon">✓</view>
+    <view class="success-title">任务已发布</view>
+    <view class="success-desc">等待搭子接单</view>
+    <view class="countdown-section">
+      <text class="countdown-label">剩余时间</text>
+      <text class="countdown-value">{{countdownText}}</text>
+      <text class="countdown-tip">{{countdown > 0 ? '30分钟内无搭子接单，资金将原路退回' : '已超时，资金正在退回...'}}</text>
+    </view>
+    <view class="success-footer">
+      <view class="success-btn primary" bindtap="onViewOrder">查看订单</view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,146 @@
+/* pages/message/message.wxss */
+
+.container {
+  min-height: 100vh;
+  background: #f8f8f8;
+  padding-bottom: calc(120rpx + env(safe-area-inset-bottom));
+}
+
+.message-list {
+  background: #ffffff;
+  margin-top: 20rpx;
+}
+
+.message-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 50rpx 24rpx 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.message-item:active {
+  background: #f5f5f5;
+}
+
+/* 系统通知头像 */
+.system-avatar {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7B68EE 0%, #9B59B6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 24rpx;
+  flex-shrink: 0;
+}
+
+.system-avatar image {
+  width: 60rpx;
+  height: 60rpx;
+}
+
+/* 普通头像 */
+.avatar-wrapper {
+  position: relative;
+  margin-right: 24rpx;
+  flex-shrink: 0;
+}
+
+.avatar {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+}
+
+.online-dot {
+  position: absolute;
+  bottom: 4rpx;
+  right: 4rpx;
+  width: 18rpx;
+  height: 18rpx;
+  border-radius: 50%;
+  background: #52C41A;
+  border: 3rpx solid #ffffff;
+}
+
+/* 消息内容 */
+.message-content {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8rpx;
+}
+
+.nickname {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.nickname.system {
+  color: #7B68EE;
+}
+
+.time {
+  font-size: 22rpx;
+  color: #999;
+  flex-shrink: 0;
+  margin-left: 16rpx;
+}
+
+.message-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.last-message {
+  flex: 1;
+  font-size: 26rpx;
+  color: #666;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 16rpx;
+}
+
+.badge {
+  min-width: 36rpx;
+  height: 36rpx;
+  padding: 0 10rpx;
+  background: #FF4D4F;
+  color: #fff;
+  font-size: 22rpx;
+  border-radius: 18rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  right: 0;
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 200rpx 40rpx;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #999;
+}
+
+.safe-area-bottom {
+  height: calc(120rpx + env(safe-area-inset-bottom));
+}

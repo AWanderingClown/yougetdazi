@@ -1,0 +1,84 @@
+<!-- pages/review/review.wxml -->
+<view class="container">
+  <!-- 顶部导航 -->
+  <view class="nav-bar" style="padding-top: {{statusBarHeight}}px; height: {{navBarHeight}}px;">
+    <view class="back-btn" bindtap="goBack">
+      <text class="back-icon">‹</text>
+    </view>
+    <view class="nav-title">评价服务</view>
+    <view class="right-placeholder"></view>
+  </view>
+
+  <!-- 评价内容 -->
+  <view class="review-content">
+    <!-- 搭子信息 -->
+    <view class="companion-section">
+      <image class="companion-avatar" src="{{companionInfo.avatar}}" mode="aspectFill"/>
+      <view class="companion-info">
+        <text class="companion-name">{{companionInfo.nickname}}</text>
+        <text class="service-info">{{serviceType}} · {{duration}}小时</text>
+      </view>
+    </view>
+
+    <!-- 评分 -->
+    <view class="rating-section">
+      <text class="section-title">服务评分</text>
+      <view class="star-wrapper">
+        <view 
+          class="star-item"
+          wx:for="{{[1,2,3,4,5]}}"
+          wx:key="*this"
+          bindtap="onStarTap"
+          data-star="{{item}}"
+        >
+          <text class="star {{rating >= item ? 'active' : ''}}">★</text>
+        </view>
+      </view>
+      <text class="rating-text">{{ratingText}}</text>
+    </view>
+
+    <!-- 评价标签 -->
+    <view class="tags-section">
+      <text class="section-title">服务标签</text>
+      <view class="tags-wrapper">
+        <view 
+          class="tag-item {{item.selected ? 'selected' : ''}}"
+          wx:for="{{tags}}"
+          wx:key="id"
+          bindtap="onTagTap"
+          data-id="{{item.id}}"
+        >{{item.name}}</view>
+      </view>
+    </view>
+
+    <!-- 评价内容 -->
+    <view class="content-section">
+      <text class="section-title">评价内容</text>
+      <textarea 
+        class="review-textarea"
+        placeholder="分享您的服务体验，帮助其他用户更好地选择..."
+        value="{{content}}"
+        bindinput="onContentInput"
+        maxlength="200"
+      />
+      <text class="word-count">{{content.length || 0}}/200</text>
+    </view>
+
+    <!-- 匿名评价 -->
+    <view class="anonymous-section">
+      <view class="anonymous-row" bindtap="onAnonymousChange">
+        <text class="anonymous-label">匿名评价</text>
+        <view class="checkbox {{isAnonymous ? 'checked' : ''}}">
+          <text wx:if="{{isAnonymous}}">✓</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 提交按钮 -->
+  <view class="submit-section">
+    <view class="submit-btn {{canSubmit ? '' : 'disabled'}}" bindtap="onSubmit">
+      提交评价
+    </view>
+  </view>
+</view>

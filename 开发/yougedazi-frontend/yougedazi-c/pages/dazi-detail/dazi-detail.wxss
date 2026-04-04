@@ -1,0 +1,626 @@
+/* 搭子详情页样式 */
+
+page {
+  --primary-color: #7B68EE;
+  --primary-dark: #5A4ACF;
+  --secondary-color: #FF6B9D;
+  --bg-color: #ffffff;
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --text-light: #999999;
+  --border-color: #eeeeee;
+  --female-color: #FF6B9D;
+  --male-color: #4A90E2;
+  
+  background-color: var(--bg-color);
+}
+
+.page-container {
+  min-height: 100vh;
+  padding-bottom: calc(160rpx + env(safe-area-inset-bottom));
+  position: relative;
+  background-color: #ffffff;
+}
+
+/* 背景不规则形状装饰 - 参考 UI 图 */
+.bg-shape {
+  position: fixed;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.5;
+}
+
+/* 右上角淡紫色装饰 */
+.shape-1 {
+  width: 300rpx;
+  height: 300rpx;
+  background: linear-gradient(135deg, rgba(123, 104, 238, 0.12) 0%, rgba(123, 104, 238, 0.03) 100%);
+  border-radius: 60% 40% 70% 30% / 40% 60% 30% 70%;
+  top: 400rpx;
+  right: -80rpx;
+  transform: rotate(-15deg);
+}
+
+/* 左侧中部粉色波浪 */
+.shape-2 {
+  width: 180rpx;
+  height: 350rpx;
+  background: linear-gradient(180deg, rgba(255, 107, 157, 0.1) 0%, rgba(255, 107, 157, 0.02) 100%);
+  border-radius: 40% 60% 70% 30% / 60% 30% 70% 40%;
+  top: 700rpx;
+  left: -60rpx;
+  transform: rotate(25deg);
+}
+
+/* 右下角淡蓝紫色椭圆 */
+.shape-3 {
+  width: 280rpx;
+  height: 220rpx;
+  background: linear-gradient(45deg, rgba(155, 137, 245, 0.1) 0%, rgba(155, 137, 245, 0.02) 100%);
+  border-radius: 70% 30% 50% 50% / 30% 70% 50% 50%;
+  bottom: 400rpx;
+  right: -80rpx;
+  transform: rotate(-10deg);
+}
+
+/* 中部小装饰点 */
+.shape-4 {
+  width: 120rpx;
+  height: 120rpx;
+  background: linear-gradient(135deg, rgba(255, 107, 157, 0.08) 0%, transparent 100%);
+  border-radius: 50% 50% 40% 60% / 60% 40% 60% 40%;
+  top: 1000rpx;
+  right: 100rpx;
+}
+
+/* 新增装饰5 - 左下角淡紫色 */
+.shape-5 {
+  width: 200rpx;
+  height: 200rpx;
+  background: linear-gradient(45deg, rgba(123, 104, 238, 0.08) 0%, rgba(155, 137, 245, 0.03) 100%);
+  border-radius: 60% 40% 30% 70% / 40% 60% 70% 30%;
+  bottom: 300rpx;
+  left: -60rpx;
+  transform: rotate(15deg);
+}
+
+/* 新增装饰6 - 服务区域右侧 */
+.shape-6 {
+  width: 160rpx;
+  height: 160rpx;
+  background: linear-gradient(135deg, rgba(255, 107, 157, 0.06) 0%, rgba(255, 107, 157, 0.02) 100%);
+  border-radius: 50%;
+  top: 850rpx;
+  right: 40rpx;
+}
+
+/* 新增装饰7 - 上部左侧 */
+.shape-7 {
+  width: 140rpx;
+  height: 180rpx;
+  background: linear-gradient(180deg, rgba(123, 104, 238, 0.07) 0%, transparent 100%);
+  border-radius: 40% 60% 60% 40% / 60% 40% 60% 40%;
+  top: 600rpx;
+  left: -30rpx;
+  transform: rotate(-20deg);
+}
+
+/* 新增装饰8 - 底部右侧 */
+.shape-8 {
+  width: 250rpx;
+  height: 180rpx;
+  background: linear-gradient(135deg, rgba(155, 137, 245, 0.08) 0%, rgba(123, 104, 238, 0.02) 100%);
+  border-radius: 50% 50% 40% 60% / 60% 40% 50% 50%;
+  bottom: 200rpx;
+  right: -50rpx;
+  transform: rotate(10deg);
+}
+
+/* 顶部轮播 */
+.banner-section {
+  position: relative;
+  width: 100%;
+  height: 500rpx;
+}
+
+.banner-swiper {
+  width: 100%;
+  height: 100%;
+}
+
+.banner-image {
+  width: 100%;
+  height: 100%;
+}
+
+.banner-indicator {
+  position: absolute;
+  bottom: 24rpx;
+  right: 24rpx;
+  background: rgba(0, 0, 0, 0.4);
+  color: #ffffff;
+  padding: 8rpx 20rpx;
+  border-radius: 24rpx;
+  font-size: 24rpx;
+  z-index: 10;
+}
+
+/* 轮播左右切换按钮 */
+.banner-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  opacity: 0.9;
+}
+
+.banner-btn-left {
+  left: 16rpx;
+}
+
+.banner-btn-right {
+  right: 16rpx;
+}
+
+.banner-btn-icon {
+  width: 56rpx;
+  height: 56rpx;
+  filter: drop-shadow(0 2rpx 4rpx rgba(0,0,0,0.3));
+}
+
+/* 基础信息区 - 透明背景 */
+.info-section {
+  background: transparent;
+  padding: 20rpx 24rpx 16rpx;
+  margin-bottom: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.info-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.avatar-wrapper {
+  position: relative;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
+
+.avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 60rpx;
+  border: 4rpx solid #ffffff;
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.1);
+}
+
+.online-status {
+  position: absolute;
+  bottom: 6rpx;
+  right: 6rpx;
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  border: 3rpx solid #ffffff;
+  background: #52C41A;
+}
+
+.basic-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.name-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8rpx;
+  flex-wrap: wrap;
+}
+
+.nickname {
+  font-size: 38rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-right: 12rpx;
+}
+
+.gender-age {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 50%;
+  font-size: 22rpx;
+  margin-right: 8rpx;
+}
+
+.gender-age.female {
+  background: #FCE4EC;
+  color: var(--female-color);
+}
+
+.gender-age.male {
+  background: #E3F2FD;
+  color: var(--male-color);
+}
+
+.age {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+}
+
+.location-row {
+  display: flex;
+  align-items: center;
+  font-size: 24rpx;
+  color: var(--text-secondary);
+}
+
+.location-icon {
+  font-size: 22rpx;
+  margin-right: 4rpx;
+}
+
+/* 认证标识区 - 透明背景 */
+.cert-section {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  padding-top: 12rpx;
+  background: transparent;
+}
+
+.cert-item {
+  display: flex;
+  align-items: center;
+  margin-right: 24rpx;
+  margin-bottom: 8rpx;
+}
+
+.cert-icon {
+  width: 32rpx;
+  height: 32rpx;
+  margin-right: 6rpx;
+}
+
+.cert-text {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+}
+
+/* 推荐给朋友按钮特殊样式 */
+.share-btn {
+  background: rgba(123, 104, 238, 0.08);
+  padding: 6rpx 14rpx;
+  border-radius: 20rpx;
+}
+
+.share-btn .cert-text {
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+.divider {
+  height: 16rpx;
+  background: var(--bg-color);
+  position: relative;
+  z-index: 1;
+}
+
+/* 服务项目 - 透明背景 */
+.service-section {
+  background: transparent;
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+  position: relative;
+  z-index: 1;
+}
+
+.section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.title-text {
+  font-size: 34rpx;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: 4rpx;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+.title-sub {
+  font-size: 24rpx;
+  color: var(--text-light);
+}
+
+.service-list {
+  border-top: 1rpx solid rgba(238, 238, 238, 0.6);
+}
+
+.service-item {
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid rgba(238, 238, 238, 0.6);
+  transition: all 0.3s ease;
+}
+
+.service-item:last-child {
+  border-bottom: none;
+}
+
+/* 选中状态 */
+.service-item.selected {
+  background: rgba(123, 104, 238, 0.12);
+  margin: 0 -24rpx;
+  padding: 24rpx 24rpx;
+  border-radius: 16rpx;
+  border-bottom: none;
+}
+
+.service-main {
+  display: flex;
+  align-items: center;
+}
+
+/* 服务图标容器 - 占卡片宽度约1/4 */
+.service-icon-wrapper {
+  width: 180rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* 服务图标 - 未选中状态 */
+.service-icon {
+  width: 64rpx;
+  height: 64rpx;
+}
+
+/* 服务内容和价格区域 */
+.service-content {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* 选中状态：横向布局 */
+.selected-layout {
+  display: flex;
+  align-items: center;
+}
+
+/* 选中状态左侧图标区 */
+.selected-icon-wrapper {
+  width: 180rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* 大图标样式 */
+.service-icon-large {
+  width: 120rpx;
+  height: 120rpx;
+}
+
+/* 选中状态右侧内容区 */
+.selected-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* 选中状态服务信息 */
+.selected-service-info {
+  margin-bottom: 24rpx;
+}
+
+/* 选中状态价格行 */
+.service-price-row {
+  display: flex;
+  align-items: baseline;
+  margin-top: 8rpx;
+}
+
+/* 选中状态时长控制行 */
+.duration-control-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16rpx;
+  border-top: 1rpx solid rgba(238, 238, 238, 0.6);
+}
+
+.service-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.service-name {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 10rpx;
+  letter-spacing: 2rpx;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+.service-tags {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.tag {
+  padding: 4rpx 12rpx;
+  background: #f0f0f0;
+  border-radius: 6rpx;
+  font-size: 22rpx;
+  color: var(--text-secondary);
+  margin-right: 12rpx;
+}
+
+.service-price {
+  display: flex;
+  align-items: baseline;
+}
+
+/* 所有状态的价格样式 - 统一小字体浅灰色 */
+.service-item .price-symbol {
+  font-size: 22rpx;
+  color: var(--text-light);
+  font-weight: 400;
+}
+
+.service-item .price-value {
+  font-size: 22rpx;
+  color: var(--text-light);
+  font-weight: 400;
+}
+
+.price-unit {
+  font-size: 22rpx;
+  color: var(--text-light);
+  margin-left: 4rpx;
+}
+
+/* 时长控制区域 - 左右排列 */
+.duration-control {
+  margin-top: 24rpx;
+  padding: 20rpx 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.duration-left {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.duration-btn {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.duration-btn.minus {
+  background: #f0f0f0;
+  color: var(--text-secondary);
+}
+
+.duration-btn.minus:active {
+  background: #e0e0e0;
+}
+
+.duration-btn.plus {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  color: #ffffff;
+}
+
+.duration-btn.plus:active {
+  opacity: 0.8;
+}
+
+.duration-value {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+  min-width: 90rpx;
+  text-align: center;
+}
+
+.total-amount {
+  display: flex;
+  align-items: center;
+}
+
+.total-label {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  margin-right: 8rpx;
+}
+
+.total-price {
+  font-size: 40rpx;
+  font-weight: 400;
+  color: #FF4D4F;
+}
+
+
+.bottom-placeholder {
+  height: 160rpx;
+}
+
+/* 底部操作栏 */
+.bottom-action-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  padding: 20rpx 24rpx calc(20rpx + env(safe-area-inset-bottom));
+  background: #ffffff;
+  box-shadow: 0 -4rpx 20rpx rgba(0,0,0,0.08);
+  z-index: 1000;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 88rpx;
+  border-radius: 44rpx;
+  position: relative;
+}
+
+.action-btn:active {
+  opacity: 0.8;
+}
+
+.chat-btn {
+  width: 200rpx;
+  background: #ffffff;
+  border: 2rpx solid var(--primary-color);
+  margin-right: 20rpx;
+}
+
+.chat-btn .btn-text {
+  font-size: 28rpx;
+  color: var(--primary-color);
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.order-btn {
+  flex: 1;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+}
+
+.order-btn .btn-text {
+  font-size: 32rpx;
+  color: #ffffff;
+  font-weight: 700;
+  pointer-events: none;
+}

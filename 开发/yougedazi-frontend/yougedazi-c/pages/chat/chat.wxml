@@ -1,0 +1,77 @@
+<!-- pages/chat/chat.wxml -->
+<view class="container">
+  <!-- 顶部导航 -->
+  <view class="nav-bar" style="padding-top: {{statusBarHeight}}px; height: {{navBarHeight}}px;">
+    <view class="back-btn" bindtap="goBack">
+      <text class="back-icon">‹</text>
+    </view>
+    <view class="nav-title">
+      <text class="nickname">{{companionInfo.nickname}}</text>
+      <text class="online-status" wx:if="{{companionInfo.isOnline}}">在线</text>
+    </view>
+    <view class="more-btn" bindtap="showMore">
+      <text class="more-icon">⋯</text>
+    </view>
+  </view>
+
+  <!-- 聊天内容区域 -->
+  <scroll-view 
+    class="chat-content" 
+    scroll-y="true" 
+    scroll-into-view="{{lastMessageId}}"
+    enhanced="true"
+    show-scrollbar="false"
+  >
+    <!-- 时间提示 -->
+    <view class="time-tip">{{currentTime}}</view>
+
+    <!-- 消息列表 -->
+    <view 
+      class="message-wrapper"
+      wx:for="{{messageList}}"
+      wx:key="id"
+      id="{{item.id}}"
+    >
+      <!-- 对方消息 -->
+      <view class="message-row left" wx:if="{{item.type === 'receive'}}">
+        <image class="avatar" src="{{companionInfo.avatar}}" mode="aspectFill"/>
+        <view class="message-bubble left">
+          <text class="message-text">{{item.content}}</text>
+        </view>
+      </view>
+
+      <!-- 自己消息 -->
+      <view class="message-row right" wx:if="{{item.type === 'send'}}">
+        <view class="message-bubble right">
+          <text class="message-text">{{item.content}}</text>
+        </view>
+        <image class="avatar" src="{{userInfo.avatar}}" mode="aspectFill"/>
+      </view>
+    </view>
+
+    <!-- 底部占位 -->
+    <view style="height: 20rpx;"></view>
+  </scroll-view>
+
+  <!-- 底部输入栏 -->
+  <view class="input-bar">
+    <view class="input-wrapper">
+      <input 
+        class="message-input"
+        placeholder="输入消息..."
+        value="{{inputValue}}"
+        bindinput="onInput"
+        confirm-type="send"
+        bindconfirm="sendMessage"
+      />
+    </view>
+    <!-- 图片发送入口 -->
+    <view class="image-btn" bindtap="sendImage">📷</view>
+    <view class="send-btn {{inputValue ? 'active' : ''}}" bindtap="sendMessage">
+      <text>发送</text>
+    </view>
+  </view>
+
+  <!-- 底部安全区域 -->
+  <view class="safe-area-bottom"></view>
+</view>

@@ -1,0 +1,466 @@
+/* 有个搭子 下单页 */
+
+page {
+  --primary-color: #7B68EE;
+  --primary-dark: #5A4ACF;
+  --secondary-color: #FF6B9D;
+  --bg-color: #ffffff;
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --text-light: #999999;
+  --border-color: #eeeeee;
+  --male-color: #4A90E2;
+  --female-color: #FF6B9D;
+  --price-color: #FF4D4F;
+  
+  background-color: var(--bg-color);
+}
+
+.container {
+  min-height: 100vh;
+  padding-bottom: calc(140rpx + env(safe-area-inset-bottom));
+  position: relative;
+}
+
+/* 背景装饰 */
+.bg-shape {
+  position: fixed;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
+}
+
+.shape-1 {
+  width: 250rpx;
+  height: 250rpx;
+  background: linear-gradient(135deg, rgba(123, 104, 238, 0.1) 0%, rgba(123, 104, 238, 0.02) 100%);
+  border-radius: 60% 40% 70% 30% / 40% 60% 30% 70%;
+  top: 300rpx;
+  right: -80rpx;
+  transform: rotate(-15deg);
+}
+
+.shape-2 {
+  width: 180rpx;
+  height: 350rpx;
+  background: linear-gradient(180deg, rgba(255, 107, 157, 0.08) 0%, rgba(255, 107, 157, 0.02) 100%);
+  border-radius: 40% 60% 70% 30% / 60% 30% 70% 40%;
+  top: 600rpx;
+  left: -60rpx;
+  transform: rotate(20deg);
+}
+
+.shape-3 {
+  width: 200rpx;
+  height: 200rpx;
+  background: linear-gradient(45deg, rgba(155, 137, 245, 0.1) 0%, rgba(155, 137, 245, 0.02) 100%);
+  border-radius: 70% 30% 50% 50% / 30% 70% 50% 50%;
+  bottom: 400rpx;
+  right: -40rpx;
+  transform: rotate(-10deg);
+}
+
+/* 搭子信息卡片 */
+.companion-card {
+  display: flex;
+  align-items: center;
+  background: transparent;
+  padding: 24rpx;
+  position: relative;
+  z-index: 1;
+}
+
+.companion-avatar {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 16rpx;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
+
+.companion-info {
+  flex: 1;
+}
+
+.companion-name-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8rpx;
+}
+
+.companion-name {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-right: 12rpx;
+}
+
+.companion-gender-age {
+  display: flex;
+  align-items: center;
+  padding: 4rpx 12rpx;
+  border-radius: 20rpx;
+  font-size: 22rpx;
+}
+
+.companion-gender-age.female {
+  background: #FCE4EC;
+  color: var(--female-color);
+}
+
+.companion-gender-age.male {
+  background: #E3F2FD;
+  color: var(--male-color);
+}
+
+.location-text {
+  font-size: 24rpx;
+  color: var(--text-light);
+}
+
+/* 区块通用样式 */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: 2rpx;
+}
+
+/* 已选服务 */
+.service-section {
+  background: transparent;
+  padding: 20rpx 24rpx;
+  margin-bottom: 16rpx;
+  position: relative;
+  z-index: 1;
+}
+
+.selected-service {
+  display: flex;
+  align-items: center;
+  padding: 20rpx;
+  background: rgba(123, 104, 238, 0.06);
+  border-radius: 16rpx;
+}
+
+.service-image {
+  width: 80rpx;
+  height: 80rpx;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
+
+.service-info {
+  flex: 1;
+}
+
+.service-name {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 12rpx;
+}
+
+.service-price-row {
+  display: flex;
+  align-items: baseline;
+}
+
+.service-price {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--price-color);
+}
+
+.service-unit {
+  font-size: 22rpx;
+  color: var(--text-light);
+  margin-left: 4rpx;
+}
+
+/* 时长控制 */
+.duration-control {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.duration-btn {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  font-weight: 500;
+}
+
+.duration-btn.minus {
+  background: #f0f0f0;
+  color: var(--text-secondary);
+}
+
+.duration-btn.plus {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  color: #ffffff;
+}
+
+.duration-value {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 70rpx;
+  text-align: center;
+}
+
+/* 服务小计 */
+.service-subtotal {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx dashed rgba(123, 104, 238, 0.2);
+}
+
+.subtotal-label {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+}
+
+.subtotal-price {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: var(--price-color);
+}
+
+/* 预约时间 */
+.time-section, .address-section {
+  background: transparent;
+  padding: 20rpx 24rpx;
+  position: relative;
+  z-index: 1;
+}
+
+/* 时间选择器行 */
+.time-picker-row {
+  display: flex;
+  gap: 20rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid var(--border-color);
+}
+
+.date-picker, .time-picker {
+  flex: 1;
+}
+
+.picker-display {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 16rpx;
+  background: rgba(123, 104, 238, 0.05);
+  border-radius: 12rpx;
+}
+
+.picker-icon {
+  font-size: 32rpx;
+  margin-right: 12rpx;
+}
+
+.picker-text {
+  flex: 1;
+  font-size: 26rpx;
+  color: var(--text-primary);
+}
+
+.picker-placeholder {
+  flex: 1;
+  font-size: 26rpx;
+  color: var(--text-light);
+}
+
+.picker-arrow {
+  font-size: 28rpx;
+  color: var(--text-light);
+}
+
+.time-selector, .address-selector {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx 0;
+  border-top: 1rpx solid var(--border-color);
+}
+
+.time-display, .address-display {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.time-icon, .address-icon {
+  font-size: 36rpx;
+  margin-right: 16rpx;
+}
+
+.time-text, .address-text {
+  font-size: 28rpx;
+  color: var(--text-primary);
+}
+
+.time-placeholder, .address-placeholder {
+  font-size: 28rpx;
+  color: var(--text-light);
+}
+
+.time-arrow, .address-arrow {
+  font-size: 32rpx;
+  color: var(--text-light);
+}
+
+/* 地址类型切换 */
+.address-type {
+  font-size: 24rpx;
+  color: var(--primary-color);
+  padding: 8rpx 16rpx;
+  background: rgba(123, 104, 238, 0.1);
+  border-radius: 20rpx;
+}
+
+/* 备注 */
+.remark-section {
+  background: transparent;
+  padding: 20rpx 24rpx;
+  position: relative;
+  z-index: 1;
+}
+
+.remark-input {
+  width: 100%;
+  height: 160rpx;
+  padding: 20rpx;
+  background: rgba(248, 248, 248, 0.8);
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  color: var(--text-primary);
+  box-sizing: border-box;
+}
+
+.remark-count {
+  text-align: right;
+  font-size: 24rpx;
+  color: var(--text-light);
+  margin-top: 12rpx;
+}
+
+/* 费用明细 */
+.price-section {
+  background: transparent;
+  padding: 20rpx 24rpx;
+  margin-bottom: 16rpx;
+  position: relative;
+  z-index: 1;
+}
+
+.price-list {
+  padding: 20rpx 0;
+  border-top: 1rpx solid var(--border-color);
+}
+
+.price-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.price-item.total {
+  margin-top: 20rpx;
+  margin-bottom: 0;
+}
+
+.price-item-label {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+}
+
+.price-item-value {
+  font-size: 28rpx;
+  color: var(--text-primary);
+}
+
+.price-item-value.total-price {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: var(--price-color);
+}
+
+.price-divider {
+  height: 1rpx;
+  background: var(--border-color);
+  margin: 20rpx 0;
+}
+
+/* 底部合计栏 */
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 24rpx calc(20rpx + env(safe-area-inset-bottom));
+  background: #ffffff;
+  box-shadow: 0 -4rpx 20rpx rgba(0,0,0,0.08);
+  z-index: 100;
+}
+
+.total-section {
+  display: flex;
+  align-items: baseline;
+}
+
+.total-label {
+  font-size: 28rpx;
+  color: var(--text-primary);
+  margin-right: 12rpx;
+}
+
+.total-price {
+  font-size: 44rpx;
+  font-weight: 700;
+  color: var(--price-color);
+}
+
+.total-price .currency {
+  font-size: 28rpx;
+}
+
+.submit-btn {
+  min-width: 240rpx;
+  height: 88rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  border-radius: 44rpx;
+}
+
+.submit-btn.disabled {
+  background: #cccccc;
+}
+
+.submit-btn text {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #ffffff;
+}

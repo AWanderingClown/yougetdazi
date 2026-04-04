@@ -1,0 +1,337 @@
+<!-- 订单详情页 -->
+<view class="order-detail-container">
+  
+  <!-- 顶部状态栏 -->
+  <view class="status-bar" style="background: {{statusConfig[status].bgColor}};">
+    <view class="status-content">
+      <text class="status-icon">{{statusConfig[status].icon}}</text>
+      <view class="status-info">
+        <text class="status-title">{{statusConfig[status].title}}</text>
+        <text class="status-desc">{{statusConfig[status].desc}}</text>
+      </view>
+    </view>
+    <!-- 倒计时（待支付状态显示） -->
+    <view class="pay-countdown" wx:if="{{status === 'pending_payment'}}">
+      <text class="countdown-text">剩余支付时间</text>
+      <text class="countdown-time">{{payCountdown}}</text>
+    </view>
+    
+    <!-- 倒计时（悬赏订单等待抢单状态显示） -->
+    <view class="pay-countdown grab-countdown" wx:if="{{status === 'waiting_grab'}}">
+      <text class="countdown-text">抢单剩余时间</text>
+      <text class="countdown-time">{{grabCountdown}}</text>
+      <text class="countdown-tip">30分钟内无搭子接单，资金将原路退回</text>
+    </view>
+  </view>
+
+  <!-- 搭子信息卡片 -->
+  <view class="companion-card" wx:if="{{status !== 'pending_payment' && status !== 'pending' && status !== 'waiting_grab' && status !== 'cancelled'}}">
+    <view class="companion-header">
+      <image class="companion-avatar" src="{{companionInfo.avatar}}" mode="aspectFill"/>
+      <view class="companion-info">
+        <view class="companion-name-row">
+          <text class="companion-name">{{companionInfo.nickname}}</text>
+          <view class="gender-age {{companionInfo.gender === 'female' ? 'female' : 'male'}}">
+            <text class="gender-icon">{{companionInfo.gender === 'female' ? '♀' : '♂'}}</text>
+            <text class="age">{{companionInfo.age}}</text>
+          </view>
+        </view>
+        <view class="companion-tags">
+          <text class="tag" wx:for="{{companionInfo.tags}}" wx:key="index">{{item}}</text>
+        </view>
+      </view>
+      <view class="distance-box" wx:if="{{companionInfo.distance}}">
+        <text class="distance-icon">📍</text>
+        <text class="distance-text">{{companionInfo.distance}}km</text>
+      </view>
+    </view>
+    
+    <!-- 预计到达时间（已接单状态显示） -->
+    <view class="arrival-info" wx:if="{{status === 'accepted'}}">
+      <text class="arrival-label">预计到达</text>
+      <text class="arrival-time">{{companionInfo.estimatedArrival}}</text>
+    </view>
+  </view>
+
+  <!-- 地图区域（已接单、服务中状态显示） -->
+  <view class="map-section" wx:if="{{status === 'accepted' || status === 'serving'}}">
+    <map 
+      id="orderMap"
+      class="order-map"
+      longitude="{{mapCenter.longitude}}"
+      latitude="{{mapCenter.latitude}}"
+      scale="{{mapScale}}"
+      markers="{{markers}}"
+      polyline="{{polyline}}"
+      show-location="{{false}}"
+      enable-zoom="{{true}}"
+      enable-scroll="{{true}}"
+      enable-rotate="{{false}}"
+    />
+    
+    <!-- 地图覆盖信息 -->
+    <view class="map-overlay">
+      <view class="location-info">
+        <view class="location-item">
+          <view class="location-dot companion-dot"></view>
+          <text class="location-text">搭子位置</text>
+        </view>
+        <view class="location-item">
+          <view class="location-dot my-dot"></view>
+          <text class="location-text">我的位置</text>
+        </view>
+      </view>
+
+      <!-- 实时位置信息 -->
+      <view class="map-info-box" wx:if="{{status === 'accepted'}}">
+        <view class="info-item" wx:if="{{distanceToCompanion > 0}}">
+          <text class="info-label">距离您</text>
+          <text class="info-value">{{distanceToCompanionText || distanceToCompanion + '米'}}</text>
+        </view>
+        <view class="info-item" wx:if="{{estimatedArrival}}">
+          <text class="info-label">预计到达</text>
+          <text class="info-value">{{estimatedArrival}}</text>
+        </view>
+        <view class="info-item" wx:if="{{!estimatedArrival}}">
+          <text class="info-label">预计到达</text>
+          <text class="info-value">计算中...</text>
+        </view>
+      </view>
+
+      <view class="arrival-badge" wx:if="{{status === 'accepted'}}">
+        <text class="arrival-badge-text">搭子正在赶来</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 服务计时器（服务中状态显示） -->
+  <view class="timer-section" wx:if="{{status === 'serving'}}">
+    <view class="timer-card">
+      <text class="timer-label">服务进行中</text>
+      <view class="timer-display">
+        <view class="time-unit">
+          <text class="time-value">{{serviceTimer.hours}}</text>
+          <text class="time-label">时</text>
+        </view>
+        <text class="time-separator">:</text>
+        <view class="time-unit">
+          <text class="time-value">{{serviceTimer.minutes}}</text>
+          <text class="time-label">分</text>
+        </view>
+        <text class="time-separator">:</text>
+        <view class="time-unit">
+          <text class="time-value">{{serviceTimer.seconds}}</text>
+          <text class="time-label">秒</text>
+        </view>
+      </view>
+      <view class="timer-progress">
+        <view class="progress-bar">
+          <view class="progress-fill" style="width: {{serviceProgress}}%;"></view>
+        </view>
+        <view class="progress-info">
+          <text class="progress-text">已进行 {{serviceProgress}}%</text>
+          <text class="remaining-text">剩余 {{remainingTimeText}}</text>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 续费提示（剩余时间<15分钟显示） -->
+    <view class="renewal-hint" wx:if="{{showRenewalHint}}">
+      <text class="renewal-icon">⏰</text>
+      <text class="renewal-text">服务即将结束，是否需要续费？</text>
+      <button class="renewal-btn" bindtap="onRenewal">立即续费</button>
+    </view>
+  </view>
+
+  <!-- 订单信息 -->
+  <view class="order-info-section">
+    <view class="section-title">
+      <text class="title-line"></text>
+      <text class="title-text">订单信息</text>
+      <text class="title-line"></text>
+    </view>
+    
+    <view class="info-list">
+      <view class="info-item">
+        <text class="info-label">订单编号</text>
+        <view class="info-value-row">
+          <text class="info-value">{{orderInfo.orderNo}}</text>
+          <text class="copy-btn" bindtap="onCopyOrderNo">复制</text>
+        </view>
+      </view>
+      <view class="info-item">
+        <text class="info-label">下单时间</text>
+        <text class="info-value">{{orderInfo.createdAt}}</text>
+      </view>
+      <view class="info-item" wx:if="{{orderInfo.paidAt}}">
+        <text class="info-label">支付时间</text>
+        <text class="info-value">{{orderInfo.paidAt}}</text>
+      </view>
+      <view class="info-item">
+        <text class="info-label">服务类型</text>
+        <text class="info-value">{{orderInfo.serviceType}}</text>
+      </view>
+      <view class="info-item">
+        <text class="info-label">服务时长</text>
+        <text class="info-value">{{orderInfo.duration}}小时</text>
+      </view>
+      <view class="info-item" wx:if="{{orderInfo.appointmentTime}}">
+        <text class="info-label">预约时间</text>
+        <text class="info-value">{{orderInfo.appointmentTime}}</text>
+      </view>
+      <view class="info-item">
+        <text class="info-label">服务地址</text>
+        <text class="info-value address">{{orderInfo.address}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 订单状态时间轴 -->
+  <view class="timeline-section" wx:if="{{timeLine.length > 0}}">
+    <view class="section-title">
+      <text class="title-line"></text>
+      <text class="title-text">订单状态</text>
+      <text class="title-line"></text>
+    </view>
+    
+    <view class="timeline-list">
+      <view class="timeline-item {{item.isCurrent ? 'current' : ''}}" wx:for="{{timeLine}}" wx:key="index">
+        <view class="timeline-left">
+          <view class="timeline-icon">{{item.icon}}</view>
+          <view class="timeline-line" wx:if="{{index < timeLine.length - 1}}"></view>
+        </view>
+        <view class="timeline-content">
+          <text class="timeline-text">{{item.text}}</text>
+          <text class="timeline-time">{{item.time}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 价格信息 -->
+  <view class="price-section">
+    <view class="section-title">
+      <text class="title-line"></text>
+      <text class="title-text">费用明细</text>
+      <text class="title-line"></text>
+    </view>
+    
+    <view class="price-list">
+      <view class="price-item">
+        <text class="price-label">服务费用</text>
+        <text class="price-value">¥{{orderInfo.servicePrice}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 取消原因（已取消状态显示） -->
+  <view class="cancel-reason-section" wx:if="{{status === 'cancelled'}}">
+    <view class="section-title">
+      <text class="title-line"></text>
+      <text class="title-text">取消原因</text>
+      <text class="title-line"></text>
+    </view>
+    <view class="cancel-reason-card">
+      <text class="cancel-reason">{{orderInfo.cancelReason || '用户主动取消订单'}}</text>
+      <text class="cancel-time">取消时间：{{orderInfo.cancelledAt}}</text>
+    </view>
+  </view>
+
+  <!-- 底部占位 -->
+  <view class="bottom-placeholder"></view>
+
+  <!-- 底部操作栏 -->
+  <view class="bottom-actions">
+    <!-- 待支付状态按钮 -->
+    <view class="action-row" wx:if="{{status === 'pending_payment'}}">
+      <button class="btn-cancel" bindtap="onCancelOrder">取消订单</button>
+      <button class="btn-primary" bindtap="onPay">立即支付 ¥{{orderInfo.totalAmount}}</button>
+    </view>
+    
+    <!-- 悬赏订单等待抢单状态按钮 -->
+    <view class="action-row" wx:if="{{status === 'waiting_grab'}}">
+      <button class="btn-cancel" bindtap="onCancelReward">取消悬赏</button>
+      <button class="btn-primary" open-type="share">分享任务</button>
+    </view>
+    
+    <!-- 待接单状态按钮 -->
+    <view class="action-row" wx:if="{{status === 'pending'}}">
+      <button class="btn-cancel" bindtap="onCancelOrder">取消订单</button>
+      <button class="btn-secondary" bindtap="onContactService">联系客服</button>
+    </view>
+    
+    <!-- 已接单状态按钮 - 赏金任务：3个按钮含换一换 -->
+    <view class="action-row action-row-three-spaced" wx:if="{{status === 'accepted' && orderType === 'reward'}}">
+      <button class="btn-change" bindtap="onChangeCompanion">换一换</button>
+      <button class="btn-secondary" bindtap="onChat">联系搭子</button>
+      <button class="btn-cancel" bindtap="onCancelOrder">取消订单</button>
+    </view>
+    <!-- 已接单状态按钮 - 定向任务：2个按钮无换一换 -->
+    <view class="action-row action-row-two" wx:if="{{status === 'accepted' && orderType !== 'reward'}}">
+      <button class="btn-secondary" bindtap="onChat">联系搭子</button>
+      <button class="btn-cancel" bindtap="onCancelOrder">取消订单</button>
+    </view>
+    
+    <!-- 已出发状态按钮 -->
+    <view class="action-row action-row-two" wx:if="{{status === 'departed'}}">
+      <button class="btn-secondary" bindtap="onChat">联系搭子</button>
+      <button class="btn-cancel" bindtap="onCancelOrder">取消订单</button>
+    </view>
+    
+    <!-- 服务中状态按钮 -->
+    <view class="action-row action-row-three" wx:if="{{status === 'serving'}}">
+      <!-- 0-15分钟：显示换一换和取消订单 -->
+      <block wx:if="{{canCancelInService}}">
+        <button class="btn-change" wx:if="{{orderType === 'reward'}}" bindtap="onChangeCompanion">换一换</button>
+        <button class="btn-secondary" bindtap="onChat">联系搭子</button>
+        <button class="btn-cancel" bindtap="onRequestEnd">取消订单</button>
+      </block>
+      <!-- >15分钟：显示续费和服务结束 -->
+      <block wx:if="{{!canCancelInService}}">
+        <button class="btn-secondary" bindtap="onChat">联系搭子</button>
+        <button class="btn-secondary" bindtap="onEndService">服务结束</button>
+        <button class="btn-renewal" bindtap="onRenewal">续费</button>
+      </block>
+    </view>
+    
+    <!-- 已完成状态按钮 -->
+    <view class="action-row" wx:if="{{status === 'completed'}}">
+      <button class="btn-secondary" bindtap="onReorder">再次下单</button>
+      <button class="btn-secondary" bindtap="onReview" wx:if="{{!orderInfo.hasReviewed}}">提交评价</button>
+      <button class="btn-secondary" bindtap="onViewReview" wx:if="{{orderInfo.hasReviewed}}">查看评价</button>
+      <button class="btn-cancel" bindtap="onContactService">联系客服</button>
+    </view>
+    
+    <!-- 已取消状态按钮 -->
+    <view class="action-row" wx:if="{{status === 'cancelled'}}">
+      <button class="btn-primary btn-full" bindtap="onReorder">再次下单</button>
+    </view>
+  </view>
+
+  <!-- 取消订单确认弹窗 -->
+  <view class="modal-mask" wx:if="{{showCancelModal}}" bindtap="hideCancelModal"></view>
+  <view class="modal-content" wx:if="{{showCancelModal}}">
+    <view class="modal-header">
+      <text class="modal-title">确认取消订单？</text>
+    </view>
+    <view class="modal-body">
+      <text class="modal-desc">取消后订单将无法恢复，是否继续？</text>
+      <radio-group class="cancel-reasons" bindchange="onCancelReasonChange">
+        <label class="reason-item" wx:for="{{cancelReasons}}" wx:key="index">
+          <radio value="{{item}}" checked="{{selectedCancelReason === item}}"/>
+          <text>{{item}}</text>
+        </label>
+      </radio-group>
+    </view>
+    <view class="modal-footer">
+      <button class="btn-modal-cancel" bindtap="hideCancelModal">再想想</button>
+      <button class="btn-modal-confirm" bindtap="confirmCancelOrder">确认取消</button>
+    </view>
+  </view>
+
+  <!-- 催一催提示 -->
+  <view class="toast-hint" wx:if="{{showUrgeToast}}">
+    <text class="toast-text">已提醒搭子加快进度</text>
+  </view>
+
+</view>
