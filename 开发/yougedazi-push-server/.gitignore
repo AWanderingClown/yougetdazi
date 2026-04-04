@@ -1,0 +1,27 @@
+# macOS系统文件
+.DS_Store
+.DS_Store?
+._*
+
+# 编辑器配置
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Node.js
+node_modules/
+npm-debug.log*
+
+# 编译输出
+dist/
+build/
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+
+# 日志
+*.log
+logs/
