@@ -1,0 +1,411 @@
+/* pages/register/register.wxss - 搭子注册样式 */
+
+.container {
+  min-height: 100vh;
+  background: #F9FAFB;
+  padding-bottom: 160rpx;
+}
+
+/* 进度条 */
+.progress-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40rpx 60rpx;
+  background: #fff;
+}
+
+.progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.step-num {
+  width: 48rpx;
+  height: 48rpx;
+  background: #E5E7EB;
+  color: #9CA3AF;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  margin-bottom: 12rpx;
+}
+
+.progress-step.active .step-num {
+  background: linear-gradient(135deg, #7B68EE 0%, #9B59B6 100%);
+  color: #fff;
+}
+
+.step-text {
+  font-size: 24rpx;
+  color: #9CA3AF;
+}
+
+.progress-step.active .step-text {
+  color: #7B68EE;
+  font-weight: 600;
+}
+
+.progress-line {
+  flex: 1;
+  height: 2rpx;
+  background: #E5E7EB;
+  margin: 0 20rpx;
+  margin-bottom: 40rpx;
+}
+
+.progress-line.active {
+  background: linear-gradient(135deg, #7B68EE 0%, #9B59B6 100%);
+}
+
+/* 表单区域 */
+.form-section {
+  padding: 30rpx;
+}
+
+.section-title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #1F2937;
+  margin-bottom: 12rpx;
+}
+
+.section-desc {
+  font-size: 26rpx;
+  color: #9CA3AF;
+  margin-bottom: 40rpx;
+  display: block;
+}
+
+/* 头像上传 */
+.avatar-upload {
+  width: 320rpx;
+  height: 400rpx;
+  margin: 0 auto 40rpx;
+  border-radius: 24rpx;
+  overflow: hidden;
+  background: linear-gradient(135deg, #F9FAFB 0%, #F0E6FF 100%);
+  box-shadow: 0 8rpx 32rpx rgba(123, 104, 238, 0.1);
+  border: 4rpx dashed #7B68EE;
+}
+
+.avatar-upload image {
+  width: 100%;
+  height: 100%;
+}
+
+.upload-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-placeholder .icon {
+  font-size: 80rpx;
+  margin-bottom: 20rpx;
+}
+
+.upload-placeholder .text {
+  font-size: 32rpx;
+  color: #7B68EE;
+  font-weight: 600;
+  margin-bottom: 12rpx;
+}
+
+.upload-placeholder .sub-text {
+  font-size: 24rpx;
+  color: #9CA3AF;
+}
+
+/* 表单组 */
+.form-group {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 20rpx 30rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.04);
+}
+
+.form-item {
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid #F3F4F6;
+}
+
+.form-item:last-child {
+  border-bottom: none;
+}
+
+.label {
+  font-size: 28rpx;
+  color: #1F2937;
+  margin-bottom: 16rpx;
+  display: block;
+}
+
+.form-item input {
+  font-size: 30rpx;
+  color: #1F2937;
+}
+
+.picker-value {
+  font-size: 30rpx;
+  color: #1F2937;
+}
+
+/* 性别选择 */
+.gender-options {
+  display: flex;
+  gap: 30rpx;
+}
+
+.option {
+  flex: 1;
+  height: 80rpx;
+  background: #F9FAFB;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  font-size: 28rpx;
+  color: #4B5563;
+}
+
+.option.active {
+  background: linear-gradient(135deg, #7B68EE 0%, #9B59B6 100%);
+  color: #fff;
+}
+
+.option .icon {
+  font-size: 32rpx;
+}
+
+/* 身份证上传 */
+.idcard-upload {
+  display: flex;
+  gap: 30rpx;
+  margin-bottom: 40rpx;
+}
+
+.upload-item {
+  flex: 1;
+  height: 220rpx;
+  background: #F9FAFB;
+  border-radius: 16rpx;
+  overflow: hidden;
+}
+
+.upload-item image {
+  width: 100%;
+  height: 100%;
+}
+
+/* 提示框 */
+.notice-box {
+  background: #DBEAFE;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  display: flex;
+  align-items: flex-start;
+  gap: 16rpx;
+  margin-top: 30rpx;
+}
+
+.notice-icon {
+  font-size: 32rpx;
+}
+
+.notice-text {
+  font-size: 26rpx;
+  color: #3B82F6;
+  line-height: 1.6;
+  flex: 1;
+}
+
+/* 技能标签 - 网格布局 */
+.skill-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20rpx;
+  padding: 20rpx 0;
+}
+
+.skill-item {
+  width: calc(20% - 16rpx);
+  aspect-ratio: 1;
+  background: #fff;
+  border-radius: 16rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06);
+  position: relative;
+  transition: all 0.3s;
+}
+
+.skill-item.selected {
+  background: linear-gradient(135deg, #7B68EE 0%, #9B59B6 100%);
+  box-shadow: 0 8rpx 24rpx rgba(123, 104, 238, 0.3);
+  transform: scale(1.05);
+}
+
+.skill-icon {
+  font-size: 48rpx;
+}
+
+.skill-name {
+  font-size: 22rpx;
+  color: #1F2937;
+  text-align: center;
+}
+
+.skill-item.selected .skill-name {
+  color: #fff;
+  font-weight: 600;
+}
+
+.selected-mark {
+  position: absolute;
+  top: 8rpx;
+  right: 8rpx;
+  width: 28rpx;
+  height: 28rpx;
+  background: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18rpx;
+  color: #7B68EE;
+  font-weight: bold;
+}
+
+/* 个人简介 */
+.bio-textarea {
+  width: 100%;
+  height: 200rpx;
+  background: #F9FAFB;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  font-size: 28rpx;
+  box-sizing: border-box;
+  border: 2rpx solid #E5E7EB;
+}
+
+.bio-textarea:focus {
+  border-color: #7B68EE;
+}
+
+/* 协议同意 */
+.agreement-section {
+  margin-top: 40rpx;
+  padding: 30rpx;
+  background: #fff;
+  border-radius: 24rpx;
+}
+
+.agreement-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1F2937;
+  margin-bottom: 24rpx;
+  padding-bottom: 20rpx;
+  border-bottom: 1rpx solid #F3F4F6;
+}
+
+.agreement-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.agreement-item {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 16rpx;
+  border-radius: 12rpx;
+  transition: all 0.2s;
+}
+
+.agreement-item:active {
+  background: #F9FAFB;
+}
+
+.agreement-item.checked {
+  background: #F0E6FF;
+}
+
+.checkbox-wrap {
+  margin-right: 16rpx;
+}
+
+.agreement-name {
+  flex: 1;
+  font-size: 30rpx;
+  color: #1F2937;
+  font-weight: 500;
+}
+
+.agreement-item.checked .agreement-name {
+  color: #7B68EE;
+}
+
+.word-count {
+  text-align: right;
+  font-size: 24rpx;
+  color: #9CA3AF;
+  margin-top: 12rpx;
+  display: block;
+}
+
+/* 底部按钮 */
+.footer-btns {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  padding: 30rpx;
+  display: flex;
+  gap: 20rpx;
+  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.05);
+}
+
+.btn-prev {
+  width: 200rpx;
+  height: 96rpx;
+  background: #F3F4F6;
+  color: #4B5563;
+  font-size: 30rpx;
+  border-radius: 48rpx;
+}
+
+.btn-prev::after {
+  border: none;
+}
+
+.btn-next {
+  flex: 1;
+  height: 96rpx;
+  background: linear-gradient(135deg, #7B68EE 0%, #9B59B6 100%);
+  color: #fff;
+  font-size: 32rpx;
+  border-radius: 48rpx;
+  font-weight: 600;
+  box-shadow: 0 4rpx 16rpx rgba(123, 104, 238, 0.3);
+}
+
+.btn-next.disabled {
+  background: #9CA3AF;
+}
+
+.btn-next::after {
+  border: none;
+}

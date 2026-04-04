@@ -1,0 +1,76 @@
+<!-- pages/message-detail/message-detail.wxml - 消息详情页 -->
+<view class="container">
+  <!-- 自定义导航栏 -->
+  <view class="custom-nav">
+    <view class="nav-left" bindtap="goBack">
+      <text class="nav-back-icon">‹</text>
+    </view>
+    <text class="nav-title">消息详情</text>
+    <view class="nav-right"></view>
+  </view>
+
+  <!-- 加载中 -->
+  <view class="loading-state" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <!-- 消息内容 -->
+  <block wx:if="{{!loading && message}}">
+    <!-- 头部信息 -->
+    <view class="message-header">
+      <view class="icon-wrap {{message.type}}">
+        <text class="icon" wx:if="{{message.iconType === 'order'}}">📋</text>
+        <text class="icon" wx:if="{{message.iconType === 'money'}}">💰</text>
+        <text class="icon" wx:if="{{message.iconType === 'system'}}">📢</text>
+      </view>
+      <view class="header-info">
+        <text class="title">{{message.title}}</text>
+        <text class="time">{{message.time}}</text>
+      </view>
+    </view>
+
+    <!-- 主要内容 -->
+    <view class="message-body">
+      <view class="content-summary">{{message.content}}</view>
+      <view class="content-detail">{{message.detail}}</view>
+    </view>
+
+    <!-- 额外信息 -->
+    <view class="extra-info" wx:if="{{message.extraInfo}}">
+      <view class="info-title">详细信息</view>
+      <view class="info-list">
+        <block wx:for="{{message.extraInfo}}" wx:key="index">
+          <view class="info-item">
+            <text class="info-label">{{index}}:</text>
+            <text class="info-value">{{item}}</text>
+          </view>
+        </block>
+      </view>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="action-bar" wx:if="{{message.actions && message.actions.length > 0}}">
+      <view 
+        class="action-btn {{item.type}}" 
+        wx:for="{{message.actions}}" 
+        wx:key="index"
+        data-action="{{item.action}}"
+        bindtap="onActionTap"
+      >
+        {{item.text}}
+      </view>
+    </view>
+  </block>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{!loading && !message}}">
+    <text class="empty-icon">📭</text>
+    <text class="empty-text">消息不存在或已被删除</text>
+  </view>
+
+  <!-- 底部操作 -->
+  <view class="footer" wx:if="{{!loading && message}}">
+    <text class="delete-btn" bindtap="onDelete">删除消息</text>
+  </view>
+</view>

@@ -1,0 +1,70 @@
+<!-- components/task-card/task-card.wxml -->
+<view class="task-card" bindtap="onTap" data-id="{{task.id}}">
+  <!-- 卡片头部：服务类型 + 标签 -->
+  <view class="card-header">
+    <view class="service-info">
+      <text class="service-icon">{{task.icon || '📋'}}</text>
+      <text class="service-name">{{task.service_name || task.serviceType}}</text>
+    </view>
+    <view class="tag-group">
+      <text class="tag tag-new" wx:if="{{task.isNew || task.created_at}}">新发布</text>
+      <text class="tag tag-urgent" wx:if="{{task.isUrgent}}">急单</text>
+    </view>
+  </view>
+
+  <!-- 卡片中部：价格信息 -->
+  <view class="card-body">
+    <view class="price-section">
+      <text class="price-symbol">¥</text>
+      <text class="price-value">{{task.totalAmount || task.price}}</text>
+      <text class="price-unit">/小时</text>
+    </view>
+    <view class="task-detail">
+      <view class="detail-item">
+        <text class="detail-icon">⏱️</text>
+        <text class="detail-value">{{task.duration}}小时</text>
+      </view>
+      <view class="detail-item">
+        <text class="detail-icon">📍</text>
+        <text class="detail-value">{{task.distance || '未知距离'}}</text>
+      </view>
+      <view class="detail-item">
+        <text class="detail-icon">🕐</text>
+        <text class="detail-value">{{task.appointment_time || task.appointmentTime || '待确认'}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 卡片底部：用户信息 + 抢单按钮 -->
+  <view class="card-footer">
+    <view class="user-info">
+      <image 
+        class="user-avatar" 
+        src="{{task.user && task.user.avatar || task.userAvatar || '/assets/icons/default-avatar.png'}}" 
+        mode="aspectFill"
+      />
+      <view class="user-detail">
+        <text class="user-name">{{task.user && task.user.nickname || task.customerName}}</text>
+        <text class="user-tags" wx:if="{{task.userType}}">
+          <text class="user-tag" wx:if="{{task.userType === 'new'}}">新用户</text>
+          <text class="user-tag regular" wx:if="{{task.userType === 'regular'}}">老客户</text>
+        </text>
+      </view>
+    </view>
+    <view 
+      class="grab-btn {{task.canGrab ? '' : 'disabled'}}"
+      catchtap="onGrab"
+      data-id="{{task.id}}"
+      data-can-grab="{{task.canGrab}}"
+    >
+      {{task.canGrab ? '立即抢单' : '已抢满'}}
+    </view>
+  </view>
+</view>
+
+<!-- 空状态 -->
+<view class="empty-state" wx:if="{{empty}}">
+  <image class="empty-icon" src="/assets/icons/empty-order.png" mode="aspectFit"/>
+  <text class="empty-title">{{emptyTitle || '暂无任务'}}</text>
+  <text class="empty-desc">{{emptyDesc || '稍后再来看看吧~'}}</text>
+</view>

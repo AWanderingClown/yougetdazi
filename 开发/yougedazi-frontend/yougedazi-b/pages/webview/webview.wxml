@@ -1,0 +1,8 @@
+<!-- pages/webview/webview.wxml - 网页浏览 -->
+<view class="container">
+  <web-view 
+    src="{{url}}" 
+    bindload="onLoadComplete"
+    binderror="onLoadError"
+  />
+</view>

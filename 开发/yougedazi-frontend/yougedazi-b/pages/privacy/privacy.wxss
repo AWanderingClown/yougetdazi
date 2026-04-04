@@ -1,0 +1,66 @@
+/* pages/privacy/privacy.wxss - 隐私政策样式 */
+.page-privacy {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #F9FAFB;
+}
+
+/* 头部 */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 32rpx;
+  background: linear-gradient(135deg, #7B68EE, #9B59B6);
+  padding-top: 60rpx;
+}
+
+.header-left {
+  width: 60rpx;
+}
+
+.icon-back {
+  font-size: 48rpx;
+  color: #fff;
+  font-weight: bold;
+}
+
+.header-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #fff;
+}
+
+.header-right {
+  width: 60rpx;
+}
+
+/* 内容区域 */
+.content-wrapper {
+  flex: 1;
+  padding: 32rpx;
+}
+
+.content {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 40rpx 32rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.04);
+}
+
+.title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #1F2937;
+  text-align: center;
+  margin-bottom: 40rpx;
+}
+
+.privacy-text {
+  font-size: 28rpx;
+  color: #4B5563;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}

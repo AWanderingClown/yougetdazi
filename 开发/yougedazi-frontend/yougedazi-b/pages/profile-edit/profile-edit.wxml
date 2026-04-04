@@ -1,0 +1,153 @@
+<!-- pages/profile-edit/profile-edit.wxml - 编辑个人资料 -->
+<view class="page-edit">
+  <!-- 自定义导航栏 -->
+  <view class="custom-nav">
+    <view class="nav-left" bindtap="goBack">
+      <text class="nav-back-icon">‹</text>
+    </view>
+    <text class="nav-title">编辑资料</text>
+    <view class="nav-right"></view>
+  </view>
+
+  <!-- 审核状态横幅 -->
+  <view class="audit-banner {{auditStatus}}" wx:if="{{auditStatus !== 'none'}}">
+    <text class="audit-banner-icon">
+      <block wx:if="{{auditStatus === 'pending'}}">⏳</block>
+      <block wx:if="{{auditStatus === 'approved'}}">✅</block>
+      <block wx:if="{{auditStatus === 'rejected'}}">❌</block>
+    </text>
+    <view class="audit-banner-content">
+      <text class="audit-banner-title">
+        <block wx:if="{{auditStatus === 'pending'}}">资料修改审核中</block>
+        <block wx:if="{{auditStatus === 'approved'}}">资料修改已通过</block>
+        <block wx:if="{{auditStatus === 'rejected'}}">资料修改被拒绝</block>
+      </text>
+      <text class="audit-banner-desc" wx:if="{{auditStatus === 'pending'}}">运营专员正在审核，审核通过后资料将更新展示</text>
+      <text class="audit-banner-desc" wx:if="{{auditStatus === 'approved'}}">审核已通过，客户端资料已更新</text>
+      <text class="audit-banner-desc" wx:if="{{auditStatus === 'rejected'}}">{{auditRemark || '审核未通过，请修改后重新提交'}}</text>
+    </view>
+  </view>
+
+  <!-- 预览卡片 -->
+  <view class="preview-section">
+    <view class="preview-label">
+      <text class="preview-label-text">客户端展示预览</text>
+    </view>
+    <!-- 1:1 还原C端 companion-card -->
+    <view class="c-card">
+      <!-- 左侧头像 - 斜切 -->
+      <view class="c-avatar-section">
+        <image class="c-avatar" src="{{avatar || '/assets/icons/default-avatar.png'}}" mode="aspectFill"/>
+        <view class="c-online online"></view>
+      </view>
+      <!-- 中间信息 -->
+      <view class="c-info-section">
+        <view class="c-info-row">
+          <text class="c-nickname">{{nickname || '你的昵称'}}</text>
+          <view class="c-gender-age {{gender === '女' ? 'female' : 'male'}}">
+            <text class="c-gender-icon">{{gender === '女' ? '♀' : '♂'}}</text>
+            <text class="c-age">{{age || '--'}}岁</text>
+          </view>
+        </view>
+        <view class="c-service-tags">
+          <text class="c-tag" wx:for="{{previewServices}}" wx:key="*this" wx:if="{{index < 3}}">{{item}}</text>
+          <text class="c-tag c-tag-empty" wx:if="{{!previewServices.length}}">暂无服务项目</text>
+        </view>
+        <view class="c-location-row">
+          <text class="c-location-icon">📍</text>
+          <text class="c-distance">{{city || '城市未设置'}} · 距离您0.0公里</text>
+        </view>
+      </view>
+    </view>
+    <text class="preview-tip">如需调整服务项目，请在上一页申请</text>
+  </view>
+
+  <!-- 基本信息 -->
+  <view class="edit-section">
+    <text class="section-title">基本信息</text>
+
+    <!-- 头像 -->
+    <view class="form-row avatar-row" bindtap="chooseAvatar">
+      <text class="form-label">头像</text>
+      <view class="avatar-right">
+        <image class="form-avatar" src="{{avatar || '/assets/icons/default-avatar.png'}}" mode="aspectFill"/>
+        <text class="form-arrow">›</text>
+      </view>
+    </view>
+
+    <!-- 昵称 -->
+    <view class="form-row">
+      <text class="form-label">昵称</text>
+      <input class="form-input" placeholder="请输入昵称" placeholder-class="form-placeholder" value="{{nickname}}" maxlength="20" bindinput="onNicknameInput"/>
+    </view>
+
+    <!-- 性别 -->
+    <view class="form-row">
+      <text class="form-label">性别</text>
+      <view class="gender-wrap">
+        <view class="gender-btn {{gender === '男' ? 'active-male' : ''}}" data-gender="男" bindtap="selectGender">♂ 男</view>
+        <view class="gender-btn {{gender === '女' ? 'active-female' : ''}}" data-gender="女" bindtap="selectGender">♀ 女</view>
+      </view>
+    </view>
+
+    <!-- 年龄 -->
+    <view class="form-row">
+      <text class="form-label">年龄</text>
+      <picker mode="selector" range="{{ageRange}}" value="{{ageIndex}}" bindchange="onAgeChange">
+        <view class="picker-row">
+          <text class="picker-text {{age ? '' : 'placeholder'}}">{{age || '请选择'}}</text>
+          <text class="form-arrow">›</text>
+        </view>
+      </picker>
+    </view>
+
+    <!-- 城市 -->
+    <view class="form-row form-row-last">
+      <text class="form-label">城市</text>
+      <picker mode="region" value="{{region}}" bindchange="onCityChange">
+        <view class="picker-row">
+          <text class="picker-text {{city ? '' : 'placeholder'}}">{{city || '请选择'}}</text>
+          <text class="form-arrow">›</text>
+        </view>
+      </picker>
+    </view>
+  </view>
+
+  <!-- 个人签名 -->
+  <view class="edit-section">
+    <view class="section-title-row">
+      <text class="section-title">个人签名</text>
+      <text class="section-sub">展示在你的详情页顶部</text>
+    </view>
+    <view class="bio-wrap">
+      <textarea class="bio-input" placeholder="介绍一下自己，让客户更了解你...（选填）" placeholder-class="form-placeholder" value="{{bio}}" maxlength="100" bindinput="onBioInput" auto-height/>
+      <text class="bio-count">{{bio.length || 0}}/100</text>
+    </view>
+  </view>
+
+  <!-- 相册 -->
+  <view class="edit-section">
+    <view class="section-title-row">
+      <text class="section-title">相册</text>
+      <text class="section-sub">{{album.length}}/9张 · 展示在你的详情页</text>
+    </view>
+    <view class="album-grid">
+      <view class="album-item" wx:for="{{album}}" wx:key="index">
+        <image class="album-photo" src="{{item}}" mode="aspectFill"/>
+        <view class="album-remove" catchtap="removeAlbumPhoto" data-index="{{index}}">×</view>
+      </view>
+      <view class="album-add" wx:if="{{album.length < 9}}" bindtap="chooseAlbumPhoto">
+        <text class="add-plus">+</text>
+        <text class="add-text">添加照片</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部提交按钮 -->
+  <view class="bottom-bar">
+    <view class="save-btn {{auditStatus === 'pending' ? 'auditing' : ''}} {{canSave && auditStatus !== 'pending' ? '' : 'disabled'}}" bindtap="submitAudit">
+      {{auditStatus === 'pending' ? '审核中，请等待' : '提交审核'}}
+    </view>
+  </view>
+
+</view>

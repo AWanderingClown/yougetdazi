@@ -1,0 +1,35 @@
+<!-- components/modal/modal.wxml -->
+<view class="modal-mask {{show ? 'show' : ''}}" wx:if="{{show}}" bindtap="onClose"></view>
+<view class="modal-container {{show ? 'show' : ''}}">
+  <view class="modal-content">
+    <!-- 头部 -->
+    <view class="modal-header" wx:if="{{title}}">
+      <text class="modal-title">{{title}}</text>
+      <view class="modal-close" bindtap="onClose" wx:if="{{showClose}}">×</view>
+    </view>
+    
+    <!-- 内容 -->
+    <view class="modal-body">
+      <text class="modal-text">{{content}}</text>
+      <slot></slot>
+    </view>
+    
+    <!-- 底部按钮 -->
+    <view class="modal-footer" wx:if="{{showCancel || showConfirm}}">
+      <view 
+        class="modal-btn modal-btn-cancel" 
+        bindtap="onCancel"
+        wx:if="{{showCancel}}"
+      >
+        {{cancelText || '取消'}}
+      </view>
+      <view 
+        class="modal-btn modal-btn-confirm" 
+        bindtap="onConfirm"
+        wx:if="{{showConfirm}}"
+      >
+        {{confirmText || '确定'}}
+      </view>
+    </view>
+  </view>
+</view>

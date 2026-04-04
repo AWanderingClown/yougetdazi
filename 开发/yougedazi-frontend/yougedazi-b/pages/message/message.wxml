@@ -1,0 +1,121 @@
+<!-- pages/message/message.wxml - 消息中心 -->
+<view class="container">
+  <!-- 自定义导航栏 -->
+  <view class="custom-nav">
+    <view class="nav-left" bindtap="goBack">
+      <text class="nav-back-icon">‹</text>
+    </view>
+    <text class="nav-title">消息中心</text>
+    <view class="nav-right"></view>
+  </view>
+
+  <!-- 消息类型切换 -->
+  <view class="message-tabs">
+    <view class="tab-item {{currentTab === 'system' ? 'active' : ''}}" bindtap="switchTab" data-tab="system">
+      <text>系统通知</text>
+      <view class="badge" wx:if="{{systemUnread > 0}}">{{systemUnread}}</view>
+    </view>
+    <view class="tab-item {{currentTab === 'chat' ? 'active' : ''}}" bindtap="switchTab" data-tab="chat">
+      <text>用户消息</text>
+      <view class="badge" wx:if="{{chatUnread > 0}}">{{chatUnread}}</view>
+    </view>
+  </view>
+
+  <!-- 系统通知列表 -->
+  <view class="message-list" wx:if="{{currentTab === 'system'}}">
+    <block wx:for="{{systemMessages}}" wx:key="id">
+      <movable-area class="movable-area">
+        <movable-view 
+          class="movable-view"
+          direction="horizontal"
+          damping="50"
+          friction="10"
+          out-of-bounds="false"
+          x="{{item.x}}"
+          data-id="{{item.id}}"
+          data-type="system"
+          bindtouchstart="onTouchStart"
+          bindtouchmove="onTouchMove"
+          bindtouchend="onTouchEnd"
+          bindchange="onChange"
+        >
+          <!-- 消息内容 -->
+          <view class="message-item" catchtap="onSystemMessageTap" data-id="{{item.id}}">
+            <view class="message-icon icon-{{item.iconType}}">
+              <text class="icon-text" wx:if="{{item.iconType === 'order'}}">订</text>
+              <text class="icon-text" wx:if="{{item.iconType === 'money'}}">¥</text>
+              <text class="icon-text" wx:if="{{item.iconType === 'system'}}">公</text>
+            </view>
+            <view class="message-content">
+              <view class="message-header">
+                <text class="title">{{item.title}}</text>
+                <text class="time">{{item.time}}</text>
+              </view>
+              <view class="message-body">
+                <text class="desc">{{item.content}}</text>
+                <view class="unread-dot" wx:if="{{item.unread > 0}}"></view>
+              </view>
+            </view>
+          </view>
+        </movable-view>
+        
+        <!-- 删除按钮 -->
+        <view class="delete-btn" bindtap="deleteSystemMessage" data-id="{{item.id}}">
+          <text>删除</text>
+        </view>
+      </movable-area>
+    </block>
+    
+    <view class="empty-state" wx:if="{{systemMessages.length === 0}}">
+      <image class="empty-icon" src="/assets/icons/empty-message.png"/>
+      <text class="empty-text">暂无系统通知</text>
+    </view>
+  </view>
+
+  <!-- 用户消息列表 -->
+  <view class="message-list" wx:if="{{currentTab === 'chat'}}">
+    <block wx:for="{{chatList}}" wx:key="id">
+      <movable-area class="movable-area">
+        <movable-view 
+          class="movable-view"
+          direction="horizontal"
+          damping="50"
+          friction="10"
+          out-of-bounds="false"
+          x="{{item.x}}"
+          data-id="{{item.id}}"
+          data-type="chat"
+          bindtouchstart="onTouchStart"
+          bindtouchmove="onTouchMove"
+          bindtouchend="onTouchEnd"
+          bindchange="onChange"
+        >
+          <!-- 聊天内容 -->
+          <view class="chat-item" catchtap="onChatTap" data-id="{{item.id}}">
+            <image class="avatar" src="{{item.avatar}}" mode="aspectFill"/>
+            <view class="chat-content">
+              <view class="chat-header">
+                <text class="name">{{item.name}}</text>
+                <text class="time">{{item.time}}</text>
+              </view>
+              <view class="chat-body">
+                <text class="last-message">{{item.lastMessage}}</text>
+                <view class="unread-badge" wx:if="{{item.unread > 0}}">{{item.unread}}</view>
+              </view>
+            </view>
+          </view>
+        </movable-view>
+        
+        <!-- 删除按钮 -->
+        <view class="delete-btn" bindtap="deleteChat" data-id="{{item.id}}">
+          <text>删除</text>
+        </view>
+      </movable-area>
+    </block>
+    
+    <view class="empty-state" wx:if="{{chatList.length === 0}}">
+      <image class="empty-icon" src="/assets/icons/empty-message.png"/>
+      <text class="empty-text">暂无用户消息</text>
+    </view>
+  </view>
+</view>

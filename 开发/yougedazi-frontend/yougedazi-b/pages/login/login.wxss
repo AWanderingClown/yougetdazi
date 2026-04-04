@@ -1,0 +1,271 @@
+/* pages/login/login.wxss - 搭子登录样式 */
+
+.container {
+  min-height: 100vh;
+  background: #F9FAFB;
+}
+
+/* 顶部背景 */
+.header-bg {
+  height: 360rpx;
+  background: linear-gradient(135deg, #7B68EE 0%, #9B59B6 100%);
+  border-radius: 0 0 60rpx 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-section {
+  text-align: center;
+  color: #fff;
+}
+
+.app-name {
+  font-size: 64rpx;
+  font-weight: 700;
+  display: block;
+  margin-bottom: 16rpx;
+  letter-spacing: 4rpx;
+}
+
+.app-slogan {
+  font-size: 28rpx;
+  opacity: 0.9;
+}
+
+/* 登录卡片 */
+.login-card {
+  margin: -80rpx 40rpx 40rpx;
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 40rpx;
+  box-shadow: 0 8rpx 40rpx rgba(123, 104, 238, 0.15);
+}
+
+/* 登录标签 */
+.login-tabs {
+  display: flex;
+  margin-bottom: 40rpx;
+  border-bottom: 2rpx solid #F3F4F6;
+}
+
+.tab-item {
+  flex: 1;
+  text-align: center;
+  padding: 24rpx 0;
+  font-size: 30rpx;
+  color: #9CA3AF;
+  position: relative;
+  transition: all 0.3s;
+}
+
+.tab-item.active {
+  color: #7B68EE;
+  font-weight: 600;
+}
+
+.tab-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60rpx;
+  height: 4rpx;
+  background: linear-gradient(135deg, #7B68EE 0%, #9B59B6 100%);
+  border-radius: 2rpx;
+}
+
+/* 微信登录 */
+.wechat-icon {
+  width: 160rpx;
+  height: 160rpx;
+  background: #D1FAE5;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 40rpx auto;
+}
+
+.wechat-icon .icon {
+  font-size: 80rpx;
+}
+
+.wechat-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #1F2937;
+  text-align: center;
+  display: block;
+  margin-bottom: 16rpx;
+}
+
+.wechat-desc {
+  font-size: 26rpx;
+  color: #9CA3AF;
+  text-align: center;
+  display: block;
+  margin-bottom: 40rpx;
+}
+
+.wechat-btn {
+  background: #10B981;
+  color: #fff;
+  font-size: 32rpx;
+  height: 96rpx;
+  border-radius: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16rpx;
+}
+
+.wechat-btn::after {
+  border: none;
+}
+
+.btn-icon {
+  font-size: 36rpx;
+}
+
+/* 手机号登录 */
+.input-group {
+  margin-bottom: 40rpx;
+}
+
+.input-item {
+  margin-bottom: 30rpx;
+}
+
+.input-label {
+  font-size: 28rpx;
+  color: #1F2937;
+  margin-bottom: 16rpx;
+  display: block;
+}
+
+.input-item input {
+  height: 88rpx;
+  background: #F9FAFB;
+  border-radius: 16rpx;
+  padding: 0 24rpx;
+  font-size: 30rpx;
+  color: #1F2937;
+  border: 2rpx solid #E5E7EB;
+}
+
+.input-item input:focus {
+  border-color: #7B68EE;
+}
+
+.code-input-wrap {
+  display: flex;
+  gap: 20rpx;
+}
+
+.code-input-wrap .code-input {
+  flex: 1;
+}
+
+.code-btn {
+  width: 200rpx;
+  height: 88rpx;
+  background: linear-gradient(135deg, #7B68EE 0%, #9B59B6 100%);
+  color: #fff;
+  font-size: 26rpx;
+  border-radius: 16rpx;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.code-btn.disabled {
+  background: #9CA3AF;
+}
+
+.code-btn::after {
+  border: none;
+}
+
+.login-btn {
+  background: linear-gradient(135deg, #7B68EE 0%, #9B59B6 100%);
+  color: #fff;
+  font-size: 32rpx;
+  height: 96rpx;
+  border-radius: 48rpx;
+  font-weight: 600;
+  box-shadow: 0 4rpx 16rpx rgba(123, 104, 238, 0.3);
+}
+
+.login-btn.disabled {
+  background: #9CA3AF;
+}
+
+.login-btn::after {
+  border: none;
+}
+
+/* 协议 */
+.agreement {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 30rpx;
+  flex-wrap: wrap;
+}
+
+.agreement-text {
+  font-size: 24rpx;
+  color: #9CA3AF;
+}
+
+.agreement-link {
+  font-size: 24rpx;
+  color: #7B68EE;
+}
+
+/* 底部 */
+.footer {
+  text-align: center;
+  font-size: 26rpx;
+  color: #9CA3AF;
+  padding-bottom: 40rpx;
+}
+
+.register-link {
+  color: #7B68EE;
+  font-weight: 600;
+  margin-left: 8rpx;
+}
+
+/* 开发者测试入口 */
+.dev-entry {
+  padding: 0 60rpx 60rpx;
+  text-align: center;
+}
+
+.dev-btn {
+  background: #F3F4F6;
+  color: #4B5563;
+  border-radius: 44rpx;
+  font-size: 28rpx;
+  padding: 20rpx 40rpx;
+  border: 2rpx dashed #E5E7EB;
+}
+
+.dev-btn::after {
+  border: none;
+}
+
+.dev-btn:active {
+  background: #E5E7EB;
+}
+
+.dev-tip {
+  display: block;
+  font-size: 22rpx;
+  color: #9CA3AF;
+  margin-top: 16rpx;
+}

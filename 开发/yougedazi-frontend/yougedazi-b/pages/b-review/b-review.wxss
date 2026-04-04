@@ -1,0 +1,342 @@
+/* pages/b-review/b-review.wxss - 评价用户页面 */
+
+.page-review {
+  min-height: 100vh;
+  background: var(--bg);
+  padding-bottom: calc(200rpx + env(safe-area-inset-bottom));
+}
+
+/* ========== 自定义导航栏 ========== */
+.custom-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 220rpx;
+  padding: 0 24rpx;
+  padding-top: 60rpx;
+  background: linear-gradient(135deg, #7B68EE 0%, #9B59B6 100%);
+  position: relative;
+  z-index: 10;
+}
+
+.nav-left, .nav-right {
+  width: 80rpx;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-back-icon {
+  font-size: 56rpx;
+  color: #ffffff;
+  font-weight: bold;
+}
+
+.nav-title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* ========== 头部区域 ========== */
+.review-header {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  padding: 40rpx 32rpx 80rpx;
+  text-align: center;
+  position: relative;
+}
+
+.header-icon {
+  font-size: 80rpx;
+  margin-bottom: 16rpx;
+}
+
+.header-title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 12rpx;
+}
+
+.header-desc {
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* ========== 用户信息卡片 ========== */
+.user-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  margin: -40rpx var(--space) var(--space);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 10;
+}
+
+.user-avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: var(--radius-full);
+  border: 6rpx solid var(--surface);
+  box-shadow: var(--shadow);
+  margin-top: -80rpx;
+  background: var(--divider);
+}
+
+.user-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: 16rpx;
+  margin-bottom: 8rpx;
+}
+
+.service-info {
+  font-size: 26rpx;
+  color: var(--text-tertiary);
+}
+
+/* ========== 评分区域（通用） ========== */
+.rating-section,
+.dimensions-section,
+.tags-section,
+.comment-section {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  margin: 0 var(--space) var(--space);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow);
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space);
+  display: flex;
+  align-items: center;
+}
+
+.section-title::before {
+  content: '';
+  display: inline-block;
+  width: 6rpx;
+  height: 28rpx;
+  background: var(--primary);
+  border-radius: 3rpx;
+  margin-right: 12rpx;
+}
+
+/* ========== 总体评分星星 ========== */
+.star-rating {
+  display: flex;
+  justify-content: center;
+  gap: 24rpx;
+  margin-bottom: 16rpx;
+}
+
+.star-item {
+  width: 80rpx;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background: var(--divider);
+  transition: all 0.2s ease;
+}
+
+.star-item.active {
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  box-shadow: 0 4rpx 16rpx rgba(255, 215, 0, 0.4);
+  transform: scale(1.1);
+}
+
+.star-icon {
+  font-size: 40rpx;
+  color: var(--text-tertiary);
+  transition: all 0.2s ease;
+}
+
+.star-item.active .star-icon {
+  color: #fff;
+}
+
+.rating-text {
+  text-align: center;
+  font-size: 28rpx;
+  color: var(--text-secondary);
+  margin-top: 8rpx;
+}
+
+/* ========== 评价维度 ========== */
+.dimension-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 0;
+  border-bottom: 2rpx solid var(--divider);
+}
+
+.dimension-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.dimension-name {
+  font-size: 28rpx;
+  color: var(--text-secondary);
+  font-weight: 500;
+  min-width: 140rpx;
+}
+
+.dimension-stars {
+  display: flex;
+  gap: 12rpx;
+}
+
+.dim-star {
+  font-size: 36rpx;
+  color: var(--divider);
+  transition: all 0.15s ease;
+}
+
+.dim-star.active {
+  color: #FFD700;
+  text-shadow: 0 2rpx 8rpx rgba(255, 215, 0, 0.3);
+}
+
+/* ========== 标签选择 ========== */
+.tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.tag-item {
+  padding: 14rpx 28rpx;
+  background: var(--bg);
+  border: 2rpx solid var(--border);
+  border-radius: var(--radius-full);
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+}
+
+.tag-item.selected {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  color: var(--primary);
+  font-weight: 500;
+}
+
+/* ========== 文字评价 ========== */
+.comment-input {
+  width: 100%;
+  height: 200rpx;
+  background: var(--bg);
+  border: 2rpx solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space);
+  font-size: 28rpx;
+  color: var(--text-primary);
+  line-height: 1.6;
+  transition: border-color 0.2s ease;
+}
+
+.comment-input:focus {
+  border-color: var(--primary);
+}
+
+.word-count {
+  text-align: right;
+  font-size: 24rpx;
+  color: var(--text-tertiary);
+  margin-top: 12rpx;
+}
+
+/* ========== 匿名评价 ========== */
+.anonymous-section {
+  display: flex;
+  align-items: center;
+  margin: 0 var(--space) var(--space);
+  padding: 20rpx var(--space-lg);
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+
+.anonymous-text {
+  font-size: 28rpx;
+  color: var(--text-secondary);
+  margin-left: 16rpx;
+}
+
+/* ========== 底部提交按钮 ========== */
+.submit-section {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  padding: var(--space) var(--space-lg);
+  padding-bottom: calc(var(--space) + env(safe-area-inset-bottom));
+  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.06);
+  display: flex;
+  gap: var(--space);
+  z-index: 100;
+}
+
+.btn-submit {
+  flex: 2;
+  height: 96rpx;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%) !important;
+  color: #fff !important;
+  font-size: 32rpx;
+  font-weight: 600;
+  border-radius: var(--radius-full) !important;
+  box-shadow: var(--shadow-btn);
+  border: none;
+  line-height: 96rpx;
+  padding: 0;
+  transition: all 0.15s ease;
+}
+
+.btn-submit::after {
+  border: none;
+}
+
+.btn-submit:active {
+  transform: scale(0.98);
+}
+
+.btn-submit.disabled {
+  opacity: 0.5;
+  box-shadow: none;
+}
+
+.btn-skip {
+  flex: 1;
+  height: 96rpx;
+  background: var(--bg) !important;
+  color: var(--text-tertiary) !important;
+  font-size: 28rpx;
+  font-weight: 500;
+  border-radius: var(--radius-full) !important;
+  border: none;
+  line-height: 96rpx;
+  padding: 0;
+}
+
+.btn-skip::after {
+  border: none;
+}
+
+.btn-skip:active {
+  background: var(--divider) !important;
+}

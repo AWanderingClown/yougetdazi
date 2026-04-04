@@ -1,0 +1,79 @@
+{
+  "pages": [
+    "pages/login/login",
+    "pages/register/register",
+    "pages/audit-result/audit-result",
+    "pages/workbench/workbench",
+    "pages/task-square/task-square",
+    "pages/b-order-list/b-order-list",
+    "pages/b-order-detail/b-order-detail",
+    "pages/face-verify/face-verify",
+    "pages/b-review/b-review",
+    "pages/earnings/earnings",
+    "pages/withdraw/withdraw",
+    "pages/message/message",
+    "pages/message-detail/message-detail",
+    "pages/chat/chat",
+    "pages/profile/profile",
+    "pages/services/services",
+    "pages/settings/settings",
+    "pages/agreement/agreement",
+    "pages/privacy/privacy",
+    "pages/account-security/account-security",
+    "pages/profile-edit/profile-edit",
+    "pages/deposit/deposit",
+    "pages/webview/webview"
+  ],
+  "useExtendedLib": {
+    "weui": true
+  },
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#fff",
+    "navigationBarTitleText": "有个搭子",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F5F5F5",
+    "navigationStyle": "custom"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#999999",
+    "selectedColor": "#7B68EE",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/workbench/workbench",
+        "text": "工作台",
+        "iconPath": "assets/icons/workbench.png",
+        "selectedIconPath": "assets/icons/workbench-active.png"
+      },
+      {
+        "pagePath": "pages/b-order-list/b-order-list",
+        "text": "订单",
+        "iconPath": "assets/icons/order.png",
+        "selectedIconPath": "assets/icons/order-active.png"
+      },
+      {
+        "pagePath": "pages/message/message",
+        "text": "消息",
+        "iconPath": "assets/icons/message.png",
+        "selectedIconPath": "assets/icons/message-active.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的",
+        "iconPath": "assets/icons/profile.png",
+        "selectedIconPath": "assets/icons/profile-active.png"
+      }
+    ]
+  },
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents",
+  "permission": {
+    "scope.userLocation": {
+      "desc": "您的位置信息将用于向用户展示您的实时位置"
+    }
+  },
+  "requiredBackgroundModes": ["location"]
+}

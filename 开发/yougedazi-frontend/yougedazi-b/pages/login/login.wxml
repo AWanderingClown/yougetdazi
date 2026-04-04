@@ -1,0 +1,66 @@
+<!-- pages/login/login.wxml - 搭子登录 -->
+<view class="container">
+  <!-- 顶部背景 -->
+  <view class="header-bg">
+    <view class="logo-section">
+      <text class="app-name">有个搭子</text>
+      <text class="app-slogan">专业搭子服务平台</text>
+    </view>
+  </view>
+
+  <!-- 登录卡片 -->
+  <view class="login-card">
+    <view class="login-tabs">
+      <view class="tab-item {{loginType === 'wechat' ? 'active' : ''}}" bindtap="switchTab" data-type="wechat">微信登录</view>
+      <view class="tab-item {{loginType === 'phone' ? 'active' : ''}}" bindtap="switchTab" data-type="phone">手机号登录</view>
+    </view>
+
+    <!-- 微信登录 -->
+    <view class="login-content" wx:if="{{loginType === 'wechat'}}">
+      <view class="wechat-icon">
+        <text class="icon">💬</text>
+      </view>
+      <text class="wechat-title">微信一键登录</text>
+      <text class="wechat-desc">快速、安全、无需注册</text>
+      <button class="wechat-btn" open-type="getPhoneNumber" bindgetphonenumber="onWechatLogin">
+        <text class="btn-icon">💬</text>
+        <text>微信授权登录</text>
+      </button>
+    </view>
+
+    <!-- 手机号登录 -->
+    <view class="login-content" wx:if="{{loginType === 'phone'}}">
+      <view class="wechat-icon">
+        <text class="icon">📱</text>
+      </view>
+      <text class="wechat-title">微信手机号登录</text>
+      <text class="wechat-desc">一键获取手机号，快速登录</text>
+      <button class="wechat-btn" open-type="getPhoneNumber" bindgetphonenumber="onGetPhoneNumber">
+        <text class="btn-icon">📱</text>
+        <text>微信手机号授权登录</text>
+      </button>
+    </view>
+
+    <!-- 协议 -->
+    <view class="agreement">
+      <checkbox checked="{{agree}}" bindtap="toggleAgree"/>
+      <text class="agreement-text">我已阅读并同意</text>
+      <text class="agreement-link" bindtap="viewAgreement">《用户协议》</text>
+      <text class="agreement-text">和</text>
+      <text class="agreement-link" bindtap="viewPrivacy">《隐私政策》</text>
+    </view>
+  </view>
+
+  <!-- 底部提示 -->
+  <view class="footer">
+    <text>还没有账号？</text>
+    <text class="register-link" bindtap="goToRegister">立即注册</text>
+  </view>
+
+  <!-- 开发者测试入口 -->
+  <view class="dev-entry">
+    <button class="dev-btn" bindtap="devModeLogin">🔧 开发者测试（直接进入）
+    </button>
+    <text class="dev-tip">用于本地开发测试，绕过登录和审核流程</text>
+  </view>
+</view>

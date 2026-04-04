@@ -1,0 +1,20 @@
+<!-- 自定义 TabBar - B端搭子版（与C端一致） -->
+<view class="tab-bar">
+  <view class="tab-bar-bg"></view>
+  
+  <view class="tab-bar-item {{selected === index ? 'active' : ''}}" 
+        wx:for="{{list}}" 
+        wx:key="index"
+        bindtap="switchTab" 
+        data-index="{{index}}"
+        data-path="{{item.pagePath}}">
+    
+    <view class="tab-icon-wrapper">
+      <image class="tab-icon" src="{{selected === index ? item.selectedIconPath : item.iconPath}}" mode="aspectFit"/>
+    </view>
+    <text class="tab-text {{selected === index ? 'active' : ''}}">{{item.text}}</text>
+    
+    <!-- 徽章 -->
+    <view class="tab-badge" wx:if="{{item.badge > 0}}">{{item.badge}}</view>
+  </view>
+</view>

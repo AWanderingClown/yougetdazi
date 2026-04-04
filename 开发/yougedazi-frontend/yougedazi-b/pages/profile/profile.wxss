@@ -1,0 +1,273 @@
+/* pages/profile/profile.wxss - 个人中心样式 */
+
+.container {
+  min-height: 100vh;
+  background: #F9FAFB;
+  padding-bottom: 40rpx;
+}
+
+/* 自定义导航栏 */
+.custom-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 220rpx;
+  padding: 0 24rpx;
+  padding-top: 60rpx;
+  background: linear-gradient(135deg, #7B68EE 0%, #9B59B6 100%);
+  position: relative;
+  z-index: 10;
+}
+
+.nav-left, .nav-right {
+  width: 80rpx;
+}
+
+.nav-title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* 顶部背景 */
+.header-bg {
+  background: linear-gradient(135deg, #7B68EE 0%, #9B59B6 100%);
+  padding: 60rpx 40rpx 40rpx;
+  margin-top: -40rpx;
+  border-radius: 0 0 40rpx 40rpx;
+}
+
+/* 用户卡片 */
+.user-card {
+  display: flex;
+  align-items: center;
+  margin-bottom: 40rpx;
+}
+
+.avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  border: 4rpx solid rgba(255, 255, 255, 0.3);
+  margin-right: 24rpx;
+}
+
+.user-info {
+  flex: 1;
+}
+
+.nickname {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #fff;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.tags {
+  display: flex;
+  gap: 12rpx;
+}
+
+.tag {
+  padding: 6rpx 16rpx;
+  border-radius: 20rpx;
+  font-size: 22rpx;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.tag.female {
+  background: rgba(255, 107, 157, 0.3);
+}
+
+.tag.male {
+  background: rgba(123, 104, 238, 0.3);
+}
+
+/* 数据统计 */
+.stats-bar {
+  display: flex;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20rpx;
+  padding: 30rpx 0;
+}
+
+.stat-item {
+  flex: 1;
+  text-align: center;
+  border-right: 1rpx solid rgba(255, 255, 255, 0.2);
+}
+
+.stat-item:last-child {
+  border-right: none;
+}
+
+.stat-item .value {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #fff;
+  display: block;
+}
+
+.stat-item .label {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.8);
+  margin-top: 8rpx;
+  display: block;
+}
+
+/* 菜单列表 */
+.menu-list {
+  padding: 30rpx;
+}
+
+.menu-group {
+  background: #fff;
+  border-radius: 24rpx;
+  margin-bottom: 20rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.04);
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 30rpx;
+  border-bottom: 1rpx solid #F3F4F6;
+}
+
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.menu-item .icon {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 12rpx;
+  margin-right: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* 个人资料图标 */
+.icon-profile {
+  background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+}
+
+.icon-profile::before {
+  content: '';
+  width: 18rpx;
+  height: 18rpx;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 14rpx 0 0 #fff;
+}
+
+/* 服务项目图标 */
+.icon-service {
+  background: linear-gradient(135deg, #7B68EE 0%, #9B59B6 100%);
+}
+
+.icon-service::before {
+  content: '';
+  width: 24rpx;
+  height: 24rpx;
+  background: #fff;
+  border-radius: 4rpx;
+}
+
+/* 实名认证图标 */
+.icon-cert {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+}
+
+.icon-cert::before {
+  content: '';
+  width: 20rpx;
+  height: 24rpx;
+  border: 4rpx solid #fff;
+  border-radius: 4rpx;
+}
+
+/* 钱包图标 */
+.icon-wallet {
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+}
+
+.icon-wallet::before {
+  content: '';
+  width: 28rpx;
+  height: 20rpx;
+  background: #fff;
+  border-radius: 4rpx;
+}
+
+/* 设置图标 */
+.icon-settings {
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+}
+
+.icon-settings::before {
+  content: '';
+  width: 24rpx;
+  height: 24rpx;
+  border: 4rpx solid #fff;
+  border-radius: 50%;
+}
+
+/* 客服图标 */
+.icon-service-help {
+  background: linear-gradient(135deg, #EC4899 0%, #DB2777 100%);
+}
+
+.icon-service-help::before {
+  content: '';
+  width: 24rpx;
+  height: 24rpx;
+  border: 4rpx solid #fff;
+  border-radius: 50% 50% 0 50%;
+  transform: rotate(-45deg);
+}
+
+.menu-item .label {
+  flex: 1;
+  font-size: 30rpx;
+  color: #1F2937;
+}
+
+.menu-item .extra {
+  font-size: 26rpx;
+  color: #9CA3AF;
+  margin-right: 16rpx;
+}
+
+.menu-item .extra.pending {
+  color: #F59E0B;
+}
+
+.menu-item .extra.approved {
+  color: #10B981;
+}
+
+.menu-item .arrow {
+  font-size: 36rpx;
+  color: #E5E7EB;
+}
+
+/* 退出登录 */
+.logout-btn {
+  margin: 40rpx 30rpx;
+  height: 96rpx;
+  background: #fff;
+  color: #EF4444;
+  font-size: 30rpx;
+  border-radius: 48rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.04);
+}
+
+.logout-btn::after {
+  border: none;
+}

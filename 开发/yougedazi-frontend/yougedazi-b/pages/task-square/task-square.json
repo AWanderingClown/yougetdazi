@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "任务广场",
+  "backgroundColor": "#f5f5f5",
+  "usingComponents": {
+    "task-card": "/components/task-card/task-card"
+  },
+  "enablePullDownRefresh": false,
+  "navigationStyle": "custom"
+}

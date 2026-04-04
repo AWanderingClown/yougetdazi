@@ -1,0 +1,796 @@
+/* 订单详情 */
+
+.page-order-detail {
+  min-height: 100vh;
+  background: var(--bg);
+  padding-bottom: calc(140rpx + env(safe-area-inset-bottom));
+}
+
+/* ========== 自定义导航栏 ========== */
+.custom-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 220rpx;
+  padding: 0 24rpx;
+  padding-top: 60rpx;
+  background: linear-gradient(135deg, #7B68EE 0%, #9B59B6 100%);
+  position: relative;
+  z-index: 10;
+}
+
+.nav-left, .nav-right {
+  width: 80rpx;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-back-icon {
+  font-size: 56rpx;
+  color: #ffffff;
+  font-weight: bold;
+}
+
+.nav-title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* ========== 顶部状态栏 ========== */
+.status-header {
+  padding: 40rpx 32rpx 40rpx;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.status-header::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 400rpx;
+  height: 400rpx;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+}
+
+/* 状态背景色 */
+.status-bg-pending_accept {
+  background: linear-gradient(135deg, #FF9F43 0%, #FF6B6B 100%);
+}
+
+.status-bg-accepted {
+  background: linear-gradient(135deg, #4A90E2 0%, #50E3C2 100%);
+}
+
+.status-bg-serving {
+  background: linear-gradient(135deg, #7B68EE 0%, #9B59B6 100%);
+}
+
+.status-bg-completed {
+  background: linear-gradient(135deg, #42D176 0%, #2ECC71 100%);
+}
+
+.status-content {
+  display: flex;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.status-icon-wrap {
+  width: 88rpx;
+  height: 88rpx;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: var(--space);
+  backdrop-filter: blur(10rpx);
+}
+
+.status-emoji {
+  font-size: 44rpx;
+}
+
+.status-text-wrap {
+  flex: 1;
+}
+
+.status-title {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 700;
+  margin-bottom: 8rpx;
+}
+
+.status-desc {
+  display: block;
+  font-size: 26rpx;
+  opacity: 0.85;
+}
+
+/* 接单倒计时卡片 */
+.countdown-card {
+  margin-top: var(--space);
+  padding: 20rpx 32rpx;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  z-index: 1;
+  border: 2rpx solid rgba(255, 255, 255, 0.2);
+}
+
+.countdown-hint {
+  font-size: 26rpx;
+  opacity: 0.9;
+}
+
+.countdown-value {
+  font-size: 44rpx;
+  font-weight: 700;
+  font-family: 'DIN Alternate', monospace;
+  letter-spacing: 2rpx;
+}
+
+/* 服务计时器卡片 */
+.timer-card {
+  margin-top: var(--space);
+  padding: 32rpx;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  border: 2rpx solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10rpx);
+}
+
+.timer-label {
+  display: block;
+  font-size: 26rpx;
+  opacity: 0.85;
+  margin-bottom: 16rpx;
+}
+
+.timer-display {
+  margin-bottom: 20rpx;
+}
+
+.timer-value {
+  font-size: 72rpx;
+  font-weight: 700;
+  font-family: 'DIN Alternate', monospace;
+  letter-spacing: 4rpx;
+  text-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.15);
+}
+
+.timer-progress {
+  margin-bottom: 16rpx;
+}
+
+.progress-bar {
+  height: 10rpx;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 5rpx;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.6), #fff);
+  border-radius: 5rpx;
+  transition: width 1s ease;
+}
+
+.lbs-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+}
+
+.lbs-dot {
+  width: 12rpx;
+  height: 12rpx;
+  background: #A7F3D0;
+  border-radius: var(--radius-full);
+  animation: lbs-blink 1.5s ease-in-out infinite;
+}
+
+@keyframes lbs-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.lbs-text {
+  font-size: 24rpx;
+  opacity: 0.9;
+}
+
+/* 位置追踪卡片 */
+.tracking-card {
+  margin-top: var(--space);
+  padding: 24rpx;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius);
+  position: relative;
+  z-index: 1;
+  border: 2rpx solid rgba(255, 255, 255, 0.2);
+}
+
+.tracking-header {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  margin-bottom: 12rpx;
+}
+
+.tracking-icon {
+  font-size: 28rpx;
+}
+
+.tracking-title {
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
+.tracking-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tracking-status {
+  font-size: 28rpx;
+}
+
+.tracking-status.arrived {
+  font-weight: 700;
+  text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.2);
+}
+
+.tracking-badge {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  background: rgba(255, 255, 255, 0.25);
+  padding: 8rpx 20rpx;
+  border-radius: var(--radius-full);
+}
+
+.badge-check {
+  font-size: 22rpx;
+}
+
+.badge-text {
+  font-size: 24rpx;
+  font-weight: 500;
+}
+
+.tracking-hint {
+  margin-top: 12rpx;
+  font-size: 22rpx;
+  opacity: 0.75;
+}
+
+/* ========== 卡片通用 ========== */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  margin: -32rpx var(--space) var(--space);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow);
+  position: relative;
+  z-index: 10;
+}
+
+.card + .card {
+  margin-top: 0;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space);
+  padding-bottom: var(--space-sm);
+  border-bottom: 2rpx solid var(--divider);
+}
+
+.card-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+}
+
+.card-title::before {
+  content: '';
+  display: inline-block;
+  width: 6rpx;
+  height: 28rpx;
+  background: var(--primary);
+  border-radius: 3rpx;
+  margin-right: 12rpx;
+}
+
+/* ========== 用户信息卡片 ========== */
+.contact-mini {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 8rpx 20rpx;
+  background: var(--primary-soft);
+  border-radius: var(--radius-full);
+}
+
+.contact-icon {
+  font-size: 22rpx;
+}
+
+.contact-text {
+  font-size: 24rpx;
+  color: var(--primary);
+  font-weight: 500;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+}
+
+.avatar-wrap {
+  position: relative;
+  margin-right: var(--space);
+  flex-shrink: 0;
+}
+
+.user-avatar {
+  width: 110rpx;
+  height: 110rpx;
+  border-radius: var(--radius-lg);
+  background: var(--divider);
+  border: 4rpx solid var(--divider);
+}
+
+.gender-dot {
+  position: absolute;
+  right: -6rpx;
+  bottom: -6rpx;
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20rpx;
+  color: #fff;
+  border: 4rpx solid #fff;
+}
+
+.gender-dot.female {
+  background: linear-gradient(135deg, #F472B6, #EC4899);
+}
+
+.gender-dot.male {
+  background: linear-gradient(135deg, #60A5FA, #3B82F6);
+}
+
+.user-detail {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-name-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 10rpx;
+}
+
+.user-name {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+.user-level {
+  padding: 4rpx 14rpx;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  border-radius: var(--radius-full);
+  font-size: 20rpx;
+  color: #fff;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.user-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+  margin-left: auto;
+  padding-right: 8rpx;
+  justify-content: flex-end;
+}
+
+.tag-item {
+  padding: 6rpx 16rpx;
+  background: var(--primary-soft);
+  border-radius: var(--radius-full);
+  font-size: 22rpx;
+  color: var(--primary);
+  font-weight: 500;
+}
+
+.tag-new-user {
+  background: rgba(251, 146, 60, 0.12);
+  color: #F97316;
+}
+
+.user-phone {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+}
+
+.phone-icon {
+  font-size: 22rpx;
+}
+
+.phone-text {
+  font-size: 24rpx;
+  color: var(--text-tertiary);
+}
+
+/* ========== 订单信息卡片 ========== */
+.order-type-badge {
+  padding: 6rpx 16rpx;
+  background: linear-gradient(135deg, var(--primary-soft), rgba(123, 104, 238, 0.15));
+  border: 2rpx solid rgba(123, 104, 238, 0.2);
+  border-radius: var(--radius-full);
+  font-size: 22rpx;
+  color: var(--primary);
+  font-weight: 500;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16rpx;
+  margin-bottom: var(--space);
+}
+
+.grid-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12rpx;
+  padding: 20rpx;
+  background: var(--bg);
+  border-radius: var(--radius);
+}
+
+.grid-item.full {
+  grid-column: span 2;
+}
+
+.grid-emoji {
+  font-size: 28rpx;
+  margin-top: 2rpx;
+  flex-shrink: 0;
+}
+
+.grid-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.grid-label {
+  display: block;
+  font-size: 22rpx;
+  color: var(--text-tertiary);
+  margin-bottom: 6rpx;
+}
+
+.grid-value {
+  display: block;
+  font-size: 28rpx;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* 价格区域 */
+.price-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.06) 0%, rgba(239, 68, 68, 0.12) 100%);
+  border: 2rpx solid rgba(239, 68, 68, 0.15);
+  border-radius: var(--radius);
+}
+
+.price-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.price-label {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.price-sub {
+  font-size: 22rpx;
+  color: var(--text-tertiary);
+}
+
+.price-amount {
+  display: flex;
+  align-items: baseline;
+}
+
+.price-symbol {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--error);
+  margin-right: 4rpx;
+}
+
+.price-value {
+  font-size: 48rpx;
+  font-weight: 700;
+  color: var(--error);
+  font-family: 'DIN Alternate', monospace;
+}
+
+/* ========== 备注卡片 ========== */
+.remark-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 12rpx;
+  padding: var(--space);
+  background: var(--bg);
+  border-radius: var(--radius);
+  border-left: 6rpx solid var(--primary);
+}
+
+.remark-icon {
+  font-size: 28rpx;
+  flex-shrink: 0;
+  margin-top: 2rpx;
+}
+
+.remark-text {
+  font-size: 28rpx;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ========== 底部操作栏 ========== */
+.action-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  padding: var(--space) var(--space-lg);
+  padding-bottom: calc(var(--space) + env(safe-area-inset-bottom));
+  box-shadow: 0 -4rpx 24rpx rgba(0, 0, 0, 0.08);
+  display: flex;
+  gap: var(--space);
+  z-index: 100;
+}
+
+.action-btn {
+  flex: 1;
+  height: 92rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  transition: all 0.15s ease;
+}
+
+.btn-depart-text {
+  font-size: 34rpx;
+  font-weight: 700;
+  letter-spacing: 6rpx;
+}
+
+.btn-contact {
+  background: var(--bg);
+  color: var(--text-primary);
+  border: 2rpx solid var(--border);
+  flex: 0.8;
+}
+
+.btn-contact:active {
+  background: var(--divider);
+}
+
+.btn-main {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: #fff;
+  box-shadow: var(--shadow-btn);
+  flex: 1.2;
+}
+
+.btn-main:active {
+  transform: scale(0.96);
+}
+
+.btn-main.disabled {
+  opacity: 0.5;
+  background: linear-gradient(135deg, #9CA3AF 0%, #6B7280 100%);
+  box-shadow: none;
+}
+
+.btn-serving {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: #fff;
+  box-shadow: 0 8rpx 24rpx rgba(16, 185, 129, 0.3);
+  flex: 1.2;
+}
+
+.serving-dot {
+  width: 14rpx;
+  height: 14rpx;
+  background: #A7F3D0;
+  border-radius: var(--radius-full);
+  animation: lbs-blink 1.5s ease-in-out infinite;
+}
+
+/* 已完成状态底部栏居中 */
+.action-bar-center {
+  justify-content: center;
+}
+
+.btn-review-center {
+  flex: none;
+  width: 60%;
+}
+
+/* ========== 地图区域 ========== */
+.map-section {
+  margin: 32rpx 24rpx 24rpx;
+  border-radius: 16rpx;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
+}
+
+.service-map {
+  width: 100%;
+  height: 400rpx;
+}
+
+.map-overlay {
+  padding: 20rpx;
+  background: #fff;
+}
+
+.location-info {
+  display: flex;
+  gap: 30rpx;
+  margin-bottom: 20rpx;
+}
+
+.location-item {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+}
+
+.location-dot {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+}
+
+.companion-dot {
+  background: #4A90E2;
+}
+
+.target-dot {
+  background: #E74C3C;
+}
+
+.location-text {
+  font-size: 26rpx;
+  color: #666;
+}
+
+.map-info-box {
+  background: #F8F9FA;
+  border-radius: 12rpx;
+  padding: 20rpx;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+
+.info-item:last-child {
+  margin-bottom: 0;
+}
+
+.info-label {
+  font-size: 26rpx;
+  color: #666;
+}
+
+.info-value {
+  font-size: 26rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.arrived-badge {
+  background: #E8F5E9;
+  border-radius: 8rpx;
+  padding: 16rpx;
+  margin-top: 16rpx;
+  text-align: center;
+}
+
+.arrived-text {
+  color: #4CAF50;
+  font-size: 28rpx;
+  font-weight: 500;
+}
+
+/* ========== 位置追踪状态栏 ========== */
+.tracking-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 32rpx;
+  margin: 0 24rpx 24rpx;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+
+.tracking-label {
+  font-size: 28rpx;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.tracking-value {
+  font-size: 28rpx;
+  font-weight: 500;
+  text-align: right;
+  color: var(--text-secondary);
+}
+
+.tracking-value.pending {
+  color: var(--text-tertiary);
+}
+
+.tracking-value.progress {
+  color: var(--primary);
+}
+
+.tracking-value.arrived {
+  color: var(--error);
+  font-weight: 600;
+}

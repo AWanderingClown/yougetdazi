@@ -1,0 +1,91 @@
+/* 自定义 TabBar - B端搭子版（与C端一致） */
+
+.tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: calc(100rpx + constant(safe-area-inset-bottom));
+  height: calc(100rpx + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  padding-bottom: constant(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 9999;
+}
+
+.tab-bar-bg {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: calc(100rpx + constant(safe-area-inset-bottom));
+  height: calc(100rpx + env(safe-area-inset-bottom));
+  background: #ffffff;
+  border-top: 1rpx solid #e8e8e8;
+}
+
+.tab-bar-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100rpx;
+  padding-bottom: 8rpx;
+  position: relative;
+  z-index: 1;
+}
+
+/* 图标容器 */
+.tab-icon-wrapper {
+  width: 80rpx;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 6rpx;
+}
+
+.tab-icon {
+  width: 64rpx;
+  height: 64rpx;
+  opacity: 0.7;
+  transition: all 0.3s;
+}
+
+.tab-bar-item.active .tab-icon {
+  opacity: 1;
+}
+
+/* 文字 */
+.tab-text {
+  font-size: 22rpx;
+  color: #999;
+  transition: all 0.3s;
+  line-height: 1;
+}
+
+.tab-text.active {
+  color: #7B68EE;
+  font-weight: 500;
+}
+
+/* 徽章 */
+.tab-badge {
+  position: absolute;
+  top: 16rpx;
+  right: 20rpx;
+  min-width: 32rpx;
+  height: 32rpx;
+  padding: 0 8rpx;
+  background: #FF4D4F;
+  color: #ffffff;
+  font-size: 20rpx;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}

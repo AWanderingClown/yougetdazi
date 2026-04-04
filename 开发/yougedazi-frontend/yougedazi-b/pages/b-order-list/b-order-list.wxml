@@ -1,0 +1,50 @@
+<!-- 订单广场 -->
+<view class="page-order-list">
+  <!-- 自定义导航头部 -->
+  <view class="custom-nav">
+    <view class="nav-left" bindtap="goBack">
+      <text class="nav-back-icon">‹</text>
+    </view>
+    <text class="nav-title">订单广场</text>
+    <view class="nav-right"></view>
+  </view>
+
+  <!-- Tab 栏 -->
+  <view class="tab-bar">
+    <view 
+      class="tab-item {{currentTab === index ? 'active' : ''}}"
+      wx:for="{{tabs}}"
+      wx:key="index"
+      data-index="{{index}}"
+      bindtap="onTabChange"
+    >
+      {{item}}
+      <view class="tab-badge" wx:if="{{index === 0 && pendingCount}}">{{pendingCount}}</view>
+    </view>
+  </view>
+
+  <!-- 订单列表 -->
+  <scroll-view class="order-list" scroll-y refresher-enabled bindrefresherrefresh="onRefresh">
+    <block wx:if="{{orders.length > 0}}">
+      <order-card 
+        wx:for="{{orders}}" 
+        wx:key="id"
+        order="{{item}}"
+        bind:tap="onOrderTap"
+        bind:detail="onViewDetail"
+      />
+    </block>
+
+    <!-- 空状态 -->
+    <block wx:else>
+      <view class="empty-state">
+        <image class="empty-icon" src="/assets/icons/empty-order.png" mode="aspectFit"/>
+        <text class="empty-title">暂无{{tabs[currentTab]}}订单</text>
+        <text class="empty-desc">去工作台看看吧</text>
+      </view>
+    </block>
+
+    <!-- 加载更多 -->
+    <view class="load-more" wx:if="{{hasMore && orders.length}}">加载中...</view>
+  </scroll-view>
+</view>

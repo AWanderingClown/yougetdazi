@@ -1,0 +1,176 @@
+<!-- pages/register/register.wxml - 搭子注册 -->
+<view class="container">
+  <!-- 进度条 -->
+  <view class="progress-bar">
+    <view class="progress-step {{step >= 1 ? 'active' : ''}}">
+      <view class="step-num">1</view>
+      <text class="step-text">基本信息</text>
+    </view>
+    <view class="progress-line {{step >= 2 ? 'active' : ''}}"></view>
+    <view class="progress-step {{step >= 2 ? 'active' : ''}}">
+      <view class="step-num">2</view>
+      <text class="step-text">实名认证</text>
+    </view>
+    <view class="progress-line {{step >= 3 ? 'active' : ''}}"></view>
+    <view class="progress-step {{step >= 3 ? 'active' : ''}}">
+      <view class="step-num">3</view>
+      <text class="step-text">技能标签</text>
+    </view>
+  </view>
+
+  <!-- 步骤1：基本信息 -->
+  <view class="form-section" wx:if="{{step === 1}}">
+    <view class="section-title">完善基本信息</view>
+    
+    <view class="avatar-upload" bindtap="chooseAvatar">
+      <image wx:if="{{avatar}}" src="{{avatar}}" mode="aspectFill"/>
+      <view wx:else class="upload-placeholder">
+        <text class="icon">📷</text>
+        <text class="text">点击上传照片</text>
+        <text class="sub-text">建议上传清晰正面照</text>
+      </view>
+    </view>
+
+    <view class="form-group">
+      <view class="form-item">
+        <text class="label">昵称</text>
+        <input placeholder="请输入昵称" value="{{nickname}}" bindinput="onNicknameInput"/>
+      </view>
+      <view class="form-item">
+        <text class="label">性别</text>
+        <view class="gender-options">
+          <view class="option {{gender === 'male' ? 'active' : ''}}" bindtap="selectGender" data-gender="male">
+            <text class="icon">♂</text>
+            <text>男</text>
+          </view>
+          <view class="option {{gender === 'female' ? 'active' : ''}}" bindtap="selectGender" data-gender="female">
+            <text class="icon">♀</text>
+            <text>女</text>
+          </view>
+        </view>
+      </view>
+      <view class="form-item">
+        <text class="label">年龄</text>
+        <picker mode="selector" range="{{ageRange}}" value="{{ageIndex}}" bindchange="onAgeChange">
+          <view class="picker-value">{{age || '请选择年龄'}}</view>
+        </picker>
+      </view>
+      <view class="form-item">
+        <text class="label">所在城市</text>
+        <picker mode="region" bindchange="onCityChange" value="{{region}}">
+          <view class="picker-value">{{city || '请选择城市'}}</view>
+        </picker>
+      </view>
+    </view>
+  </view>
+
+  <!-- 步骤2：实名认证 -->
+  <view class="form-section" wx:if="{{step === 2}}">
+    <view class="section-title">实名认证</view>
+    <text class="section-desc">为保障服务安全，请完成实名认证</text>
+
+    <view class="idcard-upload">
+      <view class="upload-item" bindtap="uploadIdCardFront">
+        <image wx:if="{{idCardFront}}" src="{{idCardFront}}" mode="aspectFill"/>
+        <view wx:else class="upload-placeholder">
+          <text class="icon">📷</text>
+          <text class="text">身份证正面</text>
+        </view>
+      </view>
+      <view class="upload-item" bindtap="uploadIdCardBack">
+        <image wx:if="{{idCardBack}}" src="{{idCardBack}}" mode="aspectFill"/>
+        <view wx:else class="upload-placeholder">
+          <text class="icon">📷</text>
+          <text class="text">身份证反面</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="form-group">
+      <view class="form-item">
+        <text class="label">真实姓名</text>
+        <input placeholder="请输入真实姓名" value="{{realName}}" bindinput="onRealNameInput"/>
+      </view>
+      <view class="form-item">
+        <text class="label">身份证号</text>
+        <input placeholder="请输入身份证号" maxlength="18" value="{{idCard}}" bindinput="onIdCardInput"/>
+      </view>
+    </view>
+
+    <view class="notice-box">
+      <text class="notice-icon">ℹ️</text>
+      <text class="notice-text">您的身份信息将被严格保密，仅用于平台审核和风控</text>
+    </view>
+  </view>
+
+  <!-- 步骤3：技能标签 -->
+  <view class="form-section" wx:if="{{step === 3}}">
+    <view class="section-title">选择技能标签</view>
+    <text class="section-desc">选择您擅长的服务项目，可多选（已选 {{selectedSkills.length}} 项）</text>
+
+    <view class="skill-grid">
+      <view 
+        class="skill-item {{item.selected ? 'selected' : ''}}" 
+        wx:for="{{skillCategories}}" 
+        wx:key="id"
+        bindtap="toggleSkill"
+        data-id="{{item.id}}"
+      >
+        <text class="skill-icon">{{item.icon}}</text>
+        <text class="skill-name">{{item.name}}</text>
+        <view wx:if="{{item.selected}}" class="selected-mark">✓</view>
+      </view>
+    </view>
+
+    <view class="form-item" style="margin-top: 40rpx;">
+      <text class="label">个人简介</text>
+      <textarea 
+        class="bio-textarea"
+        placeholder="介绍一下自己，让用户更了解你..." 
+        maxlength="200"
+        value="{{bio}}"
+        bindinput="onBioInput"
+      />
+      <text class="word-count">{{bio.length}}/200</text>
+    </view>
+
+    <!-- 协议同意 -->
+    <view class="agreement-section">
+      <view class="agreement-title">入驻协议</view>
+      <view class="agreement-list">
+        <view class="agreement-item {{agreements.b_service ? 'checked' : ''}}" bindtap="toggleAgreement" data-type="b_service">
+          <view class="checkbox-wrap">
+            <checkbox checked="{{agreements.b_service}}" color="#667eea"/>
+          </view>
+          <text class="agreement-name" catchtap="viewAgreement" data-type="b_service">B端服务协议</text>
+        </view>
+        <view class="agreement-item {{agreements.b_privacy ? 'checked' : ''}}" bindtap="toggleAgreement" data-type="b_privacy">
+          <view class="checkbox-wrap">
+            <checkbox checked="{{agreements.b_privacy}}" color="#667eea"/>
+          </view>
+          <text class="agreement-name" catchtap="viewAgreement" data-type="b_privacy">B端隐私政策</text>
+        </view>
+        <view class="agreement-item {{agreements.b_service_guide ? 'checked' : ''}}" bindtap="toggleAgreement" data-type="b_service_guide">
+          <view class="checkbox-wrap">
+            <checkbox checked="{{agreements.b_service_guide}}" color="#667eea"/>
+          </view>
+          <text class="agreement-name" catchtap="viewAgreement" data-type="b_service_guide">服务项目须知</text>
+        </view>
+        <view class="agreement-item {{agreements.b_compliance ? 'checked' : ''}}" bindtap="toggleAgreement" data-type="b_compliance">
+          <view class="checkbox-wrap">
+            <checkbox checked="{{agreements.b_compliance}}" color="#667eea"/>
+          </view>
+          <text class="agreement-name" catchtap="viewAgreement" data-type="b_compliance">合规经营协议书</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部按钮 -->
+  <view class="footer-btns">
+    <button wx:if="{{step > 1}}" class="btn-prev" bindtap="prevStep">上一步</button>
+    <button class="btn-next {{canNext ? '' : 'disabled'}}" bindtap="nextStep" disabled="{{!canNext}}">
+      {{step === 3 ? '提交审核' : '下一步'}}
+    </button>
+  </view>
+</view>

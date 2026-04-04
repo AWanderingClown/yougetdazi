@@ -1,0 +1,85 @@
+<!-- components/order-card/order-card.wxml -->
+<view class="order-card" bindtap="onTap" data-id="{{order.id}}">
+  <!-- 卡片头部：用户信息 + 价格 -->
+  <view class="card-header">
+    <view class="user-info">
+      <image 
+        class="user-avatar" 
+        src="{{order.customerAvatar || '/assets/icons/default-avatar.png'}}" 
+        mode="aspectFill"
+      />
+      <view class="user-detail">
+        <text class="user-name">{{order.customerName}}</text>
+        <text class="user-meta">{{order.serviceType}} · {{order.duration}}</text>
+      </view>
+    </view>
+    <view class="price-info">
+      <text class="price-amount">¥{{order.totalAmount}}</text>
+    </view>
+  </view>
+
+  <!-- 卡片中部：订单详情 -->
+  <view class="card-body">
+    <view class="detail-item">
+      <text class="detail-icon">⏱️</text>
+      <text class="detail-label">时间</text>
+      <text class="detail-value">{{order.appointmentTime || '待确认'}}</text>
+    </view>
+    <view class="detail-item">
+      <text class="detail-icon">📍</text>
+      <text class="detail-label">地点</text>
+      <text class="detail-value">{{order.address || '用户指定地点'}}</text>
+    </view>
+  </view>
+
+  <!-- 卡片底部：状态标签 + 操作按钮 -->
+  <view class="card-footer">
+    <view class="status-tag tag-{{order.status}}">
+      <text class="tag-text">{{order.statusText || getStatusText(order.status)}}</text>
+    </view>
+    <view class="action-buttons">
+      <view 
+        wx:if="{{order.status === 'pending_accept'}}" 
+        class="btn-action btn-primary"
+        catchtap="onViewDetail"
+        data-id="{{order.id}}"
+      >
+        查看详情
+      </view>
+      <view 
+        wx:if="{{order.status === 'serving'}}" 
+        class="btn-action btn-secondary"
+        catchtap="onViewDetail"
+        data-id="{{order.id}}"
+      >
+        查看进度
+      </view>
+      <view 
+        wx:if="{{order.status === 'completed'}}" 
+        class="btn-action btn-outline"
+        catchtap="onViewDetail"
+        data-id="{{order.id}}"
+      >
+        评价
+      </view>
+    </view>
+  </view>
+
+  <!-- 倒计时（可选） -->
+  <view class="countdown" wx:if="{{order.countdown && order.countdown > 0}}">
+    <text class="countdown-text">{{order.countdownText || ''}}</text>
+    <view class="countdown-bar">
+      <view class="countdown-progress" style="width: {{order.countdownPercent || 100}}%"></view>
+    </view>
+  </view>
+</view>
+
+<!-- 空状态 -->
+<view class="empty-state" wx:if="{{empty}}">
+  <image class="empty-icon" src="/assets/icons/empty-order.png" mode="aspectFit"/>
+  <text class="empty-title">{{emptyTitle || '暂无订单'}}</text>
+  <text class="empty-desc">{{emptyDesc || '去工作台看看吧'}}</text>
+  <view class="empty-action" wx:if="{{emptyAction}}" bindtap="onEmptyAction">
+    <text class="empty-action-text">{{emptyAction}}</text>
+  </view>
+</view>

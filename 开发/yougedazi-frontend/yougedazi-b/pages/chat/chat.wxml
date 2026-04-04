@@ -1,0 +1,70 @@
+<!-- pages/chat/chat.wxml - B端搭子聊天页面 -->
+<view class="container">
+  <!-- 自定义导航栏 -->
+  <view class="custom-nav">
+    <view class="nav-left" bindtap="goBack">
+      <text class="nav-back-icon">‹</text>
+    </view>
+    <text class="nav-title">{{customerInfo.name}}</text>
+    <view class="nav-right"></view>
+  </view>
+
+  <!-- 消息列表 -->
+  <scroll-view
+    class="message-list"
+    scroll-y
+    scroll-into-view="{{lastMessageId}}"
+    scroll-with-animation
+  >
+    <view class="message-item {{item.type}}" wx:for="{{messageList}}" wx:key="id" id="{{item.id}}">
+      <!-- 系统消息 -->
+      <block wx:if="{{item.type === 'system'}}">
+        <view class="system-message">{{item.content}}</view>
+      </block>
+      
+      <!-- 发送的消息 -->
+      <block wx:if="{{item.type === 'send'}}">
+        <view class="message-content send">
+          <view class="message-bubble">
+            <text class="message-text">{{item.content}}</text>
+          </view>
+          <view class="message-status">
+            <text class="time">{{item.time}}</text>
+            <text class="status-icon" wx:if="{{item.status === 'sending'}}">·</text>
+            <text class="status-icon sent" wx:if="{{item.status === 'sent'}}">✓</text>
+          </view>
+        </view>
+        <image class="avatar" src="{{userInfo.avatar}}" mode="aspectFill"/>
+      </block>
+      
+      <!-- 接收的消息 -->
+      <block wx:if="{{item.type === 'receive'}}">
+        <image class="avatar" src="{{item.avatar || customerInfo.avatar}}" mode="aspectFill"/>
+        <view class="message-content receive">
+          <view class="message-bubble">
+            <text class="message-text">{{item.content}}</text>
+          </view>
+          <text class="time">{{item.time}}</text>
+        </view>
+      </block>
+    </view>
+  </scroll-view>
+
+  <!-- 输入框区域 -->
+  <view class="input-area">
+    <view class="input-wrapper">
+      <input 
+        class="message-input" 
+        type="text" 
+        placeholder="请输入消息..."
+        value="{{inputValue}}"
+        bindinput="onInput"
+        confirm-type="send"
+        bindconfirm="sendMessage"
+      />
+    </view>
+    <view class="send-btn {{inputValue ? 'active' : ''}}" bindtap="sendMessage">
+      <text>发送</text>
+    </view>
+  </view>
+</view>

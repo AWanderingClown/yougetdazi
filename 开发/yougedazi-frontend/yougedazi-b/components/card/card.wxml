@@ -1,0 +1,15 @@
+<!-- components/card/card.wxml -->
+<view class="card card-{{shadow}} {{flat ? 'card-flat' : ''}}" bindtap="onTap">
+  <view class="card-header" wx:if="{{title || headerRight}}">
+    <text class="card-title">{{title}}</text>
+    <view class="card-header-right">
+      <text class="card-header-text" wx:if="{{headerRight}}">{{headerRight}}</text>
+    </view>
+  </view>
+  <view class="card-body">
+    <slot></slot>
+  </view>
+  <view class="card-footer" wx:if="{{footer}}">
+    <slot name="footer"></slot>
+  </view>
+</view>

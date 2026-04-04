@@ -1,0 +1,87 @@
+<!-- pages/profile/profile.wxml - 个人中心 -->
+<view class="container">
+  <!-- 自定义导航栏 -->
+  <view class="custom-nav">
+    <view class="nav-left"></view>
+    <text class="nav-title">个人中心</text>
+    <view class="nav-right"></view>
+  </view>
+  
+  <!-- 顶部背景 -->
+  <view class="header-bg">
+    <view class="user-card">
+      <image class="avatar" src="{{userInfo.avatar || '/assets/icons/default-avatar.png'}}" mode="aspectFill"/>
+      <view class="user-info">
+        <text class="nickname">{{userInfo.nickname || '未设置昵称'}}</text>
+        <view class="tags">
+          <text class="tag {{userInfo.gender === 'female' ? 'female' : 'male'}}">
+            {{userInfo.gender === 'female' ? '♀' : '♂'}} {{userInfo.age}}岁
+          </text>
+          <text class="tag level">{{levelText}}</text>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 数据统计 -->
+    <view class="stats-bar">
+      <view class="stat-item">
+        <text class="value">{{stats.income}}</text>
+        <text class="label">本月收益</text>
+      </view>
+      <view class="stat-item">
+        <text class="value">{{stats.orders}}</text>
+        <text class="label">本月订单</text>
+      </view>
+      <view class="stat-item">
+        <text class="value">{{stats.rating}}</text>
+        <text class="label">好评率</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 功能菜单 -->
+  <view class="menu-list">
+    <view class="menu-group">
+      <view class="menu-item" bindtap="goToProfileEdit">
+        <view class="icon icon-profile"></view>
+        <text class="label">个人资料</text>
+        <text class="extra">头像/签名/相册</text>
+        <text class="arrow">›</text>
+      </view>
+      <view class="menu-item" bindtap="goToSkills">
+        <view class="icon icon-service"></view>
+        <text class="label">服务项目</text>
+        <text class="extra">{{skillCount}}个</text>
+        <text class="arrow">›</text>
+      </view>
+      <view class="menu-item" bindtap="goToCertification">
+        <view class="icon icon-cert"></view>
+        <text class="label">实名认证</text>
+        <text class="extra {{certStatus}}">{{certText}}</text>
+        <text class="arrow">›</text>
+      </view>
+      <view class="menu-item" bindtap="goToWallet">
+        <view class="icon icon-wallet"></view>
+        <text class="label">我的钱包</text>
+        <text class="extra">¥{{wallet}}</text>
+        <text class="arrow">›</text>
+      </view>
+    </view>
+    
+    <view class="menu-group">
+      <view class="menu-item" bindtap="goToSettings">
+        <view class="icon icon-settings"></view>
+        <text class="label">设置</text>
+        <text class="arrow">›</text>
+      </view>
+      <view class="menu-item" bindtap="contactService">
+        <view class="icon icon-service-help"></view>
+        <text class="label">联系客服</text>
+        <text class="arrow">›</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 退出登录 -->
+  <button class="logout-btn" bindtap="logout">退出登录</button>
+</view>

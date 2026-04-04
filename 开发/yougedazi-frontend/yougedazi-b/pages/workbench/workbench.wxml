@@ -1,0 +1,322 @@
+<!-- 工作台 - 全新设计 -->
+<view class="page-workbench">
+  <!-- 顶部状态栏占位 -->
+  <view class="status-bar-placeholder"></view>
+  
+  <!-- 装饰性背景形状 -->
+  <view class="decorative-shapes">
+    <view class="shape-1"></view>
+    <view class="shape-2"></view>
+    <view class="shape-3"></view>
+  </view>
+  <!-- 头部区域 - 紫色渐变背景 -->
+  <view class="header-section">
+    <view class="header-bg"></view>
+    
+    <!-- 状态卡片 - 全新设计 -->
+    <view class="status-card">
+      <view class="status-main">
+        <!-- 接单中动画 -->
+        <view class="status-animation {{isWorking ? 'working' : 'resting'}}">
+          <view class="animation-container" wx:if="{{isWorking}}">
+            <view class="pulse-ring ring1"></view>
+            <view class="pulse-ring ring2"></view>
+            <view class="pulse-ring ring3"></view>
+            <view class="center-icon">
+              <text class="icon-text">接</text>
+            </view>
+          </view>
+          <view class="animation-container" wx:if="{{!isWorking}}">
+            <view class="glow-ring ring1"></view>
+            <view class="glow-ring ring2"></view>
+            <view class="rest-center-icon">
+              <text class="icon-text">休</text>
+            </view>
+          </view>
+        </view>
+        <view class="status-info">
+          <text class="status-text">{{isWorking ? '接单中' : '休息中'}}</text>
+          <text class="status-desc">{{isWorking ? '已准备好接收新订单' : '暂不接收新订单'}}</text>
+        </view>
+      </view>
+      <switch 
+        class="status-switch"
+        checked="{{isWorking}}" 
+        bindchange="onStatusChange"
+        color="#7B68EE"
+      />
+    </view>
+    
+    <!-- 收益统计卡片 - 提升优先级 -->
+    <view class="earnings-card">
+      <view class="earnings-header">
+        <text class="earnings-title">💰 今日收益</text>
+        <text class="earnings-trend">+12.5% ↑</text>
+      </view>
+      <view class="earnings-stats">
+        <view class="earnings-main">
+          <text class="earnings-amount">¥{{todayIncome}}</text>
+          <text class="earnings-label">本日收入</text>
+        </view>
+        <view class="earnings-divider"></view>
+        <view class="earnings-sub">
+          <view class="sub-item">
+            <text class="sub-value">{{todayOrders}}</text>
+            <text class="sub-label">订单数</text>
+          </view>
+          <view class="sub-item">
+            <text class="sub-value">{{completionRate}}%</text>
+            <text class="sub-label">完成率</text>
+          </view>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 保证金状态 - 超简版 -->
+    <view class="deposit-bar" bindtap="showDepositDetail">
+      <view class="deposit-left">
+        <text class="deposit-name">{{depositStatus.stageText}}</text>
+        <text class="deposit-info-text">{{companionStats.totalOrders}}/{{depositConfig.rookieMax}}单免保证金</text>
+      </view>
+      <view class="deposit-right">
+        <!-- 新手期显示状态 -->
+        <block wx:if="{{depositStatus.stage === 'rookie'}}">
+          <text class="deposit-status-text free">免保证金</text>
+        </block>
+        <!-- 成长期/成熟期显示缴纳状态 -->
+        <block wx:else>
+          <text class="deposit-status-text {{companionStats.depositedAmount > 0 ? 'paid' : 'unpaid'}}">
+            {{companionStats.depositedAmount > 0 ? '已缴纳¥' + companionStats.depositedAmount : '未缴纳保证金'}}
+          </text>
+        </block>
+        <text class="deposit-arrow-icon">›</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 待接单区域 -->
+  <view class="section">
+    <view class="section-header">
+      <view class="section-title">
+        待接单
+        <text class="section-count" wx:if="{{pendingOrders.length}}">({{pendingOrders.length}})</text>
+      </view>
+      <text class="section-more" bindtap="goToTaskSquare">查看全部</text>
+    </view>
+    
+    <!-- 订单卡片 -->
+    <view class="order-card" wx:for="{{pendingOrders}}" wx:key="id" data-id="{{item.id}}" bindtap="onViewDetail">
+      <!-- 头部：用户信息 + 价格 -->
+      <view class="order-header">
+        <view class="avatar-wrapper">
+          <image class="user-avatar" src="{{item.customerAvatar || '/assets/icons/default-avatar.png'}}" mode="aspectFill"/>
+          <view class="gender-badge {{item.userGender === 'female' ? 'female' : 'male'}}">
+            <text>{{item.userGender === 'female' ? '♀' : '♂'}}</text>
+          </view>
+        </view>
+        <view class="user-info">
+          <view class="user-name-row">
+            <text class="user-name">{{item.customerName}}</text>
+            <view class="user-tag" wx:if="{{item.userTag}}">{{item.userTag}}</view>
+          </view>
+          <view class="service-row">
+            <text class="service-type">{{item.serviceType}}</text>
+            <text class="service-duration">{{item.duration || '2小时'}}</text>
+          </view>
+        </view>
+        <view class="order-price">
+          <text class="price-symbol">¥</text>
+          <text class="price-value">{{item.totalAmount}}</text>
+        </view>
+      </view>
+
+      <!-- 中间：订单信息 -->
+      <view class="order-body">
+        <view class="info-item">
+          <text class="info-emoji">🕐</text>
+          <text class="info-label">预约</text>
+          <text class="info-value">{{item.appointmentTime}}</text>
+        </view>
+        <view class="info-item">
+          <text class="info-emoji">📍</text>
+          <text class="info-label">地点</text>
+          <text class="info-value address">{{item.location || '待确认'}}</text>
+        </view>
+        <view class="info-item" wx:if="{{item.remark}}">
+          <text class="info-emoji">💬</text>
+          <text class="info-label">备注</text>
+          <text class="info-value remark">{{item.remark}}</text>
+        </view>
+      </view>
+
+      <!-- 倒计时 -->
+      <view class="countdown-box {{item.countdown < 300 ? 'urgent' : ''}}">
+        <text class="countdown-emoji">⏳</text>
+        <text class="countdown-text">{{item.countdownText || '29:59'}}</text>
+        <text class="countdown-label">后过期</text>
+      </view>
+
+      <!-- 底部操作 -->
+      <view class="order-footer">
+        <view class="btn-detail" catchtap="onViewDetail" data-id="{{item.id}}">查看详情</view>
+        <view class="btn-accept" catchtap="onAcceptOrder" data-id="{{item.id}}">立即接单</view>
+      </view>
+    </view>
+    
+    <!-- 空状态 -->
+    <view class="empty-section" wx:if="{{!pendingOrders.length}}">
+      <view class="empty-box">
+        <view class="empty-icon"></view>
+        <view class="empty-title">暂无新订单</view>
+        <view class="empty-desc">请耐心等待，新订单马上就来</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ===== 新订单弹窗蒙层 ===== -->
+  <view class="new-order-overlay" wx:if="{{newOrderPopup.show}}" bindtap="onPopupOverlayTap">
+    <view class="new-order-popup" catchtap="stopPropagation">
+
+      <!-- 顶部紧迫感标题栏 -->
+      <view class="popup-header">
+        <view class="popup-ring-wrap">
+          <view class="popup-ring r1"></view>
+          <view class="popup-ring r2"></view>
+          <view class="popup-ring-icon">🔔</view>
+        </view>
+        <view class="popup-title-group">
+          <text class="popup-title">新订单来啦！</text>
+          <text class="popup-subtitle">已加入待接单，请尽快处理</text>
+        </view>
+        <!-- 提醒倒计时（不是订单过期，只是提醒窗口关闭倒计时） -->
+        <view class="popup-accept-countdown {{newOrderPopup.acceptCountdown <= 10 ? 'urgent-blink' : ''}}">
+          <text class="popup-countdown-num">{{newOrderPopup.acceptCountdown}}</text>
+          <text class="popup-countdown-unit">秒</text>
+        </view>
+      </view>
+
+      <!-- 用户 + 订单信息 -->
+      <view class="popup-order-body">
+        <view class="popup-user-row">
+          <image class="popup-avatar" src="{{newOrderPopup.order.customerAvatar || '/assets/icons/default-avatar.png'}}" mode="aspectFill"/>
+          <view class="popup-user-info">
+            <view class="popup-name-row">
+              <text class="popup-user-name">{{newOrderPopup.order.customerName}}</text>
+              <view class="popup-gender-badge {{newOrderPopup.order.userGender === 'female' ? 'female' : 'male'}}">
+                {{newOrderPopup.order.userGender === 'female' ? '♀' : '♂'}}
+              </view>
+              <view class="popup-new-tag" wx:if="{{newOrderPopup.order.userTag}}">{{newOrderPopup.order.userTag}}</view>
+            </view>
+            <view class="popup-service-row">
+              <text class="popup-service">{{newOrderPopup.order.serviceType}}</text>
+              <text class="popup-dot">·</text>
+              <text class="popup-duration">{{newOrderPopup.order.duration}}</text>
+            </view>
+          </view>
+          <view class="popup-price-block">
+            <text class="popup-price-symbol">¥</text>
+            <text class="popup-price-num">{{newOrderPopup.order.totalAmount}}</text>
+          </view>
+        </view>
+
+        <view class="popup-info-list">
+          <view class="popup-info-item">
+            <text class="popup-info-icon">🕐</text>
+            <text class="popup-info-text">{{newOrderPopup.order.appointmentTime}}</text>
+          </view>
+          <view class="popup-info-item">
+            <text class="popup-info-icon">📍</text>
+            <text class="popup-info-text">{{newOrderPopup.order.address}}</text>
+          </view>
+          <view class="popup-info-item" wx:if="{{newOrderPopup.order.remark}}">
+            <text class="popup-info-icon">💬</text>
+            <text class="popup-info-text remark">{{newOrderPopup.order.remark}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 底部操作按钮 -->
+      <view class="popup-footer">
+        <view class="popup-btn-detail" catchtap="onPopupViewDetail">查看详情</view>
+        <view class="popup-btn-accept" catchtap="onPopupAccept">立即接单</view>
+      </view>
+
+    </view>
+  </view>
+
+  <!-- 进行中区域 -->
+  <view class="section" wx:if="{{processingOrders.length}}">
+    <view class="section-header">
+      <view class="section-title">
+        进行中
+        <text class="section-count">({{processingOrders.length}})</text>
+      </view>
+    </view>
+
+    <view class="processing-card {{item.status}}" wx:for="{{processingOrders}}" wx:key="id">
+      <!-- 顶部状态栏 -->
+      <view class="processing-status-bar">
+        <view class="processing-status-left">
+          <view class="status-dot {{item.status}}"></view>
+          <text class="processing-status-text">{{item.statusText}}</text>
+        </view>
+        <text class="processing-total-price">¥{{item.totalAmount}}</text>
+      </view>
+
+      <!-- 用户信息行 -->
+      <view class="processing-user-row">
+        <view class="avatar-wrapper">
+          <image class="user-avatar" src="{{item.customerAvatar || '/assets/icons/default-avatar.png'}}" mode="aspectFill"/>
+          <view class="gender-badge {{item.userGender === 'female' ? 'female' : 'male'}}">
+            <text>{{item.userGender === 'female' ? '♀' : '♂'}}</text>
+          </view>
+        </view>
+        <view class="processing-user-info">
+          <text class="user-name">{{item.customerName}}</text>
+          <view class="processing-service-row">
+            <text class="service-type">{{item.serviceType}}</text>
+            <text class="service-sep">·</text>
+            <text class="service-duration">{{item.duration}}</text>
+          </view>
+          <view class="info-item" style="margin-top: 8rpx;">
+            <text class="info-emoji">📍</text>
+            <text class="info-value address" style="font-size: 24rpx; color: var(--text-tertiary);">{{item.address}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 服务中：剩余时间 + 进度条 -->
+      <view class="service-remaining-section" wx:if="{{item.status === 'serving'}}">
+        <view class="remaining-header">
+          <text class="remaining-label">⏱ 剩余服务时间</text>
+          <text class="remaining-time">{{item.serviceRemainingText}}</text>
+        </view>
+        <view class="progress-bar-bg">
+          <view class="progress-bar-fill" style="width: {{item.serviceProgress}}%"></view>
+        </view>
+        <view class="progress-tips">
+          <text class="progress-tip-start">已完成 {{item.serviceProgress}}%</text>
+          <text class="progress-tip-end">{{item.appointmentTime}}</text>
+        </view>
+      </view>
+
+      <!-- 待服务：预约时间提示 -->
+      <view class="service-waiting-section" wx:if="{{item.status === 'accepted'}}">
+        <text class="waiting-icon">🕐</text>
+        <view class="waiting-info">
+          <text class="waiting-label">预约时间</text>
+          <text class="waiting-time">{{item.appointmentTime}}</text>
+        </view>
+        <view class="waiting-badge">等待开始</view>
+      </view>
+
+      <!-- 底部操作 -->
+      <view class="order-footer">
+        <view class="btn-detail" catchtap="onViewDetail" data-id="{{item.id}}">查看详情</view>
+        <view class="btn-contact {{item.status}}" catchtap="onContactUser" data-id="{{item.id}}" data-name="{{item.customerName}}" data-avatar="{{item.customerAvatar}}">联系用户</view>
+        <view class="btn-depart" wx:if="{{item.status === 'accepted'}}" catchtap="onDepart" data-id="{{item.id}}">出发</view>
+      </view>
+    </view>
+  </view>
+
+</view>

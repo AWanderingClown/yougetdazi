@@ -1,0 +1,513 @@
+/* pages/task-square/task-square.wxss */
+
+/* ========== 页面容器 ========== */
+.page-task-square {
+  min-height: 100vh;
+  background: #F9FAFB;
+}
+
+/* ========== 自定义导航栏 ========== */
+.custom-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 220rpx;
+  padding: 0 24rpx;
+  padding-top: 60rpx;
+  background: linear-gradient(135deg, #7B68EE 0%, #9B59B6 100%);
+}
+
+.nav-left {
+  width: 80rpx;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-back-icon {
+  font-size: 56rpx;
+  color: #ffffff;
+  font-weight: bold;
+}
+
+.nav-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.nav-title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.nav-right {
+  width: 80rpx;
+}
+
+/* ========== 筛选栏 ========== */
+.filter-bar {
+  display: flex;
+  padding: 24rpx 32rpx;
+  gap: 16rpx;
+  background: #ffffff;
+  border-bottom: 1rpx solid #F3F4F6;
+}
+
+.filter-item {
+  flex: 1;
+  height: 72rpx;
+  background: #F9FAFB;
+  border-radius: 36rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26rpx;
+  color: #6B7280;
+  transition: all 0.2s ease;
+}
+
+.filter-item.active {
+  background: linear-gradient(135deg, #7B68EE 0%, #9B59B6 100%);
+  color: #ffffff;
+  font-weight: 500;
+  box-shadow: 0 4rpx 16rpx rgba(123, 104, 238, 0.3);
+}
+
+/* ========== 任务列表 ========== */
+.task-list {
+  padding: 24rpx 24rpx 120rpx;
+  min-height: calc(100vh - 252rpx);
+}
+
+/* ========== 任务卡片 ========== */
+.task-card {
+  background: #ffffff;
+  border-radius: 24rpx;
+  padding: 28rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 4rpx 20rpx rgba(123, 104, 238, 0.08);
+  transition: all 0.2s ease;
+}
+
+.task-card:active {
+  transform: scale(0.98);
+  box-shadow: 0 2rpx 12rpx rgba(123, 104, 238, 0.12);
+}
+
+/* 卡片头部 */
+.task-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.service-type {
+  display: flex;
+  align-items: center;
+}
+
+.type-icon {
+  font-size: 32rpx;
+  margin-right: 12rpx;
+}
+
+.type-name {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1F2937;
+}
+
+.tag-group {
+  display: flex;
+  gap: 12rpx;
+}
+
+.tag {
+  padding: 6rpx 16rpx;
+  border-radius: 8rpx;
+  font-size: 22rpx;
+  font-weight: 500;
+}
+
+.tag-new {
+  background: #F0E6FF;
+  color: #7B68EE;
+}
+
+.tag-urgent {
+  background: #FEE2E2;
+  color: #EF4444;
+}
+
+/* 价格区域 */
+.task-card-price {
+  margin-bottom: 20rpx;
+}
+
+.price-main {
+  display: flex;
+  align-items: baseline;
+  margin-bottom: 8rpx;
+}
+
+.price-symbol {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #7B68EE;
+}
+
+.price-value {
+  font-size: 48rpx;
+  font-weight: 700;
+  color: #7B68EE;
+  font-family: DIN Alternate, DIN, Arial;
+}
+
+.price-unit {
+  font-size: 24rpx;
+  color: #9CA3AF;
+  margin-left: 4rpx;
+}
+
+.price-total {
+  font-size: 24rpx;
+  color: #9CA3AF;
+}
+
+/* 任务详情信息 */
+.task-card-info {
+  margin-bottom: 20rpx;
+  padding: 16rpx 0;
+  border-top: 1rpx solid #F3F4F6;
+  border-bottom: 1rpx solid #F3F4F6;
+}
+
+.info-row {
+  display: flex;
+  gap: 24rpx;
+  margin-bottom: 12rpx;
+}
+
+.info-row:last-child {
+  margin-bottom: 0;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+}
+
+.info-icon {
+  font-size: 22rpx;
+  margin-right: 8rpx;
+}
+
+.info-text {
+  font-size: 24rpx;
+  color: #4B5563;
+}
+
+/* 卡片底部 */
+.task-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+}
+
+.user-avatar {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  margin-right: 12rpx;
+  background: #F0E6FF;
+}
+
+.user-detail {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-size: 26rpx;
+  color: #4B5563;
+}
+
+.user-tags {
+  display: flex;
+  gap: 8rpx;
+  margin-top: 4rpx;
+}
+
+.tag-user {
+  font-size: 20rpx;
+  padding: 2rpx 8rpx;
+  background: #F0E6FF;
+  color: #7B68EE;
+  border-radius: 4rpx;
+}
+
+.tag-user.regular {
+  background: #D1FAE5;
+  color: #10B981;
+}
+
+/* 抢单按钮 */
+.grab-btn {
+  padding: 16rpx 32rpx;
+  border-radius: 32rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.grab-btn.active {
+  background: linear-gradient(135deg, #7B68EE 0%, #9B59B6 100%);
+  color: #ffffff;
+  box-shadow: 0 4rpx 16rpx rgba(123, 104, 238, 0.3);
+}
+
+.grab-btn.active:active {
+  transform: scale(0.96);
+}
+
+.grab-btn.disabled {
+  background: #E5E7EB;
+  color: #9CA3AF;
+  box-shadow: none;
+}
+
+/* ========== 空状态 ========== */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 0;
+}
+
+.empty-icon-wrapper {
+  width: 160rpx;
+  height: 160rpx;
+  background: #F0E6FF;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 32rpx;
+}
+
+.empty-emoji {
+  font-size: 80rpx;
+}
+
+.empty-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1F2937;
+  margin-bottom: 12rpx;
+}
+
+.empty-desc {
+  font-size: 26rpx;
+  color: #9CA3AF;
+}
+
+/* ========== 加载更多 ========== */
+.loading-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32rpx 0;
+}
+
+.loading-spinner {
+  width: 32rpx;
+  height: 32rpx;
+  border: 4rpx solid #E5E7EB;
+  border-top-color: #7B68EE;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 12rpx;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 24rpx;
+  color: #9CA3AF;
+}
+
+.no-more {
+  text-align: center;
+  padding: 32rpx 0;
+}
+
+.no-more-text {
+  font-size: 24rpx;
+  color: #9CA3AF;
+}
+
+/* ========== 抢单弹窗 ========== */
+.grab-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+}
+
+.modal-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 640rpx;
+  max-width: 90%;
+  background: #ffffff;
+  border-radius: 24rpx;
+  overflow: hidden;
+  box-shadow: 0 16rpx 48rpx rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 32rpx 32rpx 24rpx;
+}
+
+.modal-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #1F2937;
+}
+
+.modal-close {
+  font-size: 44rpx;
+  color: #9CA3AF;
+}
+
+.modal-body {
+  padding: 0 32rpx 32rpx;
+}
+
+.task-info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #F3F4F6;
+}
+
+.task-info-row .info-label {
+  font-size: 28rpx;
+  color: #9CA3AF;
+}
+
+.task-info-row .info-value {
+  font-size: 28rpx;
+  color: #1F2937;
+}
+
+.task-info-row .info-value.price {
+  font-weight: 600;
+  color: #7B68EE;
+}
+
+.notice-section {
+  margin-top: 24rpx;
+  padding: 24rpx;
+  background: #F9FAFB;
+  border-radius: 16rpx;
+}
+
+.notice-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1F2937;
+  margin-bottom: 16rpx;
+  display: block;
+}
+
+.notice-item {
+  font-size: 26rpx;
+  color: #4B5563;
+  margin-bottom: 12rpx;
+}
+
+.confirm-checkbox {
+  display: flex;
+  align-items: center;
+  margin-top: 24rpx;
+}
+
+.checkbox {
+  width: 40rpx;
+  height: 40rpx;
+  border: 2rpx solid #D1D5DB;
+  border-radius: 8rpx;
+  margin-right: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  color: #ffffff;
+}
+
+.checkbox.checked {
+  background: #7B68EE;
+  border-color: #7B68EE;
+}
+
+.confirm-text {
+  font-size: 26rpx;
+  color: #4B5563;
+}
+
+.modal-footer {
+  display: flex;
+  border-top: 1rpx solid #F3F4F6;
+}
+
+.modal-btn {
+  flex: 1;
+  height: 100rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30rpx;
+  font-weight: 500;
+}
+
+.modal-btn.cancel {
+  color: #4B5563;
+  border-right: 1rpx solid #F3F4F6;
+}
+
+.modal-btn.confirm {
+  color: #7B68EE;
+}
+
+.modal-btn.confirm.disabled {
+  color: #9CA3AF;
+}

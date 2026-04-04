@@ -1,0 +1,80 @@
+<!-- pages/services/services.wxml - 服务项目 -->
+<view class="page-services">
+  <!-- 自定义导航栏 -->
+  <view class="custom-nav">
+    <view class="nav-left" bindtap="goBack">
+      <text class="nav-back-icon">‹</text>
+    </view>
+    <text class="nav-title">服务项目</text>
+    <view class="nav-right"></view>
+  </view>
+
+  <!-- 审核状态横幅 -->
+  <view class="audit-banner {{auditStatus}}" wx:if="{{auditStatus !== 'none'}}">
+    <text class="audit-banner-icon">
+      <block wx:if="{{auditStatus === 'pending'}}">⏳</block>
+      <block wx:if="{{auditStatus === 'approved'}}">✅</block>
+      <block wx:if="{{auditStatus === 'rejected'}}">❌</block>
+    </text>
+    <view class="audit-banner-content">
+      <text class="audit-banner-title">
+        <block wx:if="{{auditStatus === 'pending'}}">修改审核中</block>
+        <block wx:if="{{auditStatus === 'approved'}}">修改已通过</block>
+        <block wx:if="{{auditStatus === 'rejected'}}">修改被拒绝</block>
+      </text>
+      <text class="audit-banner-desc" wx:if="{{auditStatus === 'pending'}}">运营专员正在审核，请耐心等待</text>
+      <text class="audit-banner-desc" wx:if="{{auditStatus === 'approved'}}">已通过审核，可接新类别订单</text>
+      <text class="audit-banner-desc" wx:if="{{auditStatus === 'rejected'}}">{{auditRemark || '审核未通过，请重新提交'}}</text>
+    </view>
+  </view>
+
+  <!-- 内容区 -->
+  <view class="content">
+
+    <!-- 区块标题行 -->
+    <view class="section-header">
+      <view class="section-label-wrap">
+        <text class="section-label">{{isEditing ? '选择服务项目' : '当前服务项目'}}</text>
+        <text class="section-hint" wx:if="{{isEditing}}">点击卡片选择 / 取消服务项目</text>
+      </view>
+      <view class="section-header-right">
+        <text class="section-count" wx:if="{{isEditing}}">已选 {{pendingServices.length}}/5</text>
+        <view class="modify-btn {{isEditing ? 'cancel' : ''}} {{auditStatus === 'pending' ? 'auditing' : ''}}" bindtap="toggleEdit">
+          {{isEditing ? '取消' : (auditStatus === 'pending' ? '审核中' : '修改')}}
+        </view>
+      </view>
+    </view>
+
+    <!-- 服务宫格 -->
+    <view class="service-grid">
+      <view
+        class="service-item {{!isEditing && item.isActive ? 'active' : ''}} {{!isEditing && !item.isActive ? 'dim' : ''}} {{isEditing && item.isSelected ? 'selected' : ''}} {{isEditing && !item.isSelected ? 'unselected' : ''}} {{isEditing ? 'editable' : ''}}"
+        wx:for="{{serviceCategories}}"
+        wx:key="id"
+        data-index="{{index}}"
+        bindtap="toggleService"
+      >
+        <view class="item-check" wx:if="{{isEditing && item.isSelected}}">
+          <view class="check-icon">✓</view>
+        </view>
+        <image class="item-icon" src="{{item.icon}}" mode="aspectFit"/>
+        <text class="item-name">{{item.name}}</text>
+        <text class="item-price">¥{{item.price}}/时</text>
+      </view>
+    </view>
+
+    <!-- 编辑模式提示 -->
+    <view class="tips-box" wx:if="{{isEditing}}">
+      <text class="tips-line">• 至少选择 1 个，最多选择 5 个服务项目</text>
+      <text class="tips-line">• 服务单价由平台统一设定，搭子无需自行定价</text>
+      <text class="tips-line">• 修改后需运营专员审核，审核期间可正常接单</text>
+    </view>
+
+  </view>
+
+  <!-- 提交按钮 -->
+  <view class="submit-bar" wx:if="{{isEditing}}">
+    <view class="submit-btn" bindtap="submitAudit">提交审核</view>
+  </view>
+
+</view>

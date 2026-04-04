@@ -1,0 +1,80 @@
+<!-- pages/audit-result/audit-result.wxml - 审核结果 -->
+<view class="container">
+  <!-- 自定义导航栏 -->
+  <view class="custom-nav">
+    <view class="nav-left" bindtap="goBack">
+      <text class="nav-back-icon">‹</text>
+    </view>
+    <text class="nav-title">审核结果</text>
+    <view class="nav-right"></view>
+  </view>
+
+  <!-- 审核中 -->
+  <view class="result-box" wx:if="{{status === 'pending'}}">
+    <view class="status-icon pending">
+      <text class="icon">⏳</text>
+    </view>
+    <text class="status-title">审核中</text>
+    <text class="status-desc">您的资料已提交，工作人员正在审核中</text>
+    <view class="progress-list">
+      <view class="progress-item done">
+        <text class="dot"></text>
+        <text class="text">资料提交</text>
+      </view>
+      <view class="progress-item doing">
+        <text class="dot"></text>
+        <text class="text">人工审核</text>
+      </view>
+      <view class="progress-item">
+        <text class="dot"></text>
+        <text class="text">审核完成</text>
+      </view>
+    </view>
+    <text class="tip-text">预计1-3个工作日内完成审核</text>
+  </view>
+
+  <!-- 审核通过 -->
+  <view class="result-box" wx:if="{{status === 'approved'}}">
+    <view class="status-icon success">
+      <text class="icon">✓</text>
+    </view>
+    <text class="status-title">审核通过</text>
+    <text class="status-desc">恭喜您已通过认证，正式成为搭子</text>
+    <view class="benefits">
+      <view class="benefit-item">
+        <text class="icon">🎉</text>
+        <text class="text">可以开始接单赚钱</text>
+      </view>
+      <view class="benefit-item">
+        <text class="icon">💰</text>
+        <text class="text">获得专属接单权限</text>
+      </view>
+      <view class="benefit-item">
+        <text class="icon">🏅</text>
+        <text class="text">享受平台专属福利</text>
+      </view>
+    </view>
+    <button class="btn-primary" bindtap="goToWorkbench">进入工作台</button>
+  </view>
+
+  <!-- 审核拒绝 -->
+  <view class="result-box" wx:if="{{status === 'rejected'}}">
+    <view class="status-icon reject">
+      <text class="icon">✕</text>
+    </view>
+    <text class="status-title">审核未通过</text>
+    <text class="status-desc">很抱歉，您的资料未通过审核</text>
+    <view class="reject-reason">
+      <text class="reason-title">拒绝原因：</text>
+      <text class="reason-content">{{rejectReason || '身份证照片不清晰，请重新拍摄上传'}}</text>
+    </view>
+    <button class="btn-primary" bindtap="reapply">重新申请</button>
+    <button class="btn-text" bindtap="contactService">联系客服</button>
+  </view>
+
+  <!-- 底部 -->
+  <view class="footer" wx:if="{{status === 'pending'}}">
+    <text>有问题？</text>
+    <text class="link" bindtap="contactService">联系客服</text>
+  </view>
+</view>

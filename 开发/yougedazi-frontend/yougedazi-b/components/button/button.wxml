@@ -1,0 +1,11 @@
+<!-- components/button/button.wxml -->
+<view 
+  class="btn btn-{{type}} btn-{{size}} {{disabled ? 'btn-disabled' : ''}} {{block ? 'btn-block' : ''}}"
+  hover-class="btn-hover"
+  bindtap="onTap"
+  disabled="{{disabled}}"
+>
+  <view class="btn-loading" wx:if="{{loading}}"></view>
+  <text class="btn-text" wx:if="{{!loading}}">{{text}}</text>
+  <text class="btn-text" wx:if="{{loading}}">{{loadingText || '加载中...'}}</text>
+</view>

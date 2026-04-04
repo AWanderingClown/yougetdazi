@@ -1,0 +1,19 @@
+<!-- pages/agreement/agreement.wxml - 用户协议 -->
+<view class="page-agreement">
+  <!-- 头部 -->
+  <view class="header">
+    <view class="header-left" bindtap="goBack">
+      <text class="icon-back">‹</text>
+    </view>
+    <text class="header-title">用户协议</text>
+    <view class="header-right"></view>
+  </view>
+
+  <!-- 内容区域 -->
+  <scroll-view class="content-wrapper" scroll-y>
+    <view class="content">
+      <view class="title">{{title}}</view>
+      <text class="agreement-text">{{content}}</text>
+    </view>
+  </scroll-view>
+</view>

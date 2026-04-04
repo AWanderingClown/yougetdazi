@@ -1,0 +1,178 @@
+<!-- pages/deposit/deposit.wxml - 保证金缴纳页（按订单量阶段） -->
+<view class="container">
+  <!-- 自定义导航栏 -->
+  <view class="custom-nav">
+    <view class="nav-left" bindtap="goBack">
+      <text class="nav-back-icon">‹</text>
+    </view>
+    <text class="nav-title">保证金</text>
+    <view class="nav-right"></view>
+  </view>
+
+  <!-- 当前状态卡片 -->
+  <view class="status-card">
+    <view class="status-header">
+      <text class="status-title">保证金状态</text>
+      <view class="stage-badge {{currentStage}}">
+        <text class="stage-dot"></text>
+        <text class="stage-text">{{currentStageText}}</text>
+      </view>
+    </view>
+    
+    <view class="order-count">
+      <text class="count-label">当前已完成订单</text>
+      <text class="count-value">{{orderCount}} <text class="count-unit">单</text></text>
+    </view>
+    
+    <view class="deposit-info">
+      <view class="info-item">
+        <text class="info-label">已缴纳</text>
+        <text class="info-value">¥{{depositedAmount}}</text>
+      </view>
+      <view class="info-divider"></view>
+      <view class="info-item">
+        <text class="info-label">当前阶段</text>
+        <text class="info-value {{stageStatus}}">{{stageStatus === 'free' ? '免保证金' : (stageStatus === 'full' ? '已缴满' : '需补缴')}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 阶段说明 -->
+  <view class="section">
+    <view class="section-title">保证金规则</view>
+    <view class="stage-list">
+      <!-- 新手期 -->
+      <view class="stage-item {{currentStage === 'rookie' ? 'active' : ''}} {{orderCount > depositConfig.rookieMax ? 'passed' : ''}}">
+        <view class="stage-icon rookie">
+          <text class="icon-text">新</text>
+        </view>
+        <view class="stage-content">
+          <view class="stage-name">新手期</view>
+          <view class="stage-range">0-{{depositConfig.rookieMax}}单</view>
+          <view class="stage-amount free">免保证金</view>
+        </view>
+        <view class="stage-status">
+          <text wx:if="{{currentStage === 'rookie'}}" class="status-current">当前</text>
+          <text wx:elif="{{orderCount > depositConfig.rookieMax}}" class="status-passed">已通过</text>
+        </view>
+      </view>
+
+      <!-- 成长期 -->
+      <view class="stage-item {{currentStage === 'growth' ? 'active' : ''}} {{orderCount > depositConfig.growthMax ? 'passed' : ''}}">
+        <view class="stage-icon growth">
+          <text class="icon-text">成</text>
+        </view>
+        <view class="stage-content">
+          <view class="stage-name">成长期</view>
+          <view class="stage-range">{{depositConfig.rookieMax + 1}}-{{depositConfig.growthMax}}单</view>
+          <view class="stage-amount">需缴纳 ¥{{depositConfig.growthAmount}}</view>
+        </view>
+        <view class="stage-status">
+          <text wx:if="{{currentStage === 'growth'}}" class="status-current">当前</text>
+          <text wx:elif="{{orderCount > depositConfig.growthMax}}" class="status-passed">已通过</text>
+          <text wx:else class="status-locked">未到达</text>
+        </view>
+      </view>
+
+      <!-- 成熟期 -->
+      <view class="stage-item {{currentStage === 'mature' ? 'active' : ''}}">
+        <view class="stage-icon mature">
+          <text class="icon-text">熟</text>
+        </view>
+        <view class="stage-content">
+          <view class="stage-name">成熟期</view>
+          <view class="stage-range">{{depositConfig.growthMax + 1}}单及以上</view>
+          <view class="stage-amount">累计缴纳 ¥{{depositConfig.matureAmount}}</view>
+        </view>
+        <view class="stage-status">
+          <text wx:if="{{currentStage === 'mature'}}" class="status-current">当前</text>
+          <text wx:else class="status-locked">未到达</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 补缴提示（如果需要） -->
+  <view class="section" wx:if="{{stageStatus === 'partial'}}">
+    <view class="section-title">待缴纳金额</view>
+    <view class="pay-card">
+      <view class="pay-amount">
+        <text class="currency">¥</text>
+        <text class="amount">{{needPay}}</text>
+      </view>
+      <view class="pay-desc">
+        <text wx:if="{{currentStage === 'growth'}}">缴纳后即可正常接单（{{depositConfig.rookieMax + 1}}-{{depositConfig.growthMax}}单）</text>
+        <text wx:if="{{currentStage === 'mature'}}">缴纳后即可正常接单（{{depositConfig.growthMax + 1}}单及以上）</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 支付方式 -->
+  <view class="section" wx:if="{{stageStatus === 'partial'}}">
+    <view class="section-title">选择支付方式</view>
+    <view class="payment-methods">
+      <view 
+        class="payment-item {{paymentMethod === 'wechat' ? 'selected' : ''}}"
+        data-method="wechat"
+        bindtap="selectPayment"
+      >
+        <view class="payment-icon wechat">💚</view>
+        <text class="payment-name">微信支付</text>
+        <view class="check-icon" wx:if="{{paymentMethod === 'wechat'}}">✓</view>
+      </view>
+      <view 
+        class="payment-item {{paymentMethod === 'alipay' ? 'selected' : ''}}"
+        data-method="alipay"
+        bindtap="selectPayment"
+      >
+        <view class="payment-icon alipay">💙</view>
+        <text class="payment-name">支付宝</text>
+        <view class="check-icon" wx:if="{{paymentMethod === 'alipay'}}">✓</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 协议同意 -->
+  <view class="agreement-section" wx:if="{{stageStatus === 'partial'}}">
+    <view class="agreement-item" bindtap="toggleAgreement">
+      <checkbox checked="{{agreementChecked}}" color="#667eea"/>
+      <text class="agreement-text">我已阅读并同意</text>
+      <text class="agreement-link" catchtap="showAgreementModal">《保证金协议》</text>
+    </view>
+  </view>
+
+  <!-- 底部操作 -->
+  <view class="footer">
+    <!-- 需要缴纳时显示支付按钮 -->
+    <block wx:if="{{stageStatus === 'partial'}}">
+      <button 
+        class="pay-btn {{paying || !agreementChecked ? 'disabled' : ''}}" 
+        bindtap="onPay"
+        disabled="{{paying || !agreementChecked}}"
+      >
+        {{paying ? '支付中...' : '立即支付 ¥' + needPay}}
+      </button>
+    </block>
+    
+    <!-- 已缴满时显示状态 -->
+    <block wx:elif="{{stageStatus === 'full'}}">
+      <view class="status-full">
+        <text class="full-icon">✓</text>
+        <text class="full-text">保证金已缴满</text>
+      </view>
+      <text class="full-desc">您已完成当前阶段的保证金缴纳，可正常接单</text>
+    </block>
+    
+    <!-- 免保证金时显示状态 -->
+    <block wx:else>
+      <view class="status-free">
+        <text class="free-icon">🎉</text>
+        <text class="free-text">免保证金阶段</text>
+      </view>
+      <text class="free-desc">完成 {{depositConfig.rookieMax}} 单内免保证金，继续加油！</text>
+    </block>
+    
+    <text class="refund-link" bindtap="onRefund" wx:if="{{depositedAmount > 0}}">申请退还保证金</text>
+    <text class="service-link" bindtap="contactService">遇到问题？联系客服</text>
+  </view>
+</view>

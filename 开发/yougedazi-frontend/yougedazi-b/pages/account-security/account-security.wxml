@@ -1,0 +1,92 @@
+<!-- pages/account-security/account-security.wxml - 账号与安全 -->
+<view class="page-account-security">
+  <!-- 头部 -->
+  <view class="header">
+    <view class="header-left" bindtap="goBack">
+      <text class="icon-back">‹</text>
+    </view>
+    <text class="header-title">账号与安全</text>
+    <view class="header-right"></view>
+  </view>
+
+  <!-- 账号信息 -->
+  <view class="section">
+    <view class="section-title">账号信息</view>
+    
+    <view class="list-item" bindtap="changePhone">
+      <view class="item-icon"></view>
+      <view class="item-content">
+        <text class="item-title">手机号</text>
+        <text class="item-value">{{phone || '未绑定'}}</text>
+      </view>
+      <text class="item-arrow">›</text>
+    </view>
+
+    <view class="list-item" bindtap="handleWechatBind">
+      <view class="item-icon" style="color: #07c160;"></view>
+      <view class="item-content">
+        <text class="item-title">微信绑定</text>
+        <text class="item-value {{isWechatBound ? 'verified' : ''}}">
+          {{isWechatBound ? '已绑定' : '未绑定'}}
+        </text>
+      </view>
+      <text class="item-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 安全认证 -->
+  <view class="section">
+    <view class="section-title">安全认证</view>
+    
+    <view class="list-item" bindtap="goToRealNameVerify">
+      <view class="item-icon" style="color: #e74c3c;"></view>
+      <view class="item-content">
+        <text class="item-title">实名认证</text>
+        <text class="item-value {{isRealNameVerified ? 'verified' : 'unverified'}}">
+          {{isRealNameVerified ? '已认证' : '未认证'}}
+        </text>
+      </view>
+      <text class="item-arrow">›</text>
+    </view>
+
+    <view class="list-item" bindtap="goToFaceVerify">
+      <view class="item-icon" style="color: #9b59b6;"></view>
+      <view class="item-content">
+        <text class="item-title">人脸识别</text>
+        <text class="item-value {{isFaceVerified ? 'verified' : 'unverified'}}">
+          {{isFaceVerified ? '已认证' : '未认证'}}
+        </text>
+      </view>
+      <text class="item-arrow">›</text>
+    </view>
+
+    <view class="list-item" bindtap="changePassword">
+      <view class="item-icon" style="color: #f39c12;"></view>
+      <view class="item-content">
+        <text class="item-title">修改登录密码</text>
+        <text class="item-value"></text>
+      </view>
+      <text class="item-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 账号管理 -->
+  <view class="section">
+    <view class="section-title">账号管理</view>
+    
+    <view class="list-item danger" bindtap="deleteAccount">
+      <view class="item-icon" style="color: #e74c3c;"></view>
+      <view class="item-content">
+        <text class="item-title">注销账号</text>
+        <text class="item-value"></text>
+      </view>
+      <text class="item-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 安全提示 -->
+  <view class="safety-tips">
+    <text class="tips-icon"></text>
+    <text class="tips-text">有个搭子采用多重安全保护机制，确保您的账号信息安全</text>
+  </view>
+</view>

@@ -1,0 +1,9 @@
+{
+  "desc": "有个搭子B端小程序",
+  "rules": [
+    {
+      "action": "allow",
+      "page": "*"
+    }
+  ]
+}

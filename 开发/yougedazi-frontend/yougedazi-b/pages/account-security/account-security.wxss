@@ -1,0 +1,133 @@
+/* pages/account-security/account-security.wxss - 账号与安全样式 */
+.page-account-security {
+  min-height: 100vh;
+  background: #F9FAFB;
+  padding-bottom: 40rpx;
+}
+
+/* 头部 */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 32rpx;
+  background: linear-gradient(135deg, #7B68EE, #9B59B6);
+  padding-top: 60rpx;
+}
+
+.header-left {
+  width: 60rpx;
+}
+
+.icon-back {
+  font-size: 48rpx;
+  color: #fff;
+  font-weight: bold;
+}
+
+.header-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #fff;
+}
+
+.header-right {
+  width: 60rpx;
+}
+
+/* 区块样式 */
+.section {
+  background: #fff;
+  margin: 24rpx 32rpx;
+  border-radius: 24rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.04);
+}
+
+.section-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1F2937;
+  padding: 24rpx 32rpx;
+  border-bottom: 2rpx solid #F3F4F6;
+}
+
+/* 列表项 */
+.list-item {
+  display: flex;
+  align-items: center;
+  padding: 32rpx;
+  border-bottom: 2rpx solid #F3F4F6;
+  background: #fff;
+  transition: all 0.2s;
+}
+
+.list-item:active {
+  background: #F9FAFB;
+}
+
+.list-item:last-child {
+  border-bottom: none;
+}
+
+.list-item.danger .item-title {
+  color: #EF4444;
+}
+
+.item-icon {
+  font-size: 40rpx;
+  margin-right: 24rpx;
+  width: 50rpx;
+  text-align: center;
+}
+
+.item-content {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.item-title {
+  font-size: 30rpx;
+  color: #1F2937;
+  font-weight: 500;
+}
+
+.item-value {
+  font-size: 28rpx;
+  color: #9CA3AF;
+  margin-right: 10rpx;
+}
+
+.item-value.verified {
+  color: #10B981;
+  font-weight: 500;
+}
+
+.item-value.unverified {
+  color: #EF4444;
+}
+
+.item-arrow {
+  font-size: 32rpx;
+  color: #D1D5DB;
+}
+
+/* 安全提示 */
+.safety-tips {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40rpx 60rpx;
+  gap: 10rpx;
+}
+
+.tips-icon {
+  font-size: 28rpx;
+}
+
+.tips-text {
+  font-size: 24rpx;
+  color: #9CA3AF;
+}

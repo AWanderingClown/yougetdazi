@@ -1,0 +1,114 @@
+<!-- pages/face-verify/face-verify.wxml - 人脸识别验证 -->
+<view class="page-face-verify">
+  <!-- 自定义导航栏 -->
+  <view class="custom-nav">
+    <view class="nav-left" bindtap="goBack">
+      <text class="nav-back-icon">‹</text>
+    </view>
+    <text class="nav-title">人脸识别</text>
+    <view class="nav-right"></view>
+  </view>
+
+  <!-- 头部说明 -->
+  <view class="verify-header">
+    <view class="header-icon">👤</view>
+    <view class="header-desc">为保障服务安全，请完成人脸识别验证</view>
+  </view>
+
+  <!-- 摄像头区域 -->
+  <view class="camera-section">
+    <view class="camera-box {{verifyStatus}}">
+      <!-- 人脸框 -->
+      <view class="face-frame" wx:if="{{verifyStatus !== 'locked'}}">
+        <view class="frame-corner top-left"></view>
+        <view class="frame-corner top-right"></view>
+        <view class="frame-corner bottom-left"></view>
+        <view class="frame-corner bottom-right"></view>
+      </view>
+      
+      <!-- 扫描线 -->
+      <view class="scan-line" wx:if="{{verifyStatus === 'scanning'}}"></view>
+      
+      <!-- 状态提示 -->
+      <view class="status-tip">
+        <text wx:if="{{verifyStatus === 'waiting'}}">请将脸部对准框内</text>
+        <text wx:if="{{verifyStatus === 'scanning'}}">正在识别...</text>
+        <text wx:if="{{verifyStatus === 'success'}}">✓ 识别成功</text>
+        <text wx:if="{{verifyStatus === 'fail'}}">✗ 识别失败，请重试</text>
+        <text wx:if="{{verifyStatus === 'locked'}}">🔒 验证受限</text>
+      </view>
+    </view>
+    
+    <!-- 模拟摄像头画面 -->
+    <view class="camera-placeholder" wx:if="{{!isRealCamera && verifyStatus !== 'locked'}}">
+      <text class="placeholder-icon">📷</text>
+      <text class="placeholder-text">点击开始识别</text>
+    </view>
+    
+    <!-- 锁定状态显示 -->
+    <view class="camera-placeholder locked" wx:if="{{verifyStatus === 'locked'}}">
+      <text class="placeholder-icon">🔒</text>
+      <text class="placeholder-text">验证受限</text>
+    </view>
+  </view>
+
+  <!-- 失败统计提示 -->
+  <view class="attempts-tip" wx:if="{{consecutiveFails > 0 && !consecutiveLimitReached && !dailyLimitReached}}">
+    <text class="tip-warning">连续失败 {{consecutiveFails}} 次，还剩 {{5 - consecutiveFails}} 次机会</text>
+  </view>
+  
+  <!-- 每日统计 -->
+  <view class="daily-stats" wx:if="{{dailyAttempts > 0 && !dailyLimitReached}}">
+    <text class="stats-text">今日已尝试 {{dailyAttempts}}/15 次</text>
+  </view>
+
+  <!-- 操作按钮 -->
+  <view class="action-section">
+    <!-- 正常状态按钮 -->
+    <block wx:if="{{!dailyLimitReached && !consecutiveLimitReached}}">
+      <view class="btn-verify {{verifyStatus === 'scanning' ? 'disabled' : ''}}" bindtap="startVerify">
+        <text wx:if="{{verifyStatus === 'waiting'}}">开始识别</text>
+        <text wx:if="{{verifyStatus === 'scanning'}}">识别中...</text>
+        <text wx:if="{{verifyStatus === 'success'}}">验证通过</text>
+        <text wx:if="{{verifyStatus === 'fail'}}">重新识别</text>
+      </view>
+    </block>
+    
+    <!-- 连续失败5次后显示联系客服 -->
+    <block wx:if="{{consecutiveLimitReached}}">
+      <view class="btn-verify btn-service" bindtap="showContactServiceModal">
+        联系客服
+      </view>
+    </block>
+    
+    <!-- 每日上限后显示联系客服 -->
+    <block wx:if="{{dailyLimitReached}}">
+      <view class="btn-verify btn-service" bindtap="showLockedModal">
+        联系客服解锁
+      </view>
+    </block>
+    
+    <view class="btn-cancel" bindtap="onCancel" wx:if="{{verifyStatus !== 'success'}}">取消</view>
+  </view>
+
+  <!-- 倒计时提示 -->
+  <view class="timeout-tip" wx:if="{{timeout > 0 && verifyStatus !== 'success' && verifyStatus !== 'locked'}}">
+    <text class="tip-icon">⏰</text>
+    <text class="tip-text">请在 {{countdownText}} 内完成验证</text>
+  </view>
+
+  <!-- 说明文字 -->
+  <view class="verify-tips">
+    <view class="tip-title">注意事项：</view>
+    <view class="tip-item">• 请确保光线充足，面部无遮挡</view>
+    <view class="tip-item">• 请保持面部在框内，不要晃动</view>
+    <view class="tip-item" wx:if="{{!consecutiveLimitReached && !dailyLimitReached}}">• 连续失败5次将需联系客服</view>
+    <view class="tip-item" wx:if="{{!dailyLimitReached}}">• 每日最多尝试15次验证</view>
+    <view class="tip-item">• 超时未验证将自动取消订单</view>
+  </view>
+
+  <!-- 跳过按钮（开发测试用） -->
+  <view class="dev-skip" bindtap="devSkipVerify" wx:if="{{isDevMode && verifyStatus !== 'locked'}}">
+    [开发者模式] 跳过验证
+  </view>
+</view>

@@ -1,0 +1,241 @@
+<!-- 订单详情 -->
+<view class="page-order-detail">
+  <!-- 自定义导航栏 -->
+  <view class="custom-nav">
+    <view class="nav-left" bindtap="goBack">
+      <text class="nav-back-icon">‹</text>
+    </view>
+    <text class="nav-title">订单详情</text>
+    <view class="nav-right"></view>
+  </view>
+
+  <!-- 顶部状态栏（渐变背景） -->
+  <view class="status-header status-bg-{{order.status}}">
+    <view class="status-content">
+      <view class="status-icon-wrap">
+        <text class="status-emoji" wx:if="{{order.status === 'pending_accept'}}">📋</text>
+        <text class="status-emoji" wx:elif="{{order.status === 'accepted'}}">🚗</text>
+        <text class="status-emoji" wx:elif="{{order.status === 'serving'}}">⚡</text>
+        <text class="status-emoji" wx:elif="{{order.status === 'completed'}}">✅</text>
+        <text class="status-emoji" wx:else>📦</text>
+      </view>
+      <view class="status-text-wrap">
+        <text class="status-title">{{order.statusText || '待接单'}}</text>
+        <text class="status-desc">{{order.statusDesc || '请尽快确认是否接单'}}</text>
+      </view>
+    </view>
+
+    <!-- 接单倒计时 -->
+    <view class="countdown-card" wx:if="{{order.status === 'pending_accept'}}">
+      <text class="countdown-hint">剩余接单时间</text>
+      <text class="countdown-value">{{countdown}}</text>
+    </view>
+
+    <!-- 服务计时器（渐变卡片） -->
+    <view class="timer-card" wx:if="{{order.status === 'serving'}}">
+      <text class="timer-label">服务剩余时间</text>
+      <view class="timer-display">
+        <text class="timer-value">{{serviceCountdown}}</text>
+      </view>
+      <view class="timer-progress">
+        <view class="progress-bar">
+          <view class="progress-fill" style="width: 65%;"></view>
+        </view>
+      </view>
+      <view class="lbs-row">
+        <text class="lbs-dot"></text>
+        <text class="lbs-text">{{lbsStatus}}</text>
+      </view>
+    </view>
+
+  </view>
+
+  <!-- 位置追踪状态（出发后/已接单）-->
+  <view class="tracking-status-bar" wx:if="{{hasDeparted && order.status === 'accepted'}}">
+    <text class="tracking-label">实时位置追踪</text>
+    <text class="tracking-value {{lbsStatusType}}">{{lbsStatus}}</text>
+  </view>
+
+  <!-- 用户信息卡片 -->
+  <view class="card user-card">
+    <view class="card-header">
+      <text class="card-title">用户信息</text>
+    </view>
+    <view class="user-profile">
+      <view class="avatar-wrap">
+        <image class="user-avatar" src="{{order.customerAvatar || '/assets/icons/default-avatar.png'}}" mode="aspectFill"/>
+        <view class="gender-dot female">♀</view>
+      </view>
+      <view class="user-detail">
+        <view class="user-name-row">
+          <text class="user-name">{{order.customerName}}</text>
+          <view class="user-level">
+            <text>Lv.3</text>
+          </view>
+          <view class="user-tags">
+            <view class="tag-item tag-new-user" wx:if="{{order.isNewUser}}">新用户</view>
+            <view class="tag-item" wx:for="{{order.tags}}" wx:key="index">{{item}}</view>
+          </view>
+        </view>
+        <view class="user-phone">
+          <text class="phone-icon">📱</text>
+          <text class="phone-text">{{order.customerPhone || '138****8001'}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 订单信息卡片 -->
+  <view class="card info-card">
+    <view class="card-header">
+      <text class="card-title">订单信息</text>
+      <view class="order-type-badge">
+        <text>{{orderType === 'reward' ? '悬赏任务' : '定向订单'}}</text>
+      </view>
+    </view>
+    <view class="info-grid">
+      <view class="grid-item">
+        <text class="grid-emoji">✨</text>
+        <view class="grid-content">
+          <text class="grid-label">服务类型</text>
+          <text class="grid-value">{{order.serviceType}}</text>
+        </view>
+      </view>
+      <view class="grid-item">
+        <text class="grid-emoji">📝</text>
+        <view class="grid-content">
+          <text class="grid-label">服务内容</text>
+          <text class="grid-value">{{order.serviceDetail}}</text>
+        </view>
+      </view>
+      <view class="grid-item">
+        <text class="grid-emoji">🕐</text>
+        <view class="grid-content">
+          <text class="grid-label">服务时间</text>
+          <text class="grid-value">{{order.appointmentTime}}</text>
+        </view>
+      </view>
+      <view class="grid-item">
+        <text class="grid-emoji">⏱️</text>
+        <view class="grid-content">
+          <text class="grid-label">服务时长</text>
+          <text class="grid-value">{{order.duration}}</text>
+        </view>
+      </view>
+      <view class="grid-item full">
+        <text class="grid-emoji">📍</text>
+        <view class="grid-content">
+          <text class="grid-label">服务地点</text>
+          <text class="grid-value">{{order.address}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 价格区域 -->
+    <view class="price-section">
+      <view class="price-info">
+        <text class="price-label">订单金额</text>
+        <text class="price-sub">¥{{order.hourlyPrice}}/小时 × {{order.duration}}</text>
+      </view>
+      <view class="price-amount">
+        <text class="price-symbol">¥</text>
+        <text class="price-value">{{order.totalAmount}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 地图区域（已出发且未开始服务时显示） -->
+  <view class="map-section" wx:if="{{hasDeparted && order.status === 'accepted'}}">
+    <map
+      id="serviceMap"
+      class="service-map"
+      longitude="{{targetLocation.longitude}}"
+      latitude="{{targetLocation.latitude}}"
+      scale="{{mapScale}}"
+      markers="{{mapMarkers}}"
+      show-location="{{true}}"
+      enable-zoom="{{true}}"
+      enable-scroll="{{true}}"
+    />
+
+    <!-- 地图覆盖信息 -->
+    <view class="map-overlay">
+      <view class="location-info">
+        <view class="location-item">
+          <view class="location-dot companion-dot"></view>
+          <text class="location-text">我的位置</text>
+        </view>
+        <view class="location-item">
+          <view class="location-dot target-dot"></view>
+          <text class="location-text">目的地</text>
+        </view>
+      </view>
+
+      <!-- 实时信息 -->
+      <view class="map-info-box">
+        <view class="info-item" wx:if="{{distanceToTarget > 0}}">
+          <text class="info-label">距离目的地</text>
+          <text class="info-value">{{distanceToTarget}}米</text>
+        </view>
+        <view class="info-item" wx:if="{{order.estimatedArrival}}">
+          <text class="info-label">预计到达</text>
+          <text class="info-value">{{order.estimatedArrival}}</text>
+        </view>
+        <view class="arrived-badge" wx:if="{{hasArrived}}">
+          <text class="arrived-text">✓ 已到达服务范围（100米内）</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 备注卡片 -->
+  <view class="card remark-card" wx:if="{{order.remark}}">
+    <view class="card-header">
+      <text class="card-title">用户备注</text>
+    </view>
+    <view class="remark-body">
+      <text class="remark-icon">💬</text>
+      <text class="remark-text">{{order.remark}}</text>
+    </view>
+  </view>
+
+  <!-- 底部操作栏 -->
+  <!-- 已完成状态：未评价显示"去评价"，已评价显示灰色"已评价" -->
+  <view class="action-bar action-bar-center" wx:if="{{order.status === 'completed' && !order.hasReviewed}}">
+    <view class="action-btn btn-main btn-review-center" bindtap="onReviewUser">去评价</view>
+  </view>
+  <view class="action-bar action-bar-center" wx:if="{{order.status === 'completed' && order.hasReviewed}}">
+    <view class="action-btn btn-review-center" style="background:#ccc;color:#fff;">已评价</view>
+  </view>
+  <!-- 非已完成状态：正常操作栏 -->
+  <view class="action-bar" wx:else>
+    <view class="action-btn btn-contact" bindtap="onContactUser">
+      <text class="btn-icon">📞</text>
+      <text>联系用户</text>
+    </view>
+
+    <!-- 接单按钮 -->
+    <view class="action-btn btn-main" wx:if="{{canAccept}}" bindtap="onAcceptOrder">立即接单</view>
+
+    <!-- 出发按钮 -->
+    <view class="action-btn btn-main" wx:if="{{canDepart}}" bindtap="onDepart">
+      <text class="btn-depart-text">出发</text>
+    </view>
+
+    <!-- 开始服务按钮 -->
+    <view
+      class="action-btn btn-main {{startBtnDisabled ? 'disabled' : ''}}"
+      wx:if="{{hasDeparted && order.status === 'accepted'}}"
+      bindtap="onStartService"
+    >
+      <block wx:if="{{hasArrived}}">开始服务</block>
+      <block wx:else>{{startBtnText}}</block>
+    </view>
+
+    <!-- 服务中状态 -->
+    <view class="action-btn btn-serving" wx:if="{{order.status === 'serving'}}">
+      <view class="serving-dot"></view>
+      <text>服务进行中</text>
+    </view>
+  </view>
+</view>

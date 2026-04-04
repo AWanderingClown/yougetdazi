@@ -1,0 +1,225 @@
+<!-- 提现页面 - 有个搭子B端 -->
+<view class="container">
+  <!-- 自定义导航栏 -->
+  <view class="custom-nav">
+    <view class="nav-left" bindtap="goBack">
+      <text class="nav-back-icon">‹</text>
+    </view>
+    <text class="nav-title">提现</text>
+    <view class="nav-right"></view>
+  </view>
+
+  <!-- 可提现余额 -->
+  <view class="balance-section">
+    <text class="balance-label">可提现余额</text>
+    <view class="balance-row">
+      <text class="currency">¥</text>
+      <text class="balance-amount">{{balanceInfo.withdrawable}}</text>
+    </view>
+    <text class="balance-tips">最低提现金额 ¥{{minWithdrawAmount}}</text>
+  </view>
+
+  <!-- 银行卡选择 -->
+  <view class="section-card">
+    <view class="section-title">提现至</view>
+    <view class="bank-card {{!selectedBankCard ? 'empty' : ''}}" bindtap="selectBankCard">
+      <block wx:if="{{selectedBankCard}}">
+        <view class="bank-icon">{{selectedBankCard.icon}}</view>
+        <view class="bank-info">
+          <text class="bank-name">{{selectedBankCard.bankName}}</text>
+          <text class="bank-no">{{selectedBankCard.cardNo}}</text>
+        </view>
+        <text class="arrow">›</text>
+      </block>
+      <block wx:else>
+        <view class="add-bank">
+          <text class="add-icon">+</text>
+          <text class="add-text">添加银行卡</text>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <!-- 提现金额输入 -->
+  <view class="section-card">
+    <view class="section-title">提现金额</view>
+    <view class="amount-input-box">
+      <text class="amount-symbol">¥</text>
+      <input 
+        class="amount-input" 
+        type="digit" 
+        placeholder="请输入提现金额" 
+        value="{{withdrawAmount}}"
+        bindinput="onAmountInput"
+        focus="{{amountFocus}}"
+      />
+      <text class="clear-btn" wx:if="{{withdrawAmount}}" bindtap="clearAmount">✕</text>
+    </view>
+    <view class="amount-tips">
+      <text class="tips-text">可提现 ¥{{balanceInfo.withdrawable}}</text>
+      <text class="all-btn" bindtap="withdrawAll">全部提现</text>
+    </view>
+  </view>
+
+  <!-- 快捷金额 -->
+  <view class="section-card quick-amount-section">
+    <view class="section-title">快捷金额</view>
+    <view class="quick-amount-list">
+      <view 
+        class="quick-amount-item {{withdrawAmount == item ? 'active' : ''}}" 
+        wx:for="{{quickAmounts}}" 
+        wx:key="*this"
+        data-amount="{{item}}"
+        bindtap="selectQuickAmount"
+      >
+        ¥{{item}}
+      </view>
+    </view>
+  </view>
+
+  <!-- 提现说明 -->
+  <view class="withdraw-tips-section">
+    <view class="tips-title">
+      <text class="tips-icon">📋</text>
+      <text>提现说明</text>
+    </view>
+    <view class="tips-list">
+      <view class="tips-item">
+        <text class="tips-dot">•</text>
+        <text class="tips-content">最低提现金额为 ¥{{minWithdrawAmount}}</text>
+      </view>
+      <view class="tips-item">
+        <text class="tips-dot">•</text>
+        <text class="tips-content">提现手续费率为 {{feeRate}}%，最低 ¥{{minFee}}元</text>
+      </view>
+      <view class="tips-item">
+        <text class="tips-dot">•</text>
+        <text class="tips-content">工作日 9:00-18:00 申请，预计2小时内到账</text>
+      </view>
+      <view class="tips-item">
+        <text class="tips-dot">•</text>
+        <text class="tips-content">非工作时间申请，预计次日到账</text>
+      </view>
+      <view class="tips-item">
+        <text class="tips-dot">•</text>
+        <text class="tips-content">每日最多可提现 {{maxWithdrawCount}} 次</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 费用计算 -->
+  <view class="fee-section" wx:if="{{withdrawAmount && parseFloat(withdrawAmount) >= minWithdrawAmount}}">
+    <view class="fee-row">
+      <text class="fee-label">提现金额</text>
+      <text class="fee-value">¥{{withdrawAmount}}</text>
+    </view>
+    <view class="fee-row">
+      <text class="fee-label">手续费 ({{feeRate}}%)</text>
+      <text class="fee-value">-¥{{calculateFee(withdrawAmount)}}</text>
+    </view>
+    <view class="fee-row total">
+      <text class="fee-label">实际到账</text>
+      <text class="fee-value actual">¥{{calculateActualAmount(withdrawAmount)}}</text>
+    </view>
+  </view>
+
+  <!-- 底部按钮 -->
+  <view class="bottom-bar">
+    <view 
+      class="submit-btn {{canSubmit ? '' : 'disabled'}}" 
+      bindtap="submitWithdraw"
+    >
+      确认提现
+    </view>
+  </view>
+
+  <!-- 安全验证弹窗 -->
+  <view class="modal-mask" wx:if="{{showVerifyModal}}" bindtap="closeVerifyModal"></view>
+  <view class="verify-modal" wx:if="{{showVerifyModal}}">
+    <view class="modal-header">
+      <text class="modal-title">安全验证</text>
+      <text class="modal-close" bindtap="closeVerifyModal">✕</text>
+    </view>
+    <view class="modal-body">
+      <text class="verify-tips">请输入手机验证码完成提现</text>
+      <text class="verify-phone">验证码已发送至 {{maskedPhone}}</text>
+      <view class="code-input-box">
+        <input 
+          class="code-input" 
+          type="number" 
+          maxlength="6"
+          placeholder="请输入6位验证码"
+          value="{{verifyCode}}"
+          bindinput="onCodeInput"
+        />
+        <view 
+          class="code-btn {{countdown > 0 ? 'disabled' : ''}}" 
+          bindtap="sendVerifyCode"
+        >
+          {{countdown > 0 ? countdown + 's' : '获取验证码'}}
+        </view>
+      </view>
+    </view>
+    <view class="modal-footer">
+      <view class="modal-btn cancel" bindtap="closeVerifyModal">取消</view>
+      <view class="modal-btn confirm" bindtap="confirmWithdraw">确认</view>
+    </view>
+  </view>
+
+  <!-- 添加银行卡弹窗 -->
+  <view class="modal-mask" wx:if="{{showAddCardModal}}" bindtap="closeAddCardModal"></view>
+  <view class="add-card-modal" wx:if="{{showAddCardModal}}">
+    <view class="modal-header">
+      <text class="modal-title">添加银行卡</text>
+      <text class="modal-close" bindtap="closeAddCardModal">✕</text>
+    </view>
+    <view class="modal-body">
+      <view class="form-item">
+        <text class="form-label">持卡人姓名</text>
+        <input 
+          class="form-input" 
+          placeholder="请输入持卡人姓名"
+          value="{{cardForm.name}}"
+          data-field="name"
+          bindinput="onCardFormInput"
+        />
+      </view>
+      <view class="form-item">
+        <text class="form-label">银行卡号</text>
+        <input 
+          class="form-input" 
+          type="number"
+          maxlength="19"
+          placeholder="请输入银行卡号"
+          value="{{cardForm.cardNo}}"
+          data-field="cardNo"
+          bindinput="onCardFormInput"
+        />
+      </view>
+      <view class="form-item">
+        <text class="form-label">开户银行</text>
+        <picker bindchange="onBankChange" value="{{bankIndex}}" range="{{bankList}}">
+          <view class="picker-value {{cardForm.bankName ? '' : 'placeholder'}}">
+            {{cardForm.bankName || '请选择开户银行'}}
+          </view>
+        </picker>
+      </view>
+      <view class="form-item">
+        <text class="form-label">预留手机号</text>
+        <input 
+          class="form-input" 
+          type="number"
+          maxlength="11"
+          placeholder="请输入银行预留手机号"
+          value="{{cardForm.phone}}"
+          data-field="phone"
+          bindinput="onCardFormInput"
+        />
+      </view>
+    </view>
+    <view class="modal-footer">
+      <view class="modal-btn cancel" bindtap="closeAddCardModal">取消</view>
+      <view class="modal-btn confirm" bindtap="saveBankCard">保存</view>
+    </view>
+  </view>
+</view>

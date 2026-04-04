@@ -1,0 +1,100 @@
+<!-- pages/b-review/b-review.wxml - 评价用户 -->
+<view class="page-review">
+  <!-- 自定义导航栏 -->
+  <view class="custom-nav">
+    <view class="nav-left" bindtap="goBack">
+      <text class="nav-back-icon">‹</text>
+    </view>
+    <text class="nav-title">评价用户</text>
+    <view class="nav-right"></view>
+  </view>
+
+  <!-- 头部 -->
+  <view class="review-header">
+    <view class="header-icon">⭐</view>
+    <view class="header-desc">服务已完成，请对用户进行评价</view>
+  </view>
+
+  <!-- 用户信息卡片 -->
+  <view class="user-card">
+    <image class="user-avatar" src="{{user.avatar || '/assets/icons/default-avatar.png'}}" mode="aspectFill"/>
+    <view class="user-name">{{user.name}}</view>
+    <view class="service-info">{{user.serviceName}}</view>
+  </view>
+
+  <!-- 评分区域 -->
+  <view class="rating-section">
+    <view class="section-title">总体评价</view>
+    <view class="star-rating">
+      <view 
+        class="star-item {{index < rating ? 'active' : ''}}" 
+        wx:for="{{5}}" 
+        wx:key="index"
+        data-index="{{index + 1}}"
+        bindtap="onRatingChange"
+      >
+        <text class="star-icon">★</text>
+      </view>
+    </view>
+    <view class="rating-text">{{ratingText}}</view>
+  </view>
+
+  <!-- 评价维度 -->
+  <view class="dimensions-section">
+    <view class="section-title">服务评价</view>
+    <view class="dimension-item" wx:for="{{dimensions}}" wx:key="name">
+      <text class="dimension-name">{{item.name}}</text>
+      <view class="dimension-stars">
+        <text 
+          class="dim-star {{index < item.score ? 'active' : ''}}"
+          wx:for="{{5}}"
+          wx:key="index"
+          data-dim="{{item.name}}"
+          data-score="{{index + 1}}"
+          bindtap="onDimensionRating"
+        >★</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 标签选择 -->
+  <view class="tags-section">
+    <view class="section-title">用户印象</view>
+    <view class="tags-list">
+      <view 
+        class="tag-item {{item.selected ? 'selected' : ''}}"
+        wx:for="{{tags}}"
+        wx:key="name"
+        data-index="{{index}}"
+        bindtap="onTagSelect"
+      >
+        {{item.name}}
+      </view>
+    </view>
+  </view>
+
+  <!-- 文字评价 -->
+  <view class="comment-section">
+    <view class="section-title">详细评价（选填）</view>
+    <textarea 
+      class="comment-input"
+      placeholder="说说这次服务的感受，帮助其他搭子了解这位用户..."
+      maxlength="200"
+      value="{{comment}}"
+      bindinput="onCommentInput"
+    />
+    <view class="word-count">{{comment.length}}/200</view>
+  </view>
+
+  <!-- 匿名评价 -->
+  <view class="anonymous-section">
+    <switch checked="{{isAnonymous}}" bindchange="onAnonymousChange" color="#7B68EE"/>
+    <text class="anonymous-text">匿名评价</text>
+  </view>
+
+  <!-- 提交按钮 -->
+  <view class="submit-section">
+    <button class="btn-submit {{canSubmit ? '' : 'disabled'}}" bindtap="submitReview">提交评价</button>
+    <button class="btn-skip" bindtap="skipReview">跳过</button>
+  </view>
+</view>

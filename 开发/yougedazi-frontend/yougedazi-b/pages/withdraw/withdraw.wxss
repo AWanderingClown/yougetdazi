@@ -1,0 +1,161 @@
+/* 提现页面样式 */
+
+page {
+  background-color: #F9FAFB;
+}
+
+/* ========== 自定义导航栏 ========== */
+.custom-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 220rpx;
+  padding: 0 24rpx;
+  padding-top: 60rpx;
+  background: linear-gradient(135deg, #7B68EE 0%, #9B59B6 100%);
+  position: relative;
+  z-index: 10;
+}
+
+.nav-left, .nav-right {
+  width: 80rpx;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-back-icon {
+  font-size: 56rpx;
+  color: #ffffff;
+  font-weight: bold;
+}
+
+.nav-title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.header {
+  background: linear-gradient(135deg, #7B68EE, #9B59B6);
+  padding: 40rpx 40rpx;
+  text-align: center;
+  color: #fff;
+  border-radius: 0 0 40rpx 40rpx;
+}
+
+.balance-label {
+  font-size: 28rpx;
+  opacity: 0.8;
+  margin-bottom: 20rpx;
+}
+
+.balance-amount {
+  font-size: 80rpx;
+  font-weight: bold;
+}
+
+.form-card {
+  background: #fff;
+  margin: 20rpx;
+  padding: 40rpx;
+  border-radius: 24rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.04);
+}
+
+.input-label {
+  font-size: 28rpx;
+  color: #4B5563;
+  margin-bottom: 20rpx;
+}
+
+.amount-input {
+  display: flex;
+  align-items: center;
+  border-bottom: 2rpx solid #E5E7EB;
+  padding-bottom: 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.currency {
+  font-size: 48rpx;
+  font-weight: bold;
+  margin-right: 20rpx;
+  color: #1F2937;
+}
+
+.input-field {
+  flex: 1;
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #1F2937;
+}
+
+.select-all {
+  color: #7B68EE;
+  font-size: 28rpx;
+  font-weight: 500;
+}
+
+.method-list {
+  margin-top: 40rpx;
+}
+
+.method-item {
+  display: flex;
+  align-items: center;
+  padding: 30rpx;
+  border: 2rpx solid #E5E7EB;
+  border-radius: 16rpx;
+  margin-bottom: 20rpx;
+  background: #fff;
+  transition: all 0.2s;
+}
+
+.method-item.selected {
+  border-color: #7B68EE;
+  background: #F0E6FF;
+}
+
+.method-icon {
+  width: 60rpx;
+  height: 60rpx;
+  margin-right: 20rpx;
+}
+
+.method-name {
+  flex: 1;
+  font-size: 30rpx;
+  color: #1F2937;
+}
+
+.selected-icon {
+  color: #7B68EE;
+  font-size: 36rpx;
+}
+
+.tips {
+  padding: 20rpx 40rpx;
+  font-size: 24rpx;
+  color: #9CA3AF;
+}
+
+.withdraw-btn {
+  background: linear-gradient(135deg, #7B68EE, #9B59B6);
+  color: #fff;
+  border-radius: 48rpx;
+  margin: 40rpx;
+  height: 96rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  box-shadow: 0 4rpx 16rpx rgba(123, 104, 238, 0.3);
+}
+
+.withdraw-btn.disabled {
+  background: #9CA3AF;
+}
+
+.withdraw-btn::after {
+  border: none;
+}

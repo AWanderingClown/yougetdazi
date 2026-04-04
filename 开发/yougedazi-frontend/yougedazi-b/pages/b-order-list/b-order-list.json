@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "订单广场",
+  "usingComponents": {
+    "order-card": "/components/order-card/order-card"
+  },
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark",
+  "navigationStyle": "custom"
+}
