@@ -79,7 +79,6 @@ describe('E2E: 直单完整流程', () => {
     const body = JSON.parse(res.body)
     expect(body.code).toBe(0)
     expect(body.data).toHaveProperty('order')
-    expect(body.data).toHaveProperty('prepayParams')
 
     const order = body.data.order
     expect(order.status).toBe('pending_payment')
@@ -90,8 +89,9 @@ describe('E2E: 直单完整流程', () => {
     orderId = order.id
     orderNo = order.orderNo
 
-    // 支付参数应该是mock的
-    expect(body.data.prepayParams.prepayId).toMatch(/^mock_/)
+    // 验证支付参数（中间件将 payment_params 转换为 paymentParams）
+    expect(body.data.paymentParams).toBeDefined()
+    expect(body.data.paymentParams.prepayId).toMatch(/^mock_/)
   })
 
   it('模拟支付回调成功，订单状态变pending_accept', async () => {
