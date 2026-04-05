@@ -31,7 +31,17 @@ Page({
   },
 
   onShow() {
-    if (this.data.tasks.length === 0) {
+    // 检查性别是否变化，若变化则重新缓存并加载任务列表
+    const userInfo = wx.getStorageSync('userInfo') || {};
+    const registerData = wx.getStorageSync('registerData') || {};
+    const newGender = userInfo.gender || registerData.gender;
+
+    if (newGender && newGender !== this.cachedGender) {
+      this.cachedGender = newGender;
+      this.setData({ tasks: [], page: 1, hasMore: true }, () => {
+        this.loadTasks(true);
+      });
+    } else if (this.data.tasks.length === 0) {
       this.loadTasks();
     }
 
@@ -64,7 +74,17 @@ Page({
   loadTasks(refresh = false) {
     if (this.data.loadingState !== 'idle' && !refresh) return;
 
-    const newState = refresh ? (this.data.loadingState === 'loadingMore' ? 'loadingMore' : 'refreshing') : 'loading';
+    // 状态转换逻辑：
+    // - refresh=true 时总是切换到 'refreshing'（下拉刷新）
+    // - refresh=false 时，保持 'loadingMore'（如果已在加载更多），否则切换为 'loading'
+    let newState;
+    if (refresh) {
+      newState = 'refreshing';
+    } else if (this.data.loadingState === 'loadingMore') {
+      newState = 'loadingMore';
+    } else {
+      newState = 'loading';
+    }
     this.setData({ loadingState: newState });
 
     const params = {

@@ -71,6 +71,19 @@ Page({
   touchStartX: 0,
   touchStartY: 0,
 
+  goBack() {
+    const pages = getCurrentPages();
+    if (pages.length > 1) {
+      wx.navigateBack({
+        fail: () => {
+          wx.switchTab({ url: '/pages/workbench/workbench' });
+        }
+      });
+    } else {
+      wx.switchTab({ url: '/pages/workbench/workbench' });
+    }
+  },
+
   onLoad() {
     this._restoreUnreadFromStorage();
     this.calculateUnread();
