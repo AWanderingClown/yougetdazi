@@ -1,5 +1,14 @@
 // pages/b-order-list/b-order-list.js
 const { ORDER_STATUS } = require('../../utils/constants');
+const { formatAmount } = require('../../utils/auth');
+
+const ORDER_REFRESH_DEBOUNCE_MS = 5000;
+
+const TAB_STATUS_MAP = {
+  0: ORDER_STATUS.ACCEPTED,
+  1: ORDER_STATUS.SERVING,
+  2: ORDER_STATUS.COMPLETED
+};
 
 Page({
   data: {
@@ -20,8 +29,10 @@ Page({
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
       this.getTabBar().setData({ selected: 1 });
     }
-    // 每次页面显示时刷新订单列表，感知 C端取消等状态变更
-    this.loadOrders();
+    const now = Date.now();
+    if (!this._lastLoadTime || now - this._lastLoadTime > ORDER_REFRESH_DEBOUNCE_MS) {
+      this.loadOrders();
+    }
   },
 
   onPullDownRefresh() {
@@ -36,10 +47,10 @@ Page({
 
   loadOrders(refresh = false) {
     this.setData({ loading: true });
+    this._lastLoadTime = Date.now();
 
     // 根据当前 Tab 确定 status 参数
-    const statusMap = { 0: 'accepted', 1: 'serving', 2: 'completed' };
-    const status = statusMap[this.data.currentTab] || 'accepted';
+    const status = TAB_STATUS_MAP[this.data.currentTab] || ORDER_STATUS.ACCEPTED;
 
     getApp().request({
       url: '/api/b/orders',
@@ -65,7 +76,7 @@ Page({
           serviceType:    o.service_name,
           duration:       o.duration + '小时',
           appointmentTime: createdAt,
-          totalAmount:    (o.total_amount || 0) / 100
+          totalAmount:    formatAmount(o.total_amount)
         };
       });
 

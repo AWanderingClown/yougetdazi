@@ -1,3 +1,7 @@
+const { goBack } = require('../../utils/auth');
+
+const SAVE_DEBOUNCE_MS = 300;
+
 // pages/message/message.js - 消息中心
 // 支持左滑删除功能
 Page({
@@ -72,16 +76,7 @@ Page({
   touchStartY: 0,
 
   goBack() {
-    const pages = getCurrentPages();
-    if (pages.length > 1) {
-      wx.navigateBack({
-        fail: () => {
-          wx.switchTab({ url: '/pages/workbench/workbench' });
-        }
-      });
-    } else {
-      wx.switchTab({ url: '/pages/workbench/workbench' });
-    }
+    goBack('/pages/workbench/workbench');
   },
 
   onLoad() {
@@ -116,14 +111,19 @@ Page({
     this.setData({ systemMessages, chatList });
   },
 
-  // 将当前未读状态保存到 Storage
   _saveUnreadToStorage() {
-    this.data.systemMessages.forEach(item => {
-      wx.setStorageSync(`b_sys_msg_${item.id}_unread`, item.unread);
-    });
-    this.data.chatList.forEach(item => {
-      wx.setStorageSync(`b_chat_${item.id}_unread`, item.unread);
-    });
+    if (this._saveUnreadTimeout) {
+      clearTimeout(this._saveUnreadTimeout);
+    }
+    this._saveUnreadTimeout = setTimeout(() => {
+      this.data.systemMessages.forEach(item => {
+        wx.setStorage({ key: `b_sys_msg_${item.id}_unread`, data: item.unread });
+      });
+      this.data.chatList.forEach(item => {
+        wx.setStorage({ key: `b_chat_${item.id}_unread`, data: item.unread });
+      });
+      this._saveUnreadTimeout = null;
+    }, SAVE_DEBOUNCE_MS);
   },
 
   // 切换标签
@@ -133,6 +133,34 @@ Page({
     });
     // 关闭所有打开的滑动项
     this.closeAllSwipe();
+  },
+
+  onHide() {
+    if (this._saveUnreadTimeout) {
+      clearTimeout(this._saveUnreadTimeout);
+      this._saveUnreadTimeout = null;
+      // 同步 flush 待保存的未读状态
+      this._flushUnreadToStorage();
+    }
+  },
+
+  onUnload() {
+    if (this._saveUnreadTimeout) {
+      clearTimeout(this._saveUnreadTimeout);
+      this._saveUnreadTimeout = null;
+      // 同步 flush 待保存的未读状态
+      this._flushUnreadToStorage();
+    }
+  },
+
+  // 同步保存未读状态到 Storage
+  _flushUnreadToStorage() {
+    this.data.systemMessages.forEach(item => {
+      wx.setStorageSync(`b_sys_msg_${item.id}_unread`, item.unread);
+    });
+    this.data.chatList.forEach(item => {
+      wx.setStorageSync(`b_chat_${item.id}_unread`, item.unread);
+    });
   },
 
   // 计算未读数
@@ -159,7 +187,17 @@ Page({
   },
 
   // ========== 左滑删除功能 ==========
-  
+
+  _updateListPosition(listName, id, x, resetOthers = true) {
+    const list = this.data[listName].map(item => {
+      if (item.id === id) {
+        return { ...item, x };
+      }
+      return resetOthers ? { ...item, x: 0 } : item;
+    });
+    this.setData({ [listName]: list });
+  },
+
   // 触摸开始
   onTouchStart(e) {
     this.touchStartX = e.touches[0].clientX;
@@ -187,26 +225,10 @@ Page({
     const id = e.currentTarget.dataset.id;
     const type = e.currentTarget.dataset.type;
     const x = e.detail.x;
-    
-    // 更新对应项的位置
     const numId = Number(id);
-    if (type === 'system') {
-      const list = this.data.systemMessages.map(item => {
-        if (item.id === numId) {
-          return { ...item, x };
-        }
-        return { ...item, x: 0 };
-      });
-      this.setData({ systemMessages: list });
-    } else {
-      const list = this.data.chatList.map(item => {
-        if (item.id === numId) {
-          return { ...item, x };
-        }
-        return { ...item, x: 0 };
-      });
-      this.setData({ chatList: list });
-    }
+
+    const listName = type === 'system' ? 'systemMessages' : 'chatList';
+    this._updateListPosition(listName, numId, x, true);
   },
 
   // 滑动结束
@@ -216,32 +238,17 @@ Page({
     const list = type === 'system' ? this.data.systemMessages : this.data.chatList;
     const numId = Number(id);
     const item = list.find(i => i.id === numId);
-    
+
     if (!item) return;
-    
+
     // 判断是否滑动超过阈值
     const threshold = this.data.deleteBtnWidth / 2;
     const newX = item.x < -threshold ? -this.data.deleteBtnWidth : 0;
-    
+
     // 更新位置
-    if (type === 'system') {
-      const newList = this.data.systemMessages.map(i => {
-        if (i.id === id) {
-          return { ...i, x: newX };
-        }
-        return i;
-      });
-      this.setData({ systemMessages: newList });
-    } else {
-      const newList = this.data.chatList.map(i => {
-        if (i.id === id) {
-          return { ...i, x: newX };
-        }
-        return i;
-      });
-      this.setData({ chatList: newList });
-    }
-    
+    const listName = type === 'system' ? 'systemMessages' : 'chatList';
+    this._updateListPosition(listName, numId, newX, false);
+
     // 延迟重置滑动状态，防止点击事件立即触发
     setTimeout(() => {
       this.isSwiping = false;

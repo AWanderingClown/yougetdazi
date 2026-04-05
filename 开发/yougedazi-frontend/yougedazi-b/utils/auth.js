@@ -68,8 +68,36 @@ function checkCanStartWork() {
   });
 }
 
+/**
+ * 导航返回工具
+ * @param {string} fallbackUrl - 返回失败时的跳转路径
+ */
+function goBack(fallbackUrl = '/pages/workbench/workbench') {
+  const pages = getCurrentPages();
+  if (pages.length > 1) {
+    wx.navigateBack({
+      fail: () => {
+        wx.switchTab({ url: fallbackUrl });
+      }
+    });
+  } else {
+    wx.switchTab({ url: fallbackUrl });
+  }
+}
+
+/**
+ * 金额格式化（分转元）
+ * @param {number} amountInCents - 金额（分）
+ * @returns {number} 金额（元）
+ */
+function formatAmount(amountInCents) {
+  return (amountInCents || 0) / 100;
+}
+
 module.exports = {
   showDepositModal,
   checkAcceptPermission,
   checkCanStartWork,
+  goBack,
+  formatAmount,
 };

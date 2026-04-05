@@ -1,6 +1,7 @@
 // pages/chat/chat.js - B端搭子聊天页面（极简版）
 const { MESSAGE_STATUS, MESSAGE_TYPE } = require('../../utils/constants');
 const { generateTempId, needTimeSeparator } = require('../../utils/date-helpers');
+const { goBack } = require('../../utils/auth');
 const app = getApp();
 
 // 错误消息常量
@@ -472,15 +473,6 @@ Page({
   },
 
   goBack() {
-    const pages = getCurrentPages();
-    if (pages.length > 1) {
-      wx.navigateBack({
-        fail: () => {
-          wx.switchTab({ url: '/pages/workbench/workbench' });
-        }
-      });
-    } else {
-      wx.switchTab({ url: '/pages/workbench/workbench' });
-    }
+    goBack('/pages/workbench/workbench');
   }
 });

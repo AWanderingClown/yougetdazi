@@ -1,3 +1,6 @@
+const { formatAmount } = require('../../utils/auth');
+const { getCurrentMonthRange } = require('../../utils/date-helpers');
+
 // pages/earnings/earnings.js - 收益明细
 Page({
   data: {
@@ -27,30 +30,31 @@ Page({
   },
 
   onLoad() {
-    this.loadIncomeData();
     this.setDefaultDateRange();
+    this._isLoadingData = true;
+    this.loadIncomeData().then(() => {
+      this._isLoadingData = false;
+    });
   },
 
   onShow() {
-    // 刷新收益数据
-    this.loadIncomeData();
+    if (!this._hasLoaded && !this._isLoadingData) {
+      this.loadIncomeData();
+    }
   },
 
   // 设置默认日期范围（本月）
   setDefaultDateRange() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth() + 1;
-    const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
-    const endDate = `${year}-${String(month).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    
+    const { startDate, endDate } = getCurrentMonthRange();
     this.setData({ startDate, endDate });
   },
 
   // 加载收益数据
   loadIncomeData(isLoadMore = false) {
-    if (this.data.isLoading) return;
+    if (this.data.isLoading) return Promise.resolve();
     this.setData({ isLoading: true });
+
+    return new Promise((resolve) => {
 
     const page = isLoadMore ? this.data.page + 1 : 1;
     const app = getApp();
@@ -78,11 +82,11 @@ Page({
         if (overviewRes && overviewRes.data) {
           const d = overviewRes.data;
           Object.assign(updates, {
-            todayIncome:       (d.today || 0) / 100,
-            weekIncome:        (d.this_week || 0) / 100,
-            monthIncome:       (d.this_month || 0) / 100,
-            totalIncome:       (d.total || 0) / 100,
-            withdrawableAmount:(d.withdrawable || 0) / 100,
+            todayIncome:       formatAmount(d.today),
+            weekIncome:        formatAmount(d.this_week),
+            monthIncome:       formatAmount(d.this_month),
+            totalIncome:       formatAmount(d.total),
+            withdrawableAmount:formatAmount(d.withdrawable),
           });
         }
 
@@ -94,7 +98,7 @@ Page({
             type:    item.type || 'order_income',
             icon:    '🎮',
             time:    item.created_at ? item.created_at.slice(0, 10) : '',
-            amount:  (item.amount || 0) / 100,
+            amount:  formatAmount(item.amount),
             orderId: item.order_id || '',
             status:  'settled'
           }));
@@ -102,21 +106,20 @@ Page({
           updates.hasMore = recordsRes.data.has_more || false;
         }
 
+        if (!isLoadMore) {
+          this._hasLoaded = true;
+        }
+        this._isLoadingData = false;
         this.setData(updates);
+        resolve();
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error('[收益页] 加载数据失败:', err);
+        this._isLoadingData = false;
         this.setData({ isLoading: false });
         wx.showToast({ title: '加载失败，请下拉刷新', icon: 'none' });
+        resolve();
       });
-  },
-
-  // 格式化时间
-  formatEarningsTime(date) {
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${month}-${day} ${hours}:${minutes}`;
   },
 
   // 切换标签

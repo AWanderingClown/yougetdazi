@@ -106,6 +106,8 @@ Page({
     this.stopRefreshTimer();
     this.stopCountdownTimers();
     this.stopPopupCountdown();
+    this.stopServiceTimerDisplay();
+    this.clearPopupTimeouts();
   },
 
   // 启动倒计时器

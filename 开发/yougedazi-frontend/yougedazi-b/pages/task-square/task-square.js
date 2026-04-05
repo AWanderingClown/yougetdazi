@@ -70,6 +70,18 @@ Page({
     }
   },
 
+  onUnload() {
+    if (app.globalEvent && this._handleNewReward) {
+      app.globalEvent.off('order:new_reward', this._handleNewReward);
+    }
+    this._eventBound = false;
+    this._handleNewReward = null;
+    if (this.navigateTimeout) {
+      clearTimeout(this.navigateTimeout);
+      this.navigateTimeout = null;
+    }
+  },
+
   // 加载任务列表
   loadTasks(refresh = false) {
     if (this.data.loadingState !== 'idle' && !refresh) return;
