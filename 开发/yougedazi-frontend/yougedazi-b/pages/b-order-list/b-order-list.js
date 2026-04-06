@@ -73,10 +73,10 @@ Page({
           status: o.status,
           customerName:   o.user ? o.user.nickname : '',
           customerAvatar: o.user ? o.user.avatar   : '',
-          serviceType:    o.service_name,
+          serviceType:    o.serviceName,
           duration:       o.duration + '小时',
           appointmentTime: createdAt,
-          totalAmount:    formatAmount(o.total_amount)
+          totalAmount:    formatAmount(o.totalAmount)
         };
       });
 

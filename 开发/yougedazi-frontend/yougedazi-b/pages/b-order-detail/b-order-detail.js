@@ -188,19 +188,19 @@ Page({
           customerName:    d.user?.nickname || '用户',
           customerAvatar:  d.user?.avatar || '/assets/icons/default-avatar.png',
           customerPhone:   '',
-          serviceType:     d.service_name,
-          serviceDetail:   d.user_remark || '',
-          appointmentTime: d.service_start_at ? d.service_start_at.slice(0, 16).replace('T', ' ') : '',
+          serviceType:     d.serviceName,
+          serviceDetail:   d.userRemark || '',
+          appointmentTime: d.serviceStartAt ? d.serviceStartAt.slice(0, 16).replace('T', ' ') : '',
           duration:        `${d.duration}小时`,
           durationMinutes: d.duration * 60,
-          hourlyPrice:     (d.hourly_price || 0) / 100,
-          totalAmount:     (d.total_amount || 0) / 100,
-          remark:          d.user_remark || '',
+          hourlyPrice:     (d.hourlyPrice || 0) / 100,
+          totalAmount:     (d.totalAmount || 0) / 100,
+          remark:          d.userRemark || '',
           address:         '',
           isNewUser:       false,
           tags:            [],
-          serviceStartTime: d.service_start_at || null,
-          acceptDeadline:  d.accept_deadline || null  // 添加接单截止时间
+          serviceStartTime: d.serviceStartAt || null,
+          acceptDeadline:  d.acceptDeadline || null  // 添加接单截止时间
         };
 
         // 服务目的地坐标来自后端订单数据
@@ -242,14 +242,32 @@ Page({
 
   // 接单倒计时：从订单的 acceptDeadline 计算剩余时间（与后端15分钟超时一致）
   startCountdown() {
+    // 防止竞态条件：如果已有倒计时在运行，先清除
+    if (this.countdownTimer) {
+      clearInterval(this.countdownTimer);
+      this.countdownTimer = null;
+    }
+
+    // 使用倒计时实例ID确保只有一个实例在运行
+    const countdownInstanceId = Date.now();
+    this._currentCountdownInstanceId = countdownInstanceId;
+
     const order = this.data.order;
     // acceptDeadline 由后端下发（ISO 字符串）
     const deadline = order.acceptDeadline ? new Date(order.acceptDeadline).getTime() : (Date.now() + 15 * 60 * 1000);
 
     this.countdownTimer = setInterval(() => {
+      // 检查实例有效性
+      if (this._currentCountdownInstanceId !== countdownInstanceId) {
+        clearInterval(this.countdownTimer);
+        this.countdownTimer = null;
+        return;
+      }
+
       const remaining = Math.max(0, Math.floor((deadline - Date.now()) / 1000));
       if (remaining <= 0) {
         clearInterval(this.countdownTimer);
+        this.countdownTimer = null;
         this.setData({
           countdown: '已过期',
           canAccept: false,
@@ -275,17 +293,31 @@ Page({
     const orderId = this.data.order.id;
     const app = getApp();
 
+    // 防止竞态条件：如果已有定时器在运行，先清除
     if (this.serviceDisplayTimer) {
       clearInterval(this.serviceDisplayTimer);
+      this.serviceDisplayTimer = null;
     }
+
+    // 使用轮询实例ID确保只有一个轮询实例在运行
+    const pollInstanceId = Date.now();
+    this._currentPollInstanceId = pollInstanceId;
 
     let localRemaining = 0; // 本地维护的剩余秒数
     let pollCount = 0;
 
     const fetchAndSync = () => {
+      // 检查当前轮询实例是否仍然有效
+      if (this._currentPollInstanceId !== pollInstanceId) {
+        return;
+      }
       app.request({ url: `/api/b/orders/${orderId}/timer` }).then((res) => {
+        // 再次检查实例有效性，防止回调时实例已被替换
+        if (this._currentPollInstanceId !== pollInstanceId) {
+          return;
+        }
         if (res && res.data) {
-          localRemaining = res.data.remaining_seconds || 0;
+          localRemaining = res.data.remainingSeconds || 0;
         }
       }).catch(() => {});
     };
@@ -294,6 +326,13 @@ Page({
     fetchAndSync();
 
     this.serviceDisplayTimer = setInterval(() => {
+      // 检查实例有效性
+      if (this._currentPollInstanceId !== pollInstanceId) {
+        clearInterval(this.serviceDisplayTimer);
+        this.serviceDisplayTimer = null;
+        return;
+      }
+
       pollCount++;
 
       // 每10秒向后端同步一次
@@ -333,6 +372,9 @@ Page({
     if (this.locationUpdateInterval) {
       clearInterval(this.locationUpdateInterval);
     }
+    // 清除轮询实例ID，防止竞态条件
+    this._currentPollInstanceId = null;
+    this._currentCountdownInstanceId = null;
   },
 
   // 接单（仅赏金任务）
@@ -455,6 +497,8 @@ Page({
     app.request({
       url: `/api/b/orders/${orderId}/start`,
       method: 'POST',
+      // event: preparing-出发, departed-出发完成, serving-开始服务
+      data: { event: ORDER_STATUS.SERVING },
     }).then(() => {
       wx.hideLoading();
       // 等待后端 Socket 推送 order:status_changed 来更新UI

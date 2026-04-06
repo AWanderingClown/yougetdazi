@@ -1,6 +1,7 @@
 // pages/workbench/workbench.js - 搭子工作台
 const { ORDER_STATUS, DEFAULT_DEPOSIT_CONFIG, checkDepositLevel, TIMER } = require('../../utils/constants');
 const { checkAcceptPermission } = require('../../utils/auth');
+const { formatCountdown } = require('../../utils/date-helpers');
 
 Page({
   data: {
@@ -60,6 +61,18 @@ Page({
     this.startRefreshTimer();
     this.startCountdownTimers();
 
+    // 监听页面可见性变化，页面隐藏时清理资源防止内存泄漏
+    this._pageVisibilityHandler = (res) => {
+      if (!res.status || res.status === 'hide') {
+        // 页面隐藏时清理所有定时器
+        this.stopRefreshTimer();
+        this.stopCountdownTimers();
+        this.stopServiceTimerDisplay();
+        this.clearPopupTimeouts();
+      }
+    };
+    wx.onAppShow && wx.onAppShow(this._pageVisibilityHandler);
+    wx.onAppHide && wx.onAppHide(this._pageVisibilityHandler);
   },
 
   onShow() {
@@ -108,6 +121,12 @@ Page({
     this.stopPopupCountdown();
     this.stopServiceTimerDisplay();
     this.clearPopupTimeouts();
+    // 移除页面可见性监听
+    if (this._pageVisibilityHandler) {
+      wx.offAppShow && wx.offAppShow(this._pageVisibilityHandler);
+      wx.offAppHide && wx.offAppHide(this._pageVisibilityHandler);
+      this._pageVisibilityHandler = null;
+    }
   },
 
   // 启动倒计时器
@@ -121,7 +140,7 @@ Page({
       if (order.countdown > 0) {
         const timerKey = `order_${order.id}`;
         // 先设置初始显示
-        const countdownText = this.formatCountdown(order.countdown);
+        const countdownText = formatCountdown(order.countdown);
         const textKey = `pendingOrders[${index}].countdownText`;
         this.setData({
           [textKey]: countdownText
@@ -167,7 +186,7 @@ Page({
     }
     
     const newCountdown = order.countdown - 1;
-    const countdownText = this.formatCountdown(newCountdown);
+    const countdownText = formatCountdown(newCountdown);
     
     // 更新特定订单的倒计时
     const key = `pendingOrders[${index}].countdown`;
@@ -209,13 +228,6 @@ Page({
     console.log(`[工作台] 通知服务器订单 ${orderId} 已过期`);
   },
 
-  // 格式化倒计时显示
-  formatCountdown(seconds) {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  },
-
   startRefreshTimer() {
     this.refreshTimer = setInterval(() => {
       this.loadData();
@@ -226,16 +238,6 @@ Page({
     if (this.refreshTimer) {
       clearInterval(this.refreshTimer);
     }
-  },
-
-  // 将秒数格式化为 MM:SS 或 HH:MM:SS 字符串
-  _formatCountdown(seconds) {
-    if (!seconds || seconds <= 0) return '00:00';
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    const pad = n => String(n).padStart(2, '0');
-    return h > 0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
   },
 
   // 启动进行中订单的倒计时显示更新（从后端定期查询）
@@ -252,20 +254,29 @@ Page({
       const servingOrders = processingOrders.filter(o => o.status === 'serving');
       if (servingOrders.length === 0) return;
 
-      servingOrders.forEach(order => {
-        app.request({ url: `/api/b/orders/${order.id}/timer` }).then((res) => {
-          if (!res || !res.data) return;
-          const remaining = res.data.remaining_seconds || 0;
-          const hours = Math.floor(remaining / 3600);
-          const mins  = Math.floor((remaining % 3600) / 60);
-          const secs  = remaining % 60;
-          const newRemainingText = `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-
-          const updatedOrders = this.data.processingOrders.map(o =>
-            o.id === order.id ? { ...o, serviceRemainingText: newRemainingText } : o
-          );
-          this.setData({ processingOrders: updatedOrders });
-        }).catch(() => {});
+      // 使用Promise.all控制并发，避免同时发起过多请求
+      Promise.all(
+        servingOrders.map(order =>
+          app.request({ url: `/api/b/orders/${order.id}/timer` })
+            .then(res => ({ orderId: order.id, data: res?.data }))
+            .catch(() => ({ orderId: order.id, data: null }))
+        )
+      ).then(results => {
+        const updates = {};
+        results.forEach(({ orderId, data }) => {
+          if (!data) return;
+          const remaining = data.remainingSeconds || 0;
+          const newRemainingText = formatCountdown(remaining, true);
+          // 找到订单在数组中的索引，使用局部更新避免全量渲染
+          const index = this.data.processingOrders.findIndex(o => o.id === orderId);
+          if (index !== -1) {
+            updates[`processingOrders[${index}].serviceRemainingText`] = newRemainingText;
+          }
+        });
+        // 批量更新，减少setData调用次数
+        if (Object.keys(updates).length > 0) {
+          this.setData(updates);
+        }
       });
     }, 10000);
   },
@@ -281,20 +292,31 @@ Page({
   // 预加载服务中订单的剩余时间（从后端获取）
   registerServingOrdersToBackend(processingOrders) {
     const app = getApp();
-    processingOrders.forEach(order => {
-      if (order.status === 'serving') {
-        app.request({ url: `/api/b/orders/${order.id}/timer` }).then((res) => {
-          if (!res || !res.data) return;
-          const remaining = res.data.remaining_seconds || 0;
-          const hours = Math.floor(remaining / 3600);
-          const mins  = Math.floor((remaining % 3600) / 60);
-          const secs  = remaining % 60;
-          const serviceRemainingText = `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-          const updatedOrders = this.data.processingOrders.map(o =>
-            o.id === order.id ? { ...o, serviceRemainingText } : o
-          );
-          this.setData({ processingOrders: updatedOrders });
-        }).catch(() => {});
+    const servingOrders = processingOrders.filter(o => o.status === 'serving');
+    if (servingOrders.length === 0) return;
+
+    // 使用Promise.all控制并发，避免同时发起过多请求
+    Promise.all(
+      servingOrders.map(order =>
+        app.request({ url: `/api/b/orders/${order.id}/timer` })
+          .then(res => ({ orderId: order.id, data: res?.data }))
+          .catch(() => ({ orderId: order.id, data: null }))
+      )
+    ).then(results => {
+      const updates = {};
+      results.forEach(({ orderId, data }) => {
+        if (!data) return;
+        const remaining = data.remainingSeconds || 0;
+        const serviceRemainingText = formatCountdown(remaining, true);
+        // 找到订单在数组中的索引，使用局部更新避免全量渲染
+        const index = this.data.processingOrders.findIndex(o => o.id === orderId);
+        if (index !== -1) {
+          updates[`processingOrders[${index}].serviceRemainingText`] = serviceRemainingText;
+        }
+      });
+      // 批量更新，减少setData调用次数
+      if (Object.keys(updates).length > 0) {
+        this.setData(updates);
       }
     });
   },
@@ -305,31 +327,31 @@ Page({
       .then(res => {
         const d = res.data;
         this.setData({
-          todayIncome:     (d.today_income || 0) / 100,
-          todayOrders:     d.today_orders || 0,
-          completionRate:  d.completion_rate || 100,
-          isWorking:       d.is_online || false,
-          pendingOrders:   (d.pending_orders || []).map(o => ({
+          todayIncome:     (d.todayIncome || 0) / 100,
+          todayOrders:     d.todayOrders || 0,
+          completionRate:  d.completionRate || 100,
+          isWorking:       d.isOnline || false,
+          pendingOrders:   (d.pendingOrders || []).map(o => ({
             id:             o.id,
             customerName:   o.user && o.user.nickname || '用户',
             customerAvatar: o.user && o.user.avatar || '',
-            serviceType:    o.service_name,
+            serviceType:    o.serviceName,
             duration:       o.duration + '小时',
-            totalAmount:    (o.total_amount || 0) / 100,
+            totalAmount:    (o.totalAmount || 0) / 100,
             status:         o.status,
-            countdown:      o.remaining_seconds || 0,
-            countdownText:  this._formatCountdown(o.remaining_seconds || 0)
+            countdown:      o.remainingSeconds || 0,
+            countdownText:  formatCountdown(o.remainingSeconds || 0)
           })),
-          processingOrders: (d.processing_orders || []).map(o => ({
+          processingOrders: (d.processingOrders || []).map(o => ({
             id:             o.id,
             customerName:   o.user && o.user.nickname || '用户',
             customerAvatar: o.user && o.user.avatar || '',
-            serviceType:    o.service_name,
+            serviceType:    o.serviceName,
             duration:       o.duration + '小时',
-            totalAmount:    (o.total_amount || 0) / 100,
+            totalAmount:    (o.totalAmount || 0) / 100,
             status:         o.status,
             statusText:     o.status === 'serving' ? '服务中' : '待服务',
-            serviceRemainingText: this._formatCountdown(o.remaining_seconds || 0),
+            serviceRemainingText: formatCountdown(o.remainingSeconds || 0, true),
             serviceProgress: o.progress || 0
           }))
         });

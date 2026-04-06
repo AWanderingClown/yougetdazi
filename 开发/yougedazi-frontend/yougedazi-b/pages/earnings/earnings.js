@@ -103,7 +103,7 @@ Page({
             status:  'settled'
           }));
           updates.incomeList = isLoadMore ? [...this.data.incomeList, ...mapped] : mapped;
-          updates.hasMore = recordsRes.data.has_more || false;
+          updates.hasMore = recordsRes.data.hasMore || false;
         }
 
         if (!isLoadMore) {
@@ -120,6 +120,7 @@ Page({
         wx.showToast({ title: '加载失败，请下拉刷新', icon: 'none' });
         resolve();
       });
+    });
   },
 
   // 切换标签
