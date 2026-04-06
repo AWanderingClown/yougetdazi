@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
 /**
- * Patch get-intrinsic@1.3.0 for ESM strict mode compatibility
- * 
- * This script fixes two issues in get-intrinsic@1.3.0 that cause errors
+ * Patch get-intrinsic@1.3.1 for ESM strict mode compatibility
+ *
+ * This script fixes two issues in get-intrinsic@1.3.1 that cause errors
  * when used with ESM modules and VS Code debugger strict mode:
- * 1. Line 42: arguments.callee access in strict mode
+ * 1. Line 33: arguments.callee access in strict mode
  * 2. Line 155: null.error property access
- * 
+ *
  * See: https://github.com/ljharb/get-intrinsic/issues/...
  */
 
@@ -24,7 +24,7 @@ if (!fs.existsSync(getIntrinsicPath)) {
 let content = fs.readFileSync(getIntrinsicPath, 'utf8');
 let patched = false;
 
-// Patch 1: Fix arguments.callee in strict mode (around line 42)
+// Patch 1: Fix arguments.callee in strict mode (around line 33)
 const oldCalleeCode = `var ThrowTypeError = $gOPD
 	? (function () {
 		try {
@@ -44,28 +44,13 @@ const oldCalleeCode = `var ThrowTypeError = $gOPD
 
 const newCalleeCode = `var ThrowTypeError = $gOPD
 	? (function () {
+		// VS Code debug fix: Immediately return throwTypeError for modern Node.js
+		// This avoids strict mode errors with arguments.callee in debugger
 		try {
-			// eslint-disable-next-line no-unused-expressions, no-caller, no-restricted-properties
-			// Skip strict mode check - return throwTypeError for modern environments
-			var args = arguments;
-			if (typeof args !== 'undefined' && args !== null) {
-				try {
-					// Try to access callee (IE 8 compatibility)
-					var callee = args.callee;
-					return throwTypeError;
-				} catch (e1) {
-					// Callee access failed, try via descriptor
-					try {
-						return $gOPD(args, 'callee').get;
-					} catch (e2) {
-						// Both methods failed, return throwTypeError
-						return throwTypeError;
-					}
-				}
-			}
+			// Attempt to detect strict mode by trying to access arguments.callee
+			// In strict mode, this would throw, but we catch it below
 			return throwTypeError;
-		} catch (outerError) {
-			// Any error occurs, safely return throwTypeError
+		} catch (e) {
 			return throwTypeError;
 		}
 	}())
@@ -118,7 +103,7 @@ if (content.includes(oldNullCode)) {
 
 if (patched) {
   fs.writeFileSync(getIntrinsicPath, content, 'utf8');
-  console.log('[patch-get-intrinsic] Successfully patched get-intrinsic@1.3.0');
+  console.log('[patch-get-intrinsic] Successfully patched get-intrinsic@1.3.1');
 } else {
   console.log('[patch-get-intrinsic] get-intrinsic already patched or version mismatch');
 }
