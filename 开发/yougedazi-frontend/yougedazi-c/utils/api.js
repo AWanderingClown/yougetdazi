@@ -52,7 +52,12 @@ const orders = {
   urge: (id) => url('orders', id, 'urge'),
   changeCompanion: (id) => url('orders', id, 'change-companion'),
   timer: (id) => url('orders', id, 'timer'),
-  companionLocation: (id) => url('orders', id, 'companion-location')
+  companionLocation: (id) => url('orders', id, 'companion-location'),
+  payCountdown: (id) => url('orders', id, 'pay-countdown'),
+  grabCountdown: (id) => url('orders', id, 'grab-countdown'),
+  serviceStatus: (id) => url('orders', id, 'service-status'),
+  canCancelFree: (id) => url('orders', id, 'can-cancel-free'),
+  renewalOptions: (id) => url('orders', id, 'renewal-options')
 };
 
 /**

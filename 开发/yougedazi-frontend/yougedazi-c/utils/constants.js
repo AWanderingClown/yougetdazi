@@ -196,6 +196,15 @@ const VALIDATE_MESSAGES = {
   MINIMUM_HOURLY_RATE: '最低20元/小时'
 };
 
+// ==================== 取消订单原因 ====================
+const CANCEL_REASONS = [
+  '临时有事，不需要服务了',
+  '等待时间太长',
+  '价格不合适',
+  '更换了其他平台',
+  '其他原因'
+];
+
 // ==================== 消息相关常量 ====================
 const MESSAGE_TYPE = {
   TEXT: 'text',
@@ -235,32 +244,37 @@ function getOrderStatusColor(status) {
   return ORDER_STATUS_COLOR[status] || 'info';
 }
 
+// 可取消订单状态集合
+const CANCELABLE_STATUSES_SET = new Set([
+  ORDER_STATUS.PENDING_PAYMENT,
+  ORDER_STATUS.PENDING,
+  ORDER_STATUS.WAITING_GRAB,
+  ORDER_STATUS.ACCEPTED,
+  ORDER_STATUS.SERVING
+]);
+
+// 按钮配置对象
+const BUTTONS = Object.freeze({
+  PAY: Object.freeze({ text: '立即支付', action: 'pay', type: 'primary' }),
+  CANCEL: Object.freeze({ text: '取消订单', action: 'cancel', type: 'default' }),
+  DETAIL: Object.freeze({ text: '查看详情', action: 'detail', type: 'default' }),
+  CONTACT: Object.freeze({ text: '联系搭子', action: 'contact', type: 'primary' }),
+  CHANGE: Object.freeze({ text: '换一换', action: 'change', type: 'default' }),
+  REORDER: Object.freeze({ text: '再次下单', action: 'reorder', type: 'primary' }),
+  CONTACT_SERVICE: Object.freeze({ text: '联系客服', action: 'contact_service', type: 'default' }),
+  REVIEW: Object.freeze({ text: '提交评价', action: 'review', type: 'primary' }),
+  RENEW: Object.freeze({ text: '续费', action: 'renew', type: 'primary' }),
+  COMPLETE: Object.freeze({ text: '服务结束', action: 'complete', type: 'primary' })
+});
+
 /**
  * 检查订单是否可以取消（前端预估）
  * 注意：实际能否取消及退款金额以服务端 /cancel-preview 接口为准
  * @param {string} status - 订单状态
- * @param {number} serviceDuration - 服务时长（毫秒）
  * @returns {boolean} 是否可以取消
  */
-function canCancelOrder(status, serviceDuration = 0) {
-  const CANCELABLE_STATUSES = [
-    ORDER_STATUS.PENDING_PAYMENT,
-    ORDER_STATUS.PENDING,
-    ORDER_STATUS.WAITING_GRAB,
-    ORDER_STATUS.ACCEPTED,
-    ORDER_STATUS.SERVING
-  ];
-
-  if (!CANCELABLE_STATUSES.includes(status)) {
-    return false;
-  }
-
-  // 服务中超过15分钟不能取消（预估）
-  if (status === ORDER_STATUS.SERVING && serviceDuration > CANCEL_RULE.FIFTEEN_MINUTES) {
-    return false;
-  }
-
-  return true;
+function canCancelOrder(status) {
+  return CANCELABLE_STATUSES_SET.has(status);
 }
 
 /**
@@ -286,137 +300,63 @@ function getCancelTip(status) {
 }
 
 /**
- * 根据下单时间计算订单时间状态
- * @param {number} orderTime - 下单时间戳（毫秒）
- * @returns {Object} 时间状态对象
- *   - isWithin2Minutes: boolean - 是否在2分钟内
- *   - isWithin15Minutes: boolean - 是否在15分钟内
- *   - exceeded15Minutes: boolean - 是否超过15分钟
- *   - minutesElapsed: number - 已过去多少分钟
- */
-function getOrderTimeStatus(orderTime) {
-  if (!orderTime) {
-    return {
-      isWithin2Minutes: true,
-      isWithin15Minutes: true,
-      exceeded15Minutes: false,
-      minutesElapsed: 0
-    };
-  }
-
-  const now = Date.now();
-  const elapsed = now - orderTime;
-  const minutesElapsed = Math.floor(elapsed / (60 * 1000));
-
-  return {
-    isWithin2Minutes: elapsed < CANCEL_RULE.TWO_MINUTES,
-    isWithin15Minutes: elapsed < CANCEL_RULE.FIFTEEN_MINUTES,
-    exceeded15Minutes: elapsed >= CANCEL_RULE.FIFTEEN_MINUTES,
-    minutesElapsed
-  };
-}
-
-/**
- * 根据订单时间和状态获取待支付订单的按钮配置
+ * 获取待支付订单的按钮配置
  * @param {string} status - 订单状态
- * @param {number} orderTime - 下单时间戳（毫秒）
  * @returns {Array|null} 按钮配置数组，非待支付状态返回null
  */
-function getPendingPaymentActions(status, orderTime) {
+function getPendingPaymentActions(status) {
   if (status !== ORDER_STATUS.PENDING_PAYMENT) {
     return null;
   }
-
-  const timeStatus = getOrderTimeStatus(orderTime);
-
-  // 超过15分钟：订单自动取消，只显示查看详情
-  if (timeStatus.exceeded15Minutes) {
-    return [
-      { text: '查看详情', action: 'detail', type: 'default' }
-    ];
-  }
-
-  // 2-15分钟内：只显示支付按钮（取消会扣50%）
-  if (!timeStatus.isWithin2Minutes && timeStatus.isWithin15Minutes) {
-    return [
-      { text: '立即支付', action: 'pay', type: 'primary' },
-      { text: '查看详情', action: 'detail', type: 'default' }
-    ];
-  }
-
-  // 2分钟内：显示取消和支付按钮
-  return [
-    { text: '立即支付', action: 'pay', type: 'primary' },
-    { text: '取消订单', action: 'cancel', type: 'default' },
-    { text: '查看详情', action: 'detail', type: 'default' }
-  ];
+  return [BUTTONS.PAY, BUTTONS.CANCEL, BUTTONS.DETAIL];
 }
 
 /**
- * 获取等待接单状态的按钮配置
+ * 获取已取消状态的按钮配置
  * @param {string} status - 订单状态
- * @param {number} orderTime - 下单时间戳（毫秒）
  * @returns {Array|null} 按钮配置数组
  */
-function getWaitingGrabActions(status, orderTime) {
+function getCancelledActions(status) {
+  if (status !== ORDER_STATUS.CANCELLED) {
+    return null;
+  }
+  return [BUTTONS.REORDER, BUTTONS.CONTACT_SERVICE, BUTTONS.DETAIL];
+}
+
+/**
+ * 获取待接单状态的按钮配置
+ * @param {string} status - 订单状态
+ * @returns {Array|null} 按钮配置数组
+ */
+function getPendingAcceptActions(status) {
+  if (status !== ORDER_STATUS.PENDING) {
+    return null;
+  }
+  return [BUTTONS.CHANGE, BUTTONS.CANCEL, BUTTONS.DETAIL];
+}
+
+/**
+ * 获取等待抢单状态的按钮配置
+ * @param {string} status - 订单状态
+ * @returns {Array|null} 按钮配置数组
+ */
+function getWaitingGrabActions(status) {
   if (status !== ORDER_STATUS.WAITING_GRAB) {
     return null;
   }
-
-  const timeStatus = getOrderTimeStatus(orderTime);
-
-  // >15分钟：保持等待或自动取消，只显示查看详情
-  if (timeStatus.exceeded15Minutes) {
-    return [
-      { text: '查看详情', action: 'detail', type: 'default' }
-    ];
-  }
-
-  // 2-15分钟：取消订单 + 查看详情（等待抢单状态没有换一换）
-  if (!timeStatus.isWithin2Minutes && timeStatus.isWithin15Minutes) {
-    return [
-      { text: '取消订单', action: 'cancel', type: 'default' },
-      { text: '查看详情', action: 'detail', type: 'default' }
-    ];
-  }
-
-  // ≤2分钟：取消(免扣费) + 查看详情
-  return [
-    { text: '取消订单', action: 'cancel', type: 'default' },
-    { text: '查看详情', action: 'detail', type: 'default' }
-  ];
+  return [BUTTONS.CANCEL, BUTTONS.DETAIL];
 }
 
 /**
  * 获取已接单状态的按钮配置
  * @param {string} status - 订单状态
- * @param {number} acceptedAt - 接单时间戳（毫秒）
  * @returns {Array|null} 按钮配置数组
  */
-function getAcceptedActions(status, acceptedAt) {
+function getAcceptedActions(status) {
   if (status !== ORDER_STATUS.ACCEPTED) {
     return null;
   }
-
-  // 使用接单时间计算时间状态
-  const timeStatus = getOrderTimeStatus(acceptedAt);
-
-  // 2-15分钟：取消(扣50元) + 联系搭子 + 换一换 + 查看详情
-  if (!timeStatus.isWithin2Minutes && timeStatus.isWithin15Minutes) {
-    return [
-      { text: '联系搭子', action: 'contact', type: 'primary' },
-      { text: '换一换', action: 'change', type: 'default' },
-      { text: '取消订单', action: 'cancel', type: 'default' },
-      { text: '查看详情', action: 'detail', type: 'default' }
-    ];
-  }
-
-  // ≤2分钟：取消(免扣费) + 联系搭子 + 查看详情
-  return [
-    { text: '联系搭子', action: 'contact', type: 'primary' },
-    { text: '取消订单', action: 'cancel', type: 'default' },
-    { text: '查看详情', action: 'detail', type: 'default' }
-  ];
+  return [BUTTONS.CONTACT, BUTTONS.CHANGE, BUTTONS.CANCEL, BUTTONS.DETAIL];
 }
 
 /**
@@ -428,85 +368,31 @@ function getDepartedActions(status) {
   if (status !== ORDER_STATUS.DEPARTED) {
     return null;
   }
-
-  // 任何时间：取消(扣50元) + 联系搭子 + 查看详情
-  return [
-    { text: '联系搭子', action: 'contact', type: 'primary' },
-    { text: '取消订单', action: 'cancel', type: 'default' },
-    { text: '查看详情', action: 'detail', type: 'default' }
-  ];
+  return [BUTTONS.CONTACT, BUTTONS.CANCEL, BUTTONS.DETAIL];
 }
 
 /**
  * 获取服务中状态的按钮配置
  * @param {string} status - 订单状态
- * @param {number} serviceStartTime - 服务开始时间戳（毫秒）
  * @returns {Array|null} 按钮配置数组
  */
-function getServingActions(status, serviceStartTime) {
+function getServingActions(status) {
   if (status !== ORDER_STATUS.SERVING) {
     return null;
   }
-
-  // 如果没有服务开始时间，默认使用当前时间
-  const startTime = serviceStartTime || Date.now();
-  const elapsed = Date.now() - startTime;
-  const isWithin15Minutes = elapsed < CANCEL_RULE.FIFTEEN_MINUTES;
-
-  // ≤15分钟：取消(扣50元) + 联系搭子 + 查看详情
-  if (isWithin15Minutes) {
-    return [
-      { text: '联系搭子', action: 'contact', type: 'primary' },
-      { text: '取消订单', action: 'cancel', type: 'default' },
-      { text: '查看详情', action: 'detail', type: 'default' }
-    ];
-  }
-
-  // >15分钟：续费 + 服务结束 + 联系搭子 + 查看详情
-  return [
-    { text: '续费', action: 'renew', type: 'primary' },
-    { text: '服务结束', action: 'complete', type: 'primary' },
-    { text: '联系搭子', action: 'contact', type: 'default' },
-    { text: '查看详情', action: 'detail', type: 'default' }
-  ];
+  return [BUTTONS.CONTACT, BUTTONS.CANCEL, BUTTONS.DETAIL];
 }
 
 /**
  * 获取已完成状态的按钮配置
  * @param {string} status - 订单状态
- * @param {number} completionTime - 订单完成时间戳（毫秒）
  * @returns {Array|null} 按钮配置数组
  */
-function getCompletedActions(status, completionTime) {
+function getCompletedActions(status) {
   if (status !== ORDER_STATUS.COMPLETED) {
     return null;
   }
-
-  // 如果没有完成时间，假设已超过24小时
-  if (!completionTime) {
-    return [
-      { text: '联系客服', action: 'contact_service', type: 'default' },
-      { text: '查看详情', action: 'detail', type: 'default' }
-    ];
-  }
-
-  const elapsed = Date.now() - completionTime;
-  const isWithin24Hours = elapsed < CANCEL_RULE.TWENTY_FOUR_HOURS;
-
-  // ≤24小时：评价 + 联系客服 + 查看详情
-  if (isWithin24Hours) {
-    return [
-      { text: '提交评价', action: 'review', type: 'primary' },
-      { text: '联系客服', action: 'contact_service', type: 'default' },
-      { text: '查看详情', action: 'detail', type: 'default' }
-    ];
-  }
-
-  // >24小时：联系客服 + 查看详情
-  return [
-    { text: '联系客服', action: 'contact_service', type: 'default' },
-    { text: '查看详情', action: 'detail', type: 'default' }
-  ];
+  return [BUTTONS.REVIEW, BUTTONS.CONTACT_SERVICE, BUTTONS.DETAIL];
 }
 
 /**
@@ -565,6 +451,7 @@ module.exports = {
   LBS,
   VERIFY,
   VALIDATE_MESSAGES,
+  CANCEL_REASONS,
   MESSAGE_TYPE,
   MESSAGE_DIRECTION,
   MESSAGE_STATUS,
@@ -572,12 +459,13 @@ module.exports = {
   getOrderStatusColor,
   canCancelOrder,
   getCancelTip,
-  getOrderTimeStatus,
   getPendingPaymentActions,
   getWaitingGrabActions,
   getAcceptedActions,
   getDepartedActions,
   getServingActions,
   getCompletedActions,
+  getCancelledActions,
+  getPendingAcceptActions,
   checkDepositLevel
 };
