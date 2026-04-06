@@ -2,7 +2,7 @@ import { Worker } from 'bullmq'
 import type { FastifyBaseLogger } from 'fastify'
 import { bullmqConnection } from '../lib/bullmq'
 import { prisma } from '../lib/prisma'
-import { orderService } from './order.service'
+import { orderService, OrderError } from './order.service'
 import { pushBridgeService, PushEvent } from './push-bridge.service'
 import { dispatchPushEvents } from '../utils/push-helper.js'
 
@@ -61,12 +61,17 @@ export function startOrderTimeoutWorker(logger: FastifyBaseLogger) {
       } catch (err) {
         // 优雅处理订单不存在或状态流转非法的情况
         // 这些都是正常的竞态条件（订单可能已被其他操作处理）
-        if (err instanceof Error && err.message.includes('订单不存在')) {
-          logger.warn({ jobId: job.id, jobName: job.name, orderId }, '[Worker] 订单不存在，可能已被处理')
-          return // 不抛出错误，正常完成
-        }
-        if (err instanceof Error && err.message.includes('订单状态')) {
-          logger.info({ jobId: job.id, jobName: job.name, orderId, reason: err.message }, '[Worker] 订单状态已变更，跳过处理')
+        const isOrderError = err instanceof OrderError || ((err as any)?.name === 'OrderError' && (err as any)?.errorKey)
+        if (isOrderError) {
+          const error = err as any
+          if (error.errorKey === 'ORDER_NOT_FOUND') {
+            logger.warn({ jobId: job.id, jobName: job.name, orderId }, '[Worker] 订单不存在，可能已被处理')
+          } else if (error.errorKey === 'ORDER_STATUS_INVALID') {
+            logger.info({ jobId: job.id, jobName: job.name, orderId, reason: error.message }, '[Worker] 订单状态已变更，跳过处理')
+          } else {
+            // 其他 OrderError 也作为正常情况处理
+            logger.info({ jobId: job.id, jobName: job.name, orderId, errorKey: error.errorKey, error: error.message }, '[Worker] 业务逻辑错误，跳过处理')
+          }
           return // 不抛出错误，正常完成
         }
         // 其他错误重新抛出
@@ -75,9 +80,9 @@ export function startOrderTimeoutWorker(logger: FastifyBaseLogger) {
     },
     {
       connection: bullmqConnection,
-      concurrency: 10,  // 最多同时处理 10 个超时任务
-      lockDuration: 30000,  // 锁定时间：30秒（job 处理时间上限）
-      lockRenewTime: 10000,  // 锁续期时间：每 10 秒续期一次，防止锁超时
+      concurrency: 5,  // 最多同时处理 5 个超时任务（降低并发减轻数据库压力）
+      lockDuration: 120000,  // 锁定时间：120秒（job 处理时间上限，足以处理数据库查询）
+      lockRenewTime: 30000,  // 锁续期时间：每 30 秒续期一次，防止锁超时
     }
   )
 
