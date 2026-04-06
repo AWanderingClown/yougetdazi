@@ -34,6 +34,7 @@ export const orderTimeoutQueue = new Queue('order-timeout', {
       type: 'exponential',
       delay: 5000,
     },
+    timeout: 25000,  // Job 超时：25秒（需要小于 lockDuration）
   },
 })
 

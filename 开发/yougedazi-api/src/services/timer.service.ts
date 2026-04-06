@@ -27,40 +27,57 @@ export function startOrderTimeoutWorker(logger: FastifyBaseLogger) {
 
       logger.info(`[Worker] 处理超时 Job: ${job.name}, orderId: ${orderId}`)
 
-      switch (job.name) {
-        case 'payment_timeout': {
-          // 支付超时取消（pending_payment → cancelled，无需退款）
-          const r1 = await orderService.cancelOrder(orderId, 'system', 'system', '支付超时，系统自动取消')
-          await dispatchPushEvents(r1)
-          break
+      try {
+        switch (job.name) {
+          case 'payment_timeout': {
+            // 支付超时取消（pending_payment → cancelled，无需退款）
+            const r1 = await orderService.cancelOrder(orderId, 'system', 'system', '支付超时，系统自动取消')
+            await dispatchPushEvents(r1)
+            break
+          }
+
+          case 'accept_timeout': {
+            // 待接单超时取消（pending_accept/waiting_grab → cancelled，全额退款）
+            const r2 = await orderService.cancelOrder(orderId, 'system', 'system', '超时未接单，系统自动取消', 100)
+            await dispatchPushEvents(r2)
+            break
+          }
+
+          case 'service_timeout': {
+            // 服务时长到期，自动完成
+            const r3 = await orderService.completeOrder(orderId, 'system', 'system')
+            await dispatchPushEvents(r3)
+            break
+          }
+
+          case 'auto_review':
+            // 24h 自动好评：检查是否已有评价，若无则插入默认5星好评
+            await handleAutoReview(orderId, userId, companionId)
+            break
+
+          default:
+            logger.warn(`[Worker] 未知 Job 类型：${job.name}`)
         }
-
-        case 'accept_timeout': {
-          // 待接单超时取消（pending_accept/waiting_grab → cancelled，全额退款）
-          const r2 = await orderService.cancelOrder(orderId, 'system', 'system', '超时未接单，系统自动取消', 100)
-          await dispatchPushEvents(r2)
-          break
+      } catch (err) {
+        // 优雅处理订单不存在或状态流转非法的情况
+        // 这些都是正常的竞态条件（订单可能已被其他操作处理）
+        if (err instanceof Error && err.message.includes('订单不存在')) {
+          logger.warn({ jobId: job.id, jobName: job.name, orderId }, '[Worker] 订单不存在，可能已被处理')
+          return // 不抛出错误，正常完成
         }
-
-        case 'service_timeout': {
-          // 服务时长到期，自动完成
-          const r3 = await orderService.completeOrder(orderId, 'system', 'system')
-          await dispatchPushEvents(r3)
-          break
+        if (err instanceof Error && err.message.includes('订单状态')) {
+          logger.info({ jobId: job.id, jobName: job.name, orderId, reason: err.message }, '[Worker] 订单状态已变更，跳过处理')
+          return // 不抛出错误，正常完成
         }
-
-        case 'auto_review':
-          // 24h 自动好评：检查是否已有评价，若无则插入默认5星好评
-          await handleAutoReview(orderId, userId, companionId)
-          break
-
-        default:
-          logger.warn(`[Worker] 未知 Job 类型：${job.name}`)
+        // 其他错误重新抛出
+        throw err
       }
     },
     {
       connection: bullmqConnection,
       concurrency: 10,  // 最多同时处理 10 个超时任务
+      lockDuration: 30000,  // 锁定时间：30秒（job 处理时间上限）
+      lockRenewTime: 10000,  // 锁续期时间：每 10 秒续期一次，防止锁超时
     }
   )
 

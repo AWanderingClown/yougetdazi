@@ -1,7 +1,11 @@
-import { PrismaClient } from '@prisma/client'
+import prismaClientPkg from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
+import pg from 'pg'
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
+const { PrismaClient } = prismaClientPkg
+const { Pool } = pg
+const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+const adapter = new PrismaPg(pool)
 
 // 单例：避免开发热重载时重复创建连接
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient }

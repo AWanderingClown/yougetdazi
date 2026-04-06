@@ -260,4 +260,53 @@ describe('E2E: 直单完整流程', () => {
     expect(body.data.status).toBe('completed')
     expect(body.data).toHaveProperty('review')
   })
+
+  it('验证订单操作日志完整记录', async () => {
+    const logs = await prisma.orderOperationLog.findMany({
+      where: { order_id: orderId },
+      orderBy: { created_at: 'asc' },
+    })
+
+    // 验证有5个关键操作日志
+    expect(logs.length).toBeGreaterThanOrEqual(5)
+
+    // 验证关键操作都被记录
+    const actions = logs.map((l) => l.action)
+    expect(actions).toContain('create_order')
+    expect(actions).toContain('payment_success')
+    expect(actions).toContain('accept_order')
+    expect(actions).toContain('start_service')
+    expect(actions).toContain('complete_order')
+
+    // 验证状态流转记录
+    const completeLog = logs.find((l) => l.action === 'complete_order')
+    expect(completeLog).toBeDefined()
+    expect(completeLog!.from_status).toBe('serving')
+    expect(completeLog!.to_status).toBe('completed')
+    expect(completeLog!.operator_type).toBe('companion')
+    expect(completeLog!.operator_id).toBe(companionId)
+
+    // 验证开始服务记录
+    const startLog = logs.find((l) => l.action === 'start_service')
+    expect(startLog).toBeDefined()
+    expect(startLog!.operator_type).toBe('companion')
+  })
+
+  it('验证收益结算记录', async () => {
+    const settlement = await prisma.settlement.findFirst({
+      where: { order_id: orderId },
+    })
+
+    expect(settlement).toBeDefined()
+    expect(settlement!.companion_id).toBe(companionId)
+    expect(settlement!.type).toBe('order_income')
+    expect(settlement!.amount).toBeGreaterThan(0) // 搭子应该收到钱
+    expect(settlement!.order_no).toBe(orderNo)
+    expect(settlement!.service_name).toBe('游戏陪玩')
+    expect(settlement!.duration).toBe(1)
+
+    // 验证余额变动合理（平台抽成20%，搭子得80%）
+    const expectedCompanionIncome = 50000 * 0.8 // 40000分 = 400元
+    expect(settlement!.amount).toBe(expectedCompanionIncome)
+  })
 })

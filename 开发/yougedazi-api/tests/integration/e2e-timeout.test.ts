@@ -171,6 +171,28 @@ describe('E2E: 订单超时自动取消', () => {
       expect(refund!.refund_amount).toBe(50000)
     })
 
+    it('验证超时取消的操作日志', async () => {
+      const logs = await prisma.orderOperationLog.findMany({
+        where: { order_id: orderId },
+        orderBy: { created_at: 'asc' },
+      })
+
+      // 应该有3个操作日志：create_order, payment_success, cancel_order
+      expect(logs.length).toBeGreaterThanOrEqual(3)
+
+      const actions = logs.map((l) => l.action)
+      expect(actions).toContain('create_order')
+      expect(actions).toContain('payment_success')
+      expect(actions).toContain('cancel_order')
+
+      // 验证系统取消记录
+      const cancelLog = logs.find((l) => l.action === 'cancel_order')
+      expect(cancelLog).toBeDefined()
+      expect(cancelLog!.operator_type).toBe('system')
+      expect(cancelLog!.from_status).toBe('pending_accept')
+      expect(cancelLog!.to_status).toBe('cancelled')
+    })
+
     it('C端验证订单已取消', async () => {
       const getRes = await app.inject({
         method: 'GET',

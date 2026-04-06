@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import { pathToFileURL } from 'url'
 import Fastify from 'fastify'
 import cookie from '@fastify/cookie'
@@ -107,7 +108,8 @@ export async function buildApp() {
   app.setErrorHandler((error, request, reply) => {
     const isDev = process.env.NODE_ENV !== 'production'
 
-    if (error.name === 'OrderError') {
+    // Check if error has 'name' property and is OrderError
+    if (error && typeof error === 'object' && 'name' in error && error.name === 'OrderError') {
       const orderError = error as unknown as { code: number; errorKey: string; message: string }
       return reply.status(400).send({
         code:     orderError.code,
@@ -116,15 +118,17 @@ export async function buildApp() {
       })
     }
 
+    const errMessage = error instanceof Error ? error.message : '服务器内部错误'
+
     app.log.error({
       err: isDev ? error : undefined,
-      path:   request.routerPath,
+      path:   (request as any).routerPath,
       method: request.method,
-    }, error.message)
+    }, errMessage)
 
     return reply.status(500).send({
       code:     ErrorCode.INTERNAL_ERROR,
-      message:  isDev ? error.message : '服务器内部错误',
+      message:  isDev ? errMessage : '服务器内部错误',
       errorKey: 'INTERNAL_ERROR',
     })
   })

@@ -199,4 +199,46 @@ describe('E2E: 悬赏单完整流程', () => {
     expect(body.code).toBe(0)
     expect(body.data.review.rating).toBe(5)
   })
+
+  it('验证订单操作日志完整记录', async () => {
+    const logs = await prisma.orderOperationLog.findMany({
+      where: { order_id: orderId },
+      orderBy: { created_at: 'asc' },
+    })
+
+    // 悬赏单应该有5个操作日志
+    expect(logs.length).toBeGreaterThanOrEqual(5)
+
+    const actions = logs.map((l) => l.action)
+    expect(actions).toContain('create_order')
+    expect(actions).toContain('payment_success')
+    expect(actions).toContain('grab_order') // 悬赏单是抢单
+    expect(actions).toContain('start_service')
+    expect(actions).toContain('complete_order')
+
+    // 验证抢单记录
+    const grabLog = logs.find((l) => l.action === 'grab_order')
+    expect(grabLog).toBeDefined()
+    expect(grabLog!.from_status).toBe('waiting_grab')
+    expect(grabLog!.to_status).toBe('accepted')
+    expect(grabLog!.operator_type).toBe('companion')
+    expect(grabLog!.operator_id).toBe(companionId)
+  })
+
+  it('验证收益结算记录', async () => {
+    const settlement = await prisma.settlement.findFirst({
+      where: { order_id: orderId },
+    })
+
+    expect(settlement).toBeDefined()
+    expect(settlement!.companion_id).toBe(companionId)
+    expect(settlement!.type).toBe('order_income')
+    expect(settlement!.order_no).toBe(orderNo)
+    expect(settlement!.service_name).toBe('游戏陪玩')
+    expect(settlement!.duration).toBe(2)
+
+    // 验证金额：600元 * 2小时 * 80% = 960元 = 96000分
+    const expectedCompanionIncome = 120000 * 0.8
+    expect(settlement!.amount).toBe(expectedCompanionIncome)
+  })
 })

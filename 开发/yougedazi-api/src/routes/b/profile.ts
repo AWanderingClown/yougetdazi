@@ -145,4 +145,72 @@ export async function bProfileRoutes(app: FastifyInstance) {
       })
     }
   })
+
+  /**
+   * 前端轮询检查接单资格（审核状态、保证金、进行中订单）
+   */
+  app.get('/api/b/profile', {
+    preHandler: [authenticate, requireCompanion],
+  }, async (request, reply) => {
+    const companionId = request.currentUser!.id
+
+    try {
+      // 查询陪玩师完整信息
+      const companion = await prisma.companion.findUnique({
+        where: { id: companionId },
+        select: {
+          id: true,
+          nickname: true,
+          avatar: true,
+          audit_status: true,
+          is_online: true,
+          is_working: true,
+          deposit_level: true,
+          deposit_amount: true,
+          rating: true,
+          total_orders: true,
+        },
+      })
+
+      if (!companion) {
+        return reply.status(404).send({
+          code:    ErrorCode.NOT_FOUND,
+          message: '陪玩师不存在',
+          errorKey: 'COMPANION_NOT_FOUND',
+        })
+      }
+
+      // 检查是否可以通过接单
+      let canAcceptOrder = true
+      let cannotAcceptReason = ''
+
+      if (companion.audit_status !== 'approved') {
+        canAcceptOrder = false
+        cannotAcceptReason = '账号尚未通过审核'
+      } else if (companion.deposit_level === 0) {
+        canAcceptOrder = false
+        cannotAcceptReason = '保证金不足，缴纳后方可接单'
+      } else if (companion.is_working) {
+        canAcceptOrder = false
+        cannotAcceptReason = '当前有进行中的订单'
+      }
+
+      return reply.status(200).send({
+        code: ErrorCode.SUCCESS,
+        message: 'ok',
+        data: {
+          ...companion,
+          can_accept_order: canAcceptOrder,
+          cannot_accept_reason: cannotAcceptReason,
+        },
+      })
+    } catch (err) {
+      app.log.error(err, '获取陪玩师资料失败')
+      return reply.status(500).send({
+        code:    ErrorCode.INTERNAL_ERROR,
+        message: '服务器内部错误',
+        errorKey: 'INTERNAL_ERROR',
+      })
+    }
+  })
 }
