@@ -148,7 +148,6 @@ Page({
   loadHistoryMessages() {
     // 检查是否已达到最大加载数量
     if (this.data.historyLoadedCount >= this.data.maxHistoryCount) {
-      console.log('[Chat] 已达到最大历史消息加载数量:', this.data.maxHistoryCount);
       return;
     }
     
@@ -188,7 +187,6 @@ Page({
         { id: 'msg_2', type: 'send', senderId: this.data.userInfo.id, content: '好的，到时候见', time: '10:32', status: MESSAGE_STATUS.SENT }
       ];
       this.setData({ messageList: historyMessages, lastMessageId: historyMessages[historyMessages.length - 1].id, historyCursor: null, historyLoadedCount: historyMessages.length });
-      this.setData({ messageList: historyMessages, lastMessageId: historyMessages[historyMessages.length - 1].id, historyCursor: null });
     }
   },
 

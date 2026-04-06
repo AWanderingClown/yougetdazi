@@ -1,6 +1,7 @@
 // pages/order-detail/order-detail.js
 const { ORDER_STATUS, CANCEL_RULE, TIMER, GEOGRAPHY, LBS } = require('../../utils/constants');
 const api = require('../../utils/api');
+const { showCustomerServiceOptions } = require('../../utils/order-service');
 const app = getApp();
 
 Page({
@@ -14,7 +15,7 @@ Page({
     // 订单状态: pending_payment(待支付), pending_accept(待接单), accepted(已接单),
     // departed(搭子已出发), serving(服务中), completed(已完成), cancelled(已取消)
     // waiting_grab(等待抢单) - 悬赏订单特有
-    status: 'serving',
+    status: ORDER_STATUS.SERVING,
     
     // 订单类型: normal(普通订单), reward(悬赏订单)
     orderType: 'normal',
@@ -184,7 +185,7 @@ Page({
 
     this.setData({
       id: id || 'order_001',
-      status: status || 'serving'
+      status: status || ORDER_STATUS.SERVING
     });
 
     // 加入订单 Room，接收实时推送
@@ -265,7 +266,7 @@ Page({
     const timer = setInterval(() => {
       // 检查订单状态，如果已经不是进行中的状态则停止刷新
       const currentStatus = this.data.status;
-      if (currentStatus !== 'accepted' && currentStatus !== 'serving') {
+      if (currentStatus !== ORDER_STATUS.ACCEPTED && currentStatus !== ORDER_STATUS.SERVING) {
         clearInterval(timer);
         this.setData({ companionLocationRefreshTimer: null });
         return;
@@ -371,24 +372,24 @@ Page({
     const { status, orderType, serviceStartTime, orderInfo } = this.data;
 
     switch(status) {
-      case 'pending_payment':
+      case ORDER_STATUS.PENDING_PAYMENT:
         this.startPayCountdown();
         break;
-      case 'pending_accept':
+      case ORDER_STATUS.PENDING_ACCEPT:
         // 待接单状态：等待搭子接单，无需额外计时器，页面显示等待动画
         break;
-      case 'accepted':
-      case 'departed':
+      case ORDER_STATUS.ACCEPTED:
+      case ORDER_STATUS.DEPARTED:
         this.initMap();
         this.startCompanionLocationRefresh();  // 启动位置刷新
         this.checkAcceptTime();
         break;
-      case 'serving':
+      case ORDER_STATUS.SERVING:
         // 服务中状态，统一使用initServiceTimer处理
         this.initServiceTimer();
         this.initMap();
         break;
-      case 'waiting_grab':
+      case ORDER_STATUS.WAITING_GRAB:
         // 悬赏订单等待抢单状态，启动倒计时
         this.initGrabCountdown();
         break;
@@ -402,7 +403,7 @@ Page({
    */
   checkAcceptTime() {
     const { orderInfo, status } = this.data;
-    if (status !== 'accepted' || !orderInfo.acceptedAt) {
+    if (status !== ORDER_STATUS.ACCEPTED || !orderInfo.acceptedAt) {
       this.setData({ acceptWithin2Minutes: false });
       return;
     }
@@ -416,7 +417,8 @@ Page({
     // 如果在2分钟内，设置定时器2分钟后更新状态
     if (acceptWithin2Minutes) {
       const remainingTime = CANCEL_RULE.TWO_MINUTES - (now - acceptedAt);
-      setTimeout(() => {
+      if (this.acceptTimer) clearTimeout(this.acceptTimer);
+      this.acceptTimer = setTimeout(() => {
         this.setData({ acceptWithin2Minutes: false });
       }, remainingTime);
     }
@@ -454,6 +456,10 @@ Page({
     if (this.data.companionLocationRefreshTimer) {
       clearInterval(this.data.companionLocationRefreshTimer);
     }
+    if (this.acceptTimer) {
+      clearTimeout(this.acceptTimer);
+      this.acceptTimer = null;
+    }
   },
 
   /**
@@ -474,14 +480,14 @@ Page({
   generateTimeLine(order) {
     const timeLine = [];
     const statusMap = {
-      'pending_payment': { text: '订单创建', icon: '📝' },
+      [ORDER_STATUS.PENDING_PAYMENT]: { text: '订单创建', icon: '📝' },
       'paid': { text: '支付成功', icon: '💰' },
-      'pending_accept': { text: '等待接单', icon: '⏳' },
-      'accepted': { text: '搭子已接单', icon: '✅' },
-      'departed': { text: '搭子已出发', icon: '🚗' },
-      'serving': { text: '服务进行中', icon: '✨' },
-      'completed': { text: '订单完成', icon: '🎉' },
-      'cancelled': { text: '订单已取消', icon: '❌' }
+      [ORDER_STATUS.PENDING_ACCEPT]: { text: '等待接单', icon: '⏳' },
+      [ORDER_STATUS.ACCEPTED]: { text: '搭子已接单', icon: '✅' },
+      [ORDER_STATUS.DEPARTED]: { text: '搭子已出发', icon: '🚗' },
+      [ORDER_STATUS.SERVING]: { text: '服务进行中', icon: '✨' },
+      [ORDER_STATUS.COMPLETED]: { text: '订单完成', icon: '🎉' },
+      [ORDER_STATUS.CANCELLED]: { text: '订单已取消', icon: '❌' }
     };
 
     // 根据订单状态和时间生成时间轴
@@ -553,6 +559,67 @@ Page({
   /**
    * 加载订单详情
    */
+  /**
+   * 从订单数据中提取搭子信息
+   */
+  _extractCompanionInfo(order, paidRecord) {
+    return {
+      id:               order.companion?.id || '',
+      nickname:         order.companion?.nickname || '等待接单',
+      avatar:           order.companion?.avatar || '/assets/images/avatar-default.png',
+      gender:           'unknown',
+      age:              0,
+      tags:             [],
+      distance:         0,
+      estimatedArrival: '',
+      location: { longitude: 116.397428, latitude: 39.90923 }
+    };
+  },
+
+  /**
+   * 从订单数据中提取订单信息
+   */
+  _extractOrderInfo(order, acceptedLog, paidRecord) {
+    return {
+      orderNo:         order.order_no,
+      createdAt:       order.created_at ? order.created_at.slice(0, 19).replace('T', ' ') : '',
+      paidAt:          paidRecord?.pay_time ? paidRecord.pay_time.slice(0, 19).replace('T', ' ') : '',
+      acceptedAt:      acceptedLog?.created_at || '',
+      serviceType:     order.service_name,
+      duration:        order.duration,
+      appointmentTime: order.service_start_at ? order.service_start_at.slice(0, 16).replace('T', ' ') : '',
+      address:         order.user_remark || '',
+      servicePrice:    (order.total_amount || 0) / 100,
+      totalAmount:     (order.total_amount || 0) / 100,
+      hasReviewed:     false,
+      cancelReason:    order.cancel_reason || '',
+      cancelledAt:     order.cancelled_at ? order.cancelled_at.slice(0, 19).replace('T', ' ') : ''
+    };
+  },
+
+  /**
+   * 处理订单详情加载成功
+   */
+  _handleOrderDetailLoaded(order, acceptedLog, paidRecord) {
+    const companionInfo = this._extractCompanionInfo(order, paidRecord);
+    const orderInfo = this._extractOrderInfo(order, acceptedLog, paidRecord);
+
+    this.setData({
+      id:               order.id || '',
+      status:           order.status || ORDER_STATUS.PENDING_PAYMENT,
+      orderType:        order.order_type === 'reward' ? 'reward' : 'normal',
+      companionInfo,
+      orderInfo,
+      serviceStartTime:    order.service_start_at ? new Date(order.service_start_at).getTime() : null,
+      paymentDeadlineMs:   order.payment_deadline ? new Date(order.payment_deadline).getTime() : null,
+      acceptDeadlineMs:    order.accept_deadline  ? new Date(order.accept_deadline).getTime()  : null,
+    });
+
+    this.generateTimeLine(order);
+    this.initByStatus();
+    this.checkAcceptTime();
+  },
+
   loadOrderDetail() {
     const id = this.data.id;
     if (!id) {
@@ -573,54 +640,9 @@ Page({
           return;
         }
 
-        // 找已接单时间（operation_logs 中 action === 'accepted'）
         const acceptedLog = (order.operation_logs || []).find(l => l.action === 'accepted');
         const paidRecord  = (order.payment_records || []).find(r => r.status === 'paid');
-
-        const companionInfo = {
-          id:               order.companion?.id || '',
-          nickname:         order.companion?.nickname || '等待接单',
-          avatar:           order.companion?.avatar || '/assets/images/avatar-default.png',
-          gender:           'unknown',
-          age:              0,
-          tags:             [],
-          distance:         0,
-          estimatedArrival: '',
-          location: { longitude: 116.397428, latitude: 39.90923 }
-        };
-
-        const orderInfo = {
-          orderNo:         order.order_no,
-          createdAt:       order.created_at ? order.created_at.slice(0, 19).replace('T', ' ') : '',
-          paidAt:          paidRecord?.pay_time ? paidRecord.pay_time.slice(0, 19).replace('T', ' ') : '',
-          acceptedAt:      acceptedLog?.created_at || '',
-          serviceType:     order.service_name,
-          duration:        order.duration,
-          appointmentTime: order.service_start_at ? order.service_start_at.slice(0, 16).replace('T', ' ') : '',
-          address:         order.user_remark || '',
-          servicePrice:    (order.total_amount || 0) / 100,
-          totalAmount:     (order.total_amount || 0) / 100,
-          hasReviewed:     false,
-          cancelReason:    order.cancel_reason || '',
-          cancelledAt:     order.cancelled_at ? order.cancelled_at.slice(0, 19).replace('T', ' ') : ''
-        };
-
-        this.setData({
-          id:               order.id || '',
-          status:           order.status || 'pending_payment',
-          orderType:        order.order_type === 'reward' ? 'reward' : 'normal',
-          companionInfo,
-          orderInfo,
-          serviceStartTime:    order.service_start_at ? new Date(order.service_start_at).getTime() : null,
-          paymentDeadlineMs:   order.payment_deadline ? new Date(order.payment_deadline).getTime() : null,
-          acceptDeadlineMs:    order.accept_deadline  ? new Date(order.accept_deadline).getTime()  : null,
-        });
-
-        // 生成订单状态时间轴
-        this.generateTimeLine(order);
-
-        this.initByStatus();
-        this.checkAcceptTime();
+        this._handleOrderDetailLoaded(order, acceptedLog, paidRecord);
       })
       .catch(() => {
         wx.hideLoading();
@@ -842,7 +864,74 @@ Page({
   },
 
   // 从 Redis 权威时间源获取剩余时间，本地每秒递减，每10秒向后端校准一次
-  startServiceTimerDisplay() {
+  /**
+   * 从服务器获取剩余时间
+   */
+  _fetchRemainingTimeFromServer(id) {
+    return app.request({ url: api.orders.timer(id) })
+      .then((res) => {
+        if (res?.data?.remaining_seconds != null) {
+          return res.data.remaining_seconds * 1000;
+        }
+        return null;
+      })
+      .catch(() => null);
+  },
+
+  /**
+   * 格式化服务计时器显示
+   */
+  _formatServiceTimer(remainingMs) {
+    const hours = Math.floor(remainingMs / 3600000);
+    const minutes = Math.floor((remainingMs % 3600000) / 60000);
+    const seconds = Math.floor((remainingMs % 60000) / 1000);
+
+    return {
+      hours: String(hours).padStart(2, '0'),
+      minutes: String(minutes).padStart(2, '0'),
+      seconds: String(seconds).padStart(2, '0')
+    };
+  },
+
+  /**
+   * 计算服务进度和状态
+   */
+  _calculateServiceProgress(remainingMs, totalDuration) {
+    const elapsed = totalDuration - remainingMs;
+    const progress = Math.min(100, Math.floor((elapsed / totalDuration) * 100));
+
+    const remainingHours = Math.floor(remainingMs / 3600000);
+    const remainingMinutes = Math.floor((remainingMs % 3600000) / 60000);
+    const remainingText = remainingHours > 0
+      ? `${remainingHours}小时${remainingMinutes}分钟`
+      : `${remainingMinutes}分钟`;
+
+    return {
+      progress,
+      remainingText,
+      canCancelInService: elapsed <= CANCEL_RULE.FIFTEEN_MINUTES,
+      serviceElapsedMinutes: Math.floor(elapsed / 60000)
+    };
+  },
+
+  /**
+   * 更新服务计时器UI
+   */
+  _updateServiceTimerUI(remainingMs, totalDuration) {
+    const timerDisplay = this._formatServiceTimer(remainingMs);
+    const progressInfo = this._calculateServiceProgress(remainingMs, totalDuration);
+
+    this.setData({
+      serviceTimer: timerDisplay,
+      serviceProgress: progressInfo.progress,
+      remainingTimeText: progressInfo.remainingText,
+      showRenewalHint: remainingMs < CANCEL_RULE.FIFTEEN_MINUTES,
+      canCancelInService: progressInfo.canCancelInService,
+      serviceElapsedMinutes: progressInfo.serviceElapsedMinutes
+    });
+  },
+
+  async startServiceTimerDisplay() {
     const id = this.data.id;
     const totalDuration = this.data.serviceTotalDuration || (this.data.orderInfo?.duration || 2) * 3600000;
 
@@ -853,68 +942,33 @@ Page({
     let localRemainingMs = totalDuration;
     let pollCount = 0;
 
-    const fetchAndSync = () => {
-      app.request({ url: api.orders.timer(id) }).then((res) => {
-        if (res && res.data && res.data.remaining_seconds != null) {
-          localRemainingMs = res.data.remaining_seconds * 1000;
-        }
-      }).catch(() => {});
-    };
-
-    fetchAndSync(); // 立即拉取一次
+    // 立即从服务器同步一次
+    const serverRemaining = await this._fetchRemainingTimeFromServer(id);
+    if (serverRemaining !== null) {
+      localRemainingMs = serverRemaining;
+    }
 
     const updateTimer = () => {
       pollCount++;
-      if (pollCount % TIMER.BACKEND_SYNC_INTERVAL_SEC === 0) fetchAndSync(); // 按周期向后端校准
+      if (pollCount % TIMER.BACKEND_SYNC_INTERVAL_SEC === 0) {
+        this._fetchRemainingTimeFromServer(id).then((serverMs) => {
+          if (serverMs !== null) localRemainingMs = serverMs;
+        });
+      }
 
       localRemainingMs = Math.max(0, localRemainingMs - TIMER.UI_TICK_INTERVAL_MS);
-      const remaining = localRemainingMs;
 
-      if (remaining <= 0 && this.data.status === ORDER_STATUS.SERVING) {
+      if (localRemainingMs <= 0 && this.data.status === ORDER_STATUS.SERVING) {
         clearInterval(this.data.serviceTimerInterval);
         this.setData({ serviceTimerInterval: null });
         this.onServiceEnd();
         return;
       }
 
-      // 倒计时显示（显示剩余时间）
-      const hours = Math.floor(remaining / 3600000);
-      const minutes = Math.floor((remaining % 3600000) / 60000);
-      const seconds = Math.floor((remaining % 60000) / 1000);
-
-      // 计算进度（已进行的比例）
-      const elapsed = totalDuration - remaining;
-      const progress = Math.min(100, Math.floor((elapsed / totalDuration) * 100));
-
-      // 计算剩余时间文本
-      const remainingHours = Math.floor(remaining / 3600000);
-      const remainingMinutes = Math.floor((remaining % 3600000) / 60000);
-      let remainingText = '';
-      if (remainingHours > 0) {
-        remainingText = `${remainingHours}小时${remainingMinutes}分钟`;
-      } else {
-        remainingText = `${remainingMinutes}分钟`;
-      }
-
-      // 判断是否可以取消服务（≤15分钟可以取消，>15分钟不能取消）
-      const canCancelInService = elapsed <= CANCEL_RULE.FIFTEEN_MINUTES;
-      const serviceElapsedMinutes = Math.floor(elapsed / 60000);
-
-      this.setData({
-        serviceTimer: {
-          hours: String(hours).padStart(2, '0'),
-          minutes: String(minutes).padStart(2, '0'),
-          seconds: String(seconds).padStart(2, '0')
-        },
-        serviceProgress: progress,
-        remainingTimeText: remainingText,
-        showRenewalHint: remaining < CANCEL_RULE.FIFTEEN_MINUTES,
-        canCancelInService,
-        serviceElapsedMinutes
-      });
+      this._updateServiceTimerUI(localRemainingMs, totalDuration);
     };
 
-    updateTimer(); // 立即执行一次
+    updateTimer();
     const timer = setInterval(updateTimer, TIMER.UI_TICK_INTERVAL_MS);
     this.setData({ serviceTimerInterval: timer });
   },
@@ -940,12 +994,12 @@ Page({
             // 同步更新 direct_orders 本地存储，防止重开 APP 后状态不同步
             const directOrders = wx.getStorageSync('direct_orders') || [];
             const updated = directOrders.map(o =>
-              o.id === this.data.id ? { ...o, status: 'completed' } : o
+              o.id === this.data.id ? { ...o, status: ORDER_STATUS.COMPLETED } : o
             );
             wx.setStorageSync('direct_orders', updated);
 
             this.setData({
-              status: 'completed',
+              status: ORDER_STATUS.COMPLETED,
               'orderInfo.hasReviewed': false
             });
           }
@@ -1116,7 +1170,7 @@ Page({
    */
   autoCancelOrder() {
     this.setData({
-      status: 'cancelled',
+      status: ORDER_STATUS.CANCELLED,
       'orderInfo.cancelReason': '支付超时，系统自动取消',
       'orderInfo.cancelledAt': this.formatTime(new Date())
     });
@@ -1214,21 +1268,7 @@ Page({
    * 联系客服
    */
   onContactService() {
-    wx.showActionSheet({
-      itemList: ['在线客服', '客服电话'],
-      success: (res) => {
-        if (res.tapIndex === 0) {
-          // 在线客服
-          wx.showToast({ title: '正在连接客服...', icon: 'none' });
-        } else {
-          // 拨打电话
-          const config = require('../../config/backend-config.js');
-          wx.makePhoneCall({
-            phoneNumber: config.customerService.phone
-          });
-        }
-      }
-    });
+    showCustomerServiceOptions(this.data.id);
   },
 
   /**
@@ -1247,7 +1287,7 @@ Page({
             if (order.id === this.data.id) {
               return {
                 ...order,
-                status: 'cancelled',
+                status: ORDER_STATUS.CANCELLED,
                 cancelReason: '用户主动取消悬赏'
               };
             }
@@ -1256,9 +1296,9 @@ Page({
           wx.setStorageSync('reward_orders', updatedOrders);
           
           this.setData({
-            status: 'cancelled'
+            status: ORDER_STATUS.CANCELLED
           });
-          
+
           wx.showToast({
             title: '已取消，资金将原路退回',
             icon: 'none',
@@ -1372,65 +1412,85 @@ Page({
   /**
    * 续费 —— 调后端创建续费订单，拉起微信支付
    */
-  onRenewal() {
-    const orderId = this.data.id;
+  /**
+   * 获取剩余可续费时长
+   */
+  _getRemainingHours() {
     const currentDuration = Math.floor(this.data.orderInfo?.duration || 0);
     const maxDuration = 24;
-    const remainingHours = Math.max(0, maxDuration - currentDuration);
-    
+    return Math.max(0, maxDuration - currentDuration);
+  },
+
+  /**
+   * 处理续费支付
+   */
+  _processRenewalPayment(orderId, addedHours) {
+    wx.showLoading({ title: '创建续费订单...' });
+
+    app.request({
+      url: api.orders.renew(orderId),
+      method: 'POST',
+      data: { added_hours: addedHours },
+    }).then((res) => {
+      wx.hideLoading();
+      const { payment_params } = res.data;
+      wx.requestPayment({
+        ...payment_params,
+        success: () => {
+          wx.showToast({ title: '支付成功，续费处理中', icon: 'success' });
+          setTimeout(() => { this.loadOrderDetail(); }, 2000);
+        },
+        fail: (err) => {
+          if (err.errMsg && err.errMsg.includes('cancel')) {
+            wx.showToast({ title: '已取消支付', icon: 'none' });
+          } else {
+            wx.showToast({ title: '支付失败，请重试', icon: 'none' });
+          }
+        },
+      });
+    }).catch((err) => {
+      wx.hideLoading();
+      wx.showToast({ title: err?.message || '创建续费订单失败', icon: 'none' });
+    });
+  },
+
+  /**
+   * 显示续费确认弹窗
+   */
+  _showRenewalConfirm(addedHours) {
+    wx.showModal({
+      title: '确认续费',
+      content: `续费${addedHours}小时，费用由后端按时薪计算`,
+      success: (modalRes) => {
+        if (!modalRes.confirm) return;
+        this._processRenewalPayment(this.data.id, addedHours);
+      },
+    });
+  },
+
+  onRenewal() {
+    const remainingHours = this._getRemainingHours();
+
     if (remainingHours <= 0) {
       wx.showToast({ title: '已达到最大时长限制', icon: 'none' });
       return;
     }
-    
-    const hoursOptions = Array.from({length: remainingHours}, (_, i) => i + 1);
+
+    const currentDuration = Math.floor(this.data.orderInfo?.duration || 0);
+    const hoursOptions = Array.from({ length: remainingHours }, (_, i) => i + 1);
     const itemList = hoursOptions.map(h => `续费${h}小时`);
+
     wx.showActionSheet({
       itemList,
       success: (res) => {
         const addedHours = hoursOptions[res.tapIndex];
-        
-        // 再次校验累计时长
-        if (currentDuration + addedHours > maxDuration) {
+
+        if (currentDuration + addedHours > 24) {
           wx.showToast({ title: '超过最大时长限制', icon: 'none' });
           return;
         }
 
-        wx.showModal({
-          title: '确认续费',
-          content: `续费${addedHours}小时，费用由后端按时薪计算`,
-          success: (modalRes) => {
-            if (!modalRes.confirm) return;
-            wx.showLoading({ title: '创建续费订单...' });
-
-            app.request({
-              url: api.orders.renew(orderId),
-              method: 'POST',
-              data: { added_hours: addedHours },
-            }).then((res) => {
-              wx.hideLoading();
-              const { payment_params } = res.data;
-              wx.requestPayment({
-                ...payment_params,
-                success: () => {
-                  wx.showToast({ title: '支付成功，续费处理中', icon: 'success' });
-                  // 支付成功后等 webhook 回调更新状态
-                  setTimeout(() => { this.loadOrderDetail(); }, 2000);
-                },
-                fail: (err) => {
-                  if (err.errMsg && err.errMsg.includes('cancel')) {
-                    wx.showToast({ title: '已取消支付', icon: 'none' });
-                  } else {
-                    wx.showToast({ title: '支付失败，请重试', icon: 'none' });
-                  }
-                },
-              });
-            }).catch((err) => {
-              wx.hideLoading();
-              wx.showToast({ title: err?.message || '创建续费订单失败', icon: 'none' });
-            });
-          },
-        });
+        this._showRenewalConfirm(addedHours);
       },
     });
   },

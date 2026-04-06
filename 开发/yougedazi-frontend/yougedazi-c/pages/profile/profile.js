@@ -91,21 +91,7 @@ Page({
 
   // 显示客服选项
   showCustomerService() {
-    const config = require('../../config/backend-config.js');
-    wx.showActionSheet({
-      itemList: ['在线客服', `客服电话 ${config.customerService.phone}`],
-      success: (res) => {
-        if (res.tapIndex === 0) {
-          // 在线客服
-          wx.showToast({ title: '正在连接客服...', icon: 'none' });
-        } else if (res.tapIndex === 1) {
-          // 拨打电话
-          wx.makePhoneCall({
-            phoneNumber: config.customerService.phone
-          });
-        }
-      }
-    });
+    showCustomerServiceOptions();
   },
 
   // 设置

@@ -1,33 +1,11 @@
 // pages/index/index.js - 有个搭子首页
 const mockCompanions = require('../../mock-data/companions');
 const api = require('../../utils/api');
+const { debounce, throttle } = require('../../utils/helpers');
 
 const app = getApp();
 
-// 防抖函数：防止按钮被重复快速点击
-function debounce(func, wait) {
-  let timeout;
-  return function(...args) {
-    const context = this;
-    if (timeout) clearTimeout(timeout);
-    timeout = setTimeout(() => {
-      func.apply(context, args);
-    }, wait);
-  };
-}
 
-// 节流函数：限制函数执行频率
-function throttle(func, limit) {
-  let inThrottle;
-  return function(...args) {
-    const context = this;
-    if (!inThrottle) {
-      func.apply(context, args);
-      inThrottle = true;
-      setTimeout(() => inThrottle = false, limit);
-    }
-  };
-}
 
 Page({
   data: {

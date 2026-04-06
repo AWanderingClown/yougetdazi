@@ -14,13 +14,14 @@ const {
 } = require('../../utils/constants');
 const api = require('../../utils/api');
 const mockOrders = require('../../mock-data/orders');
+const { showCustomerServiceOptions } = require('../../utils/order-service');
 
 Page({
   data: {
     currentTab: 0,
     tabs: ['服务中', '已完成', '已取消'],
     expandedOrderId: null, // 当前展开的订单ID
-    serviceTimer: null, // 服务计时器
+    // serviceTimer 移到实例属性，避免不必要的视图更新
     remainingSeconds: 0, // 剩余秒数
     timerDisplay: '00:00:00', // 倒计时显示
     tabCounts: [0, 0, 0],
@@ -54,9 +55,9 @@ Page({
 
   onHide() {
     // 页面隐藏时停止计时器并收起展开状态
-    if (this.data.serviceTimer) {
-      clearInterval(this.data.serviceTimer);
-      this.setData({ serviceTimer: null });
+    if (this.serviceTimer) {
+      clearInterval(this.serviceTimer);
+      this.serviceTimer = null;
     }
     // 收起展开状态
     this.setData({ expandedOrderId: null });
@@ -64,17 +65,20 @@ Page({
 
   // 切换Tab
   onTabChange(e) {
+    // 防止重复请求
+    if (this.data.isLoading) return;
+
     // 切换Tab时停止计时器
-    if (this.data.serviceTimer) {
-      clearInterval(this.data.serviceTimer);
-      this.setData({ 
-        serviceTimer: null,
-        expandedOrderId: null 
-      });
+    if (this.serviceTimer) {
+      clearInterval(this.serviceTimer);
+      this.serviceTimer = null;
     }
-    
+
     const index = parseInt(e.currentTarget.dataset.index);
-    this.setData({ currentTab: index });
+    this.setData({
+      currentTab: index,
+      expandedOrderId: null
+    });
     this.loadOrders();
   },
 
@@ -368,9 +372,9 @@ Page({
     const isExpanding = this.data.expandedOrderId !== id;
     
     // 如果正在收起，先停止计时器
-    if (!isExpanding && this.data.serviceTimer) {
-      clearInterval(this.data.serviceTimer);
-      this.setData({ serviceTimer: null });
+    if (!isExpanding && this.serviceTimer) {
+      clearInterval(this.serviceTimer);
+      this.serviceTimer = null;
     }
     
     const expandedOrderId = isExpanding ? id : null;
@@ -379,7 +383,7 @@ Page({
     // 如果展开的是服务中订单，启动倒计时
     if (isExpanding) {
       const order = this.data.orders.find(o => o.id === id);
-      if (order && order.status === 'serving') {
+      if (order && order.status === ORDER_STATUS.SERVING) {
         this.startServiceTimer(order.id, order.duration, order.serviceStartTime);
       }
     }
@@ -388,8 +392,8 @@ Page({
   // 启动服务倒计时 - 显示剩余时间
   startServiceTimer(orderId, durationHours, serviceStartTime) {
     // 清除已有计时器
-    if (this.data.serviceTimer) {
-      clearInterval(this.data.serviceTimer);
+    if (this.serviceTimer) {
+      clearInterval(this.serviceTimer);
     }
     
     // 计算总秒数
@@ -430,8 +434,8 @@ Page({
       // 倒计时结束，自动完成订单
       if (remainingSeconds <= 0) {
         clearInterval(timer);
+        this.serviceTimer = null;
         this.setData({
-          serviceTimer: null,
           timerDisplay: '00:00:00'
         });
         this.autoCompleteOrder(orderId);
@@ -439,7 +443,7 @@ Page({
       }
     }, TIMER.UI_TICK_INTERVAL_MS);
     
-    this.setData({ serviceTimer: timer });
+    this.serviceTimer = timer;
   },
 
   // 显示续费提醒
@@ -480,7 +484,7 @@ Page({
         if (o.id === orderId) {
           return {
             ...o,
-            status: 'completed',
+            status: ORDER_STATUS.COMPLETED,
             statusText: '已完成',
             statusClass: 'status-success'
           };
@@ -519,8 +523,8 @@ Page({
 
   onUnload() {
     // 页面卸载时清除计时器
-    if (this.data.serviceTimer) {
-      clearInterval(this.data.serviceTimer);
+    if (this.serviceTimer) {
+      clearInterval(this.serviceTimer);
     }
   },
 
@@ -751,17 +755,7 @@ Page({
 
   // 联系客服（已完成订单专用）
   handleContactService(orderId) {
-    const config = require('../../config/backend-config.js');
-    wx.showActionSheet({
-      itemList: ['在线客服', `客服电话 ${config.customerService.phone}`],
-      success: (res) => {
-        if (res.tapIndex === 1) {
-          wx.makePhoneCall({
-            phoneNumber: config.customerService.phone
-          });
-        }
-      }
-    });
+    showCustomerServiceOptions(orderId);
   },
 
   // 换一换（重新发布悬赏或匹配新搭子）
