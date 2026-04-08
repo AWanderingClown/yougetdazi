@@ -481,6 +481,19 @@ App({
   // 模拟请求（开发阶段使用）
   _mockRequest(options) {
     console.log('[Mock] API请求:', options.url, options.method || 'GET');
+
+    const formatRemainingTime = (ms) => {
+      const hours = Math.floor(ms / 3600000);
+      const minutes = Math.floor((ms % 3600000) / 60000);
+      const seconds = Math.floor((ms % 60000) / 1000);
+      if (hours > 0) {
+        return `${hours}小时${minutes}分钟`;
+      } else if (minutes > 0) {
+        return `${minutes}分钟${seconds}秒`;
+      } else {
+        return `${seconds}秒`;
+      }
+    };
     
     return new Promise((resolve, reject) => {
       setTimeout(() => {
@@ -615,6 +628,100 @@ App({
                 cancelled_at: order.cancelled_at ? new Date(order.cancelled_at).toISOString() : null
               }
             });
+          } else {
+            resolve({ code: 404, message: '订单不存在' });
+          }
+          return;
+        }
+
+        // 获取支付倒计时 (GET /api/c/orders/:id/pay-countdown)
+        if (url.match(/\/api\/c\/orders\/[^\/]+\/pay-countdown$/) && (!options.method || options.method === 'GET')) {
+          const id = url.split('/').pop();
+          const order = mockOrders.orders.find(o => o.id === id);
+          if (order) {
+            if (order.status === 'pending_payment') {
+              const PAY_COUNTDOWN_SECONDS = 15 * 60;
+              const elapsed = Math.floor((Date.now() - order.created_at) / 1000);
+              const remaining = Math.max(0, PAY_COUNTDOWN_SECONDS - elapsed);
+              resolve({
+                code: 0,
+                data: { remaining_seconds: remaining }
+              });
+            } else {
+              resolve({ code: 0, data: { remaining_seconds: null } });
+            }
+          } else {
+            resolve({ code: 404, message: '订单不存在' });
+          }
+          return;
+        }
+
+        // 获取抢单倒计时 (GET /api/c/orders/:id/grab-countdown)
+        if (url.match(/\/api\/c\/orders\/[^\/]+\/grab-countdown$/) && (!options.method || options.method === 'GET')) {
+          const id = url.split('/').pop();
+          const order = mockOrders.orders.find(o => o.id === id);
+          if (order) {
+            if (order.status === 'waiting_grab') {
+              const GRAB_COUNTDOWN_SECONDS = 30 * 60;
+              const elapsed = Math.floor((Date.now() - order.created_at) / 1000);
+              const remaining = Math.max(0, GRAB_COUNTDOWN_SECONDS - elapsed);
+              resolve({
+                code: 0,
+                data: { remaining_seconds: remaining }
+              });
+            } else {
+              resolve({ code: 0, data: { remaining_seconds: null } });
+            }
+          } else {
+            resolve({ code: 404, message: '订单不存在' });
+          }
+          return;
+        }
+
+        // 获取服务状态 (GET /api/c/orders/:id/service-status)
+        if (url.match(/\/api\/c\/orders\/[^\/]+\/service-status$/) && (!options.method || options.method === 'GET')) {
+          const id = url.split('/').pop();
+          const order = mockOrders.orders.find(o => o.id === id);
+          if (order) {
+            if (order.status === 'serving') {
+              const SERVICE_DURATION_MS = (order.duration || 2) * 60 * 60 * 1000;
+              const elapsed = order.service_start_time ? Date.now() - order.service_start_time : 0;
+              const remaining = Math.max(0, SERVICE_DURATION_MS - elapsed);
+              const remainingSeconds = Math.floor(remaining / 1000);
+              const progressPercent = Math.min(100, Math.floor((elapsed / SERVICE_DURATION_MS) * 100));
+              resolve({
+                code: 0,
+                data: {
+                  remaining_seconds: remainingSeconds,
+                  progress_percent: progressPercent,
+                  remaining_text: formatRemainingTime(remaining),
+                  show_renewal_hint: remainingSeconds < 15 * 60,
+                  can_cancel_in_service: elapsed < 15 * 60 * 1000,
+                  elapsed_minutes: Math.floor(elapsed / 60000),
+                  is_completed: false
+                }
+              });
+            } else {
+              resolve({ code: 0, data: null });
+            }
+          } else {
+            resolve({ code: 404, message: '订单不存在' });
+          }
+          return;
+        }
+
+        // 获取取消是否免费 (GET /api/c/orders/:id/can-cancel-free)
+        if (url.match(/\/api\/c\/orders\/[^\/]+\/can-cancel-free$/) && (!options.method || options.method === 'GET')) {
+          const id = url.split('/').pop();
+          const order = mockOrders.orders.find(o => o.id === id);
+          if (order) {
+            if (order.status === 'accepted' && order.accepted_at) {
+              const elapsed = Date.now() - new Date(order.accepted_at).getTime();
+              const canCancelFree = elapsed < 2 * 60 * 1000;
+              resolve({ code: 0, data: { can_cancel_free: canCancelFree } });
+            } else {
+              resolve({ code: 0, data: { can_cancel_free: false } });
+            }
           } else {
             resolve({ code: 404, message: '订单不存在' });
           }
