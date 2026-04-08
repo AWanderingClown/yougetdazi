@@ -325,6 +325,7 @@ function getCancelledActions(status) {
 
 /**
  * 获取待接单状态的按钮配置
+ * 注意：定向任务和悬赏任务在待接单状态均无"换一换"
  * @param {string} status - 订单状态
  * @returns {Array|null} 按钮配置数组
  */
@@ -332,7 +333,7 @@ function getPendingAcceptActions(status) {
   if (status !== ORDER_STATUS.PENDING) {
     return null;
   }
-  return [BUTTONS.CHANGE, BUTTONS.CANCEL, BUTTONS.DETAIL];
+  return [BUTTONS.CANCEL, BUTTONS.DETAIL];
 }
 
 /**
@@ -349,14 +350,19 @@ function getWaitingGrabActions(status) {
 
 /**
  * 获取已接单状态的按钮配置
+ * 注意：赏金任务(runner)有"换一换"，定向任务(direct)无"换一换"
  * @param {string} status - 订单状态
+ * @param {string} orderType - 订单类型
  * @returns {Array|null} 按钮配置数组
  */
-function getAcceptedActions(status) {
+function getAcceptedActions(status, orderType) {
   if (status !== ORDER_STATUS.ACCEPTED) {
     return null;
   }
-  return [BUTTONS.CONTACT, BUTTONS.CHANGE, BUTTONS.CANCEL, BUTTONS.DETAIL];
+  if (orderType === ORDER_TYPE.REWARD) {
+    return [BUTTONS.CONTACT, BUTTONS.CHANGE, BUTTONS.CANCEL, BUTTONS.DETAIL];
+  }
+  return [BUTTONS.CONTACT, BUTTONS.CANCEL, BUTTONS.DETAIL];
 }
 
 /**

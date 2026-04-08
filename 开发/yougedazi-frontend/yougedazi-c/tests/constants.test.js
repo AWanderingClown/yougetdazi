@@ -140,9 +140,9 @@ describe('按钮配置函数（仅基于状态）', () => {
     expect(getPendingAcceptActions(null)).toBeNull();
   });
 
-  test('getPendingAcceptActions: 返回换一换、取消、详情按钮', () => {
+  test('getPendingAcceptActions: 返回取消、详情按钮（定向和悬赏任务均无换一换）', () => {
     const buttons = getPendingAcceptActions(ORDER_STATUS.PENDING);
-    expect(actions(buttons)).toEqual(['change', 'cancel', 'detail']);
+    expect(actions(buttons)).toEqual(['cancel', 'detail']);
   });
 
   test('getWaitingGrabActions: 非 waiting_grab 返回 null', () => {
@@ -160,9 +160,14 @@ describe('按钮配置函数（仅基于状态）', () => {
     expect(getAcceptedActions(null)).toBeNull();
   });
 
-  test('getAcceptedActions: 返回联系、换一换、取消、详情按钮', () => {
-    const buttons = getAcceptedActions(ORDER_STATUS.ACCEPTED);
-    expect(actions(buttons)).toEqual(['contact', 'change', 'cancel', 'detail']);
+  test('getAcceptedActions: 悬赏任务返回联系、换一换、取消、详情按钮', () => {
+    const buttons = getAcceptedActions(ORDER_STATUS.ACCEPTED, 'reward');
+    expect(actions(buttons)).toEqual(['chat', 'change', 'cancel', 'detail']);
+  });
+
+  test('getAcceptedActions: 定向任务返回联系、取消、详情按钮（无换一换）', () => {
+    const buttons = getAcceptedActions(ORDER_STATUS.ACCEPTED, 'direct');
+    expect(actions(buttons)).toEqual(['chat', 'cancel', 'detail']);
   });
 
   test('getDepartedActions: 非 departed 返回 null', () => {
@@ -172,7 +177,7 @@ describe('按钮配置函数（仅基于状态）', () => {
 
   test('getDepartedActions: 返回联系、取消、详情按钮', () => {
     const buttons = getDepartedActions(ORDER_STATUS.DEPARTED);
-    expect(actions(buttons)).toEqual(['contact', 'cancel', 'detail']);
+    expect(actions(buttons)).toEqual(['chat', 'cancel', 'detail']);
   });
 
   test('getServingActions: 非 serving 返回 null', () => {
@@ -182,7 +187,7 @@ describe('按钮配置函数（仅基于状态）', () => {
 
   test('getServingActions: 返回联系、取消、详情按钮', () => {
     const buttons = getServingActions(ORDER_STATUS.SERVING);
-    expect(actions(buttons)).toEqual(['contact', 'cancel', 'detail']);
+    expect(actions(buttons)).toEqual(['chat', 'cancel', 'detail']);
   });
 
   test('getCompletedActions: 非 completed 返回 null', () => {
