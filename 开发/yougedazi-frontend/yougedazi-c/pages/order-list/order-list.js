@@ -29,6 +29,9 @@ Page({
   },
 
   onLoad() {
+    // 初始化续费提醒标记
+    this._hasShownRenewalReminder = false;
+
     const savedTab = wx.getStorageSync('order_current_tab');
     if (savedTab !== '' && savedTab !== undefined && savedTab !== null) {
       this.setData({ currentTab: parseInt(savedTab) || 0 }, () => {
@@ -386,66 +389,62 @@ Page({
     if (isExpanding) {
       const order = this.data.orders.find(o => o.id === id);
       if (order && order.status === ORDER_STATUS.SERVING) {
-        this.startServiceTimer(order.id, order.duration, order.serviceStartTime);
+        this.startServiceTimer(order.id);
       }
     }
   },
 
-  // 启动服务倒计时 - 显示剩余时间
-  startServiceTimer(orderId, durationHours, serviceStartTime) {
+  // 启动服务倒计时 - 从后端获取剩余时间
+  startServiceTimer(orderId) {
     // 清除已有计时器
     if (this.serviceTimer) {
       clearInterval(this.serviceTimer);
     }
-    
-    // 计算总秒数
-    const totalSeconds = durationHours * 3600;
-    
-    // 如果传入了服务开始时间，计算实际剩余时间
-    let remainingSeconds;
-    if (serviceStartTime) {
-      const now = Date.now();
-      const elapsed = Math.floor((now - serviceStartTime) / 1000);
-      remainingSeconds = Math.max(0, totalSeconds - elapsed);
-    } else {
-      // 模拟已进行35%（用于测试）
-      const elapsedSeconds = Math.floor(totalSeconds * 0.35);
-      remainingSeconds = totalSeconds - elapsedSeconds;
-    }
-    
-    this.setData({ remainingSeconds });
-    this.updateTimerDisplay(remainingSeconds);
-    
-    // 标记是否已经显示过续费提醒
-    let hasShownRenewalReminder = false;
-    
+
+    // 初始获取剩余时间
+    this._fetchRemainingTime(orderId);
+
+    // 每10秒从后端同步剩余时间
     const timer = setInterval(() => {
-      remainingSeconds--;
-      
-      // 更新显示（倒计时）
-      this.setData({ remainingSeconds });
-      this.updateTimerDisplay(remainingSeconds);
-      
-      // 倒计时结束前10分钟提醒续费（使用<=防止跳过）
-      const RENEWAL_REMINDER_SECONDS = 10 * 60;
-      if (remainingSeconds <= RENEWAL_REMINDER_SECONDS && !hasShownRenewalReminder) {
-        hasShownRenewalReminder = true;
-        this.showRenewalReminder(orderId);
-      }
-      
-      // 倒计时结束，自动完成订单
-      if (remainingSeconds <= 0) {
-        clearInterval(timer);
-        this.serviceTimer = null;
-        this.setData({
-          timerDisplay: '00:00:00'
-        });
-        this.autoCompleteOrder(orderId);
-        return;
-      }
-    }, TIMER.UI_TICK_INTERVAL_MS);
-    
+      this._fetchRemainingTime(orderId);
+    }, TIMER.BACKEND_SYNC_INTERVAL_SEC * 1000);
+
     this.serviceTimer = timer;
+  },
+
+  // 从后端获取剩余时间
+  _fetchRemainingTime(orderId) {
+    const app = getApp();
+    app.request({ url: api.orders.timer(orderId) })
+      .then(res => {
+        const remainingSeconds = res?.data?.remaining_seconds;
+        if (remainingSeconds !== null && remainingSeconds !== undefined) {
+          this.setData({ remainingSeconds });
+          this.updateTimerDisplay(remainingSeconds);
+
+          // 倒计时结束前10分钟提醒续费
+          const RENEWAL_REMINDER_SECONDS = 10 * 60;
+          if (remainingSeconds <= RENEWAL_REMINDER_SECONDS && !this._hasShownRenewalReminder) {
+            this._hasShownRenewalReminder = true;
+            this.showRenewalReminder(orderId);
+          }
+
+          // 倒计时结束，自动完成订单
+          if (remainingSeconds <= 0) {
+            if (this.serviceTimer) {
+              clearInterval(this.serviceTimer);
+              this.serviceTimer = null;
+            }
+            this.setData({
+              timerDisplay: '00:00:00'
+            });
+            this.autoCompleteOrder(orderId);
+          }
+        }
+      })
+      .catch(() => {
+        // 获取失败时不更新，保持当前显示
+      });
   },
 
   // 显示续费提醒
@@ -648,12 +647,13 @@ Page({
       success: (res) => {
         if (res.confirm) {
           // 跳转到客服页面或拨打客服电话
-          const config = require('../../config/backend-config.js');
+          const app = getApp();
+          const phone = app.globalData.customerServicePhone;
           wx.showActionSheet({
-            itemList: ['在线客服', `客服电话 ${config.customerService.phone}`],
+            itemList: ['在线客服', `客服电话 ${phone}`],
             success: (sheetRes) => {
               if (sheetRes.tapIndex === 1) {
-                wx.makePhoneCall({ phoneNumber: config.customerService.phone });
+                wx.makePhoneCall({ phoneNumber: phone });
               } else {
                 wx.showToast({ title: '正在连接客服...', icon: 'none' });
               }
@@ -739,13 +739,14 @@ Page({
 
   // 联系客服
   handleContact(orderId) {
-    const config = require('../../config/backend-config.js');
+    const app = getApp();
+    const phone = app.globalData.customerServicePhone;
     wx.showActionSheet({
       itemList: ['在线客服', '客服电话'],
       success: (res) => {
         if (res.tapIndex === 1) {
           wx.makePhoneCall({
-            phoneNumber: config.customerService.phone
+            phoneNumber: phone
           });
         }
       }

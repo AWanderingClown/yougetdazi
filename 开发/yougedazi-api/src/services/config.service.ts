@@ -75,7 +75,92 @@ function isValidBusinessRules(value: unknown): value is BusinessRules {
   }
 }
 
+// 客服配置
+export interface CustomerServiceConfig {
+  phone: string
+  online: boolean
+}
+
+// 默认客服配置（当数据库无数据时使用）
+const DEFAULT_CUSTOMER_SERVICE: CustomerServiceConfig = {
+  phone: '400-888-8888',
+  online: true
+}
+
+// Redis缓存配置
+const CUSTOMER_SERVICE_CACHE_KEY = 'config:customer-service'
+const CUSTOMER_SERVICE_CACHE_TTL = 60 * 60  // 1小时
+
 export class ConfigService {
+  /**
+   * 获取客服配置（带缓存）
+   *
+   * 流程：
+   * 1. 先查Redis缓存（1小时TTL）
+   * 2. 缓存miss则查数据库
+   * 3. 数据库miss时返回默认值
+   */
+  async getCustomerService(): Promise<CustomerServiceConfig> {
+    try {
+      // 第1步：尝试从Redis缓存读取
+      const cached = await redis.get(CUSTOMER_SERVICE_CACHE_KEY)
+      if (cached) {
+        return JSON.parse(cached)
+      }
+    } catch (error) {
+      console.warn('[ConfigService] Redis缓存读取失败，使用数据库', error)
+    }
+
+    // 第2步：从数据库读取
+    try {
+      const config = await prisma.systemConfig.findUnique({
+        where: { key: 'c-customer-service' }
+      })
+
+      if (config?.value) {
+        const result = config.value as CustomerServiceConfig
+        // 第3步：写回缓存
+        try {
+          await redis.setex(CUSTOMER_SERVICE_CACHE_KEY, CUSTOMER_SERVICE_CACHE_TTL, JSON.stringify(result))
+        } catch (cacheError) {
+          console.warn('[ConfigService] Redis缓存写入失败', cacheError)
+        }
+        return result
+      }
+    } catch (error) {
+      console.warn('[ConfigService] 获取客服配置失败，使用默认值', error)
+    }
+
+    // 第4步：返回默认值
+    return DEFAULT_CUSTOMER_SERVICE
+  }
+
+  /**
+   * 更新客服配置
+   */
+  async updateCustomerService(config: CustomerServiceConfig, updatedBy?: string) {
+    await prisma.systemConfig.upsert({
+      where: { key: 'c-customer-service' },
+      update: {
+        value: config as Record<string, unknown>,
+        updated_by: updatedBy
+      },
+      create: {
+        key: 'c-customer-service',
+        value: config as Record<string, unknown>,
+        description: 'C端客服配置',
+        updated_by: updatedBy
+      }
+    })
+
+    // 清理缓存
+    try {
+      await redis.del(CUSTOMER_SERVICE_CACHE_KEY)
+    } catch (cacheError) {
+      console.warn('[ConfigService] Redis缓存清理失败', cacheError)
+    }
+  }
+
   /**
    * 获取C端业务规则（带缓存）
    *

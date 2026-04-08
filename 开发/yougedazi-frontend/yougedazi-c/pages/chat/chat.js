@@ -408,9 +408,9 @@ Page({
             }
             break;
           case 1:
-            const config = require('../../config/backend-config.js');
+            const app = getApp();
             wx.makePhoneCall({
-              phoneNumber: config.customerService.phone
+              phoneNumber: app.globalData.customerServicePhone
             });
             break;
           case 2:

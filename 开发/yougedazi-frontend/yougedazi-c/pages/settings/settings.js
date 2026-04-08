@@ -287,10 +287,11 @@ Page({
    * 关于我们
    */
   onAboutUs() {
-    const config = require('../../config/backend-config.js');
+    const app = getApp();
+    const phone = app.globalData.customerServicePhone;
     wx.showModal({
       title: '关于 有个搭子',
-      content: `版本：${this.data.version}\n\n有个搭子 是一款线下陪伴服务平台，致力于为用户提供安全、优质的陪伴体验。\n\n如有问题请联系客服：${config.customerService.phone}`,
+      content: `版本：${this.data.version}\n\n有个搭子 是一款线下陪伴服务平台，致力于为用户提供安全、优质的陪伴体验。\n\n如有问题请联系客服：${phone}`,
       showCancel: false,
       confirmText: '知道了'
     });

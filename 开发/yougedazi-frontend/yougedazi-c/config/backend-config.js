@@ -2,10 +2,6 @@
 module.exports = {
   mode: 'mock',  // 临时使用mock模式，后端域名未部署
   realBaseUrl: 'https://api.ppmate.com',
-  customerService: {
-    phone: '400-888-8888',
-    online: true
-  },
   api: {
     prefix: '/api/c',
     orders: '/api/c/orders',

@@ -67,7 +67,10 @@ App({
     // 离线期间积压的通知数（用于消息角标）
     pendingNotificationsCount: 0,
 
-    pendingOrderUpdates: {}
+    pendingOrderUpdates: {},
+
+    // 客服配置（从后端动态获取）
+    customerServicePhone: '400-888-8888'
   },
 
   onLaunch(options) {
@@ -83,6 +86,9 @@ App({
     configService.loadRules().catch(err => {
       console.warn('[App] 业务规则加载失败，使用本地默认值:', err.message);
     });
+
+    // 加载客服配置
+    this.loadCustomerServiceConfig();
 
     // 开发阶段：自动设置模拟登录状态
     if (this.globalData.useMockData) {
@@ -312,6 +318,24 @@ App({
     wx.removeTabBarBadge({
       index: 3
     });
+  },
+
+  // 加载客服配置（从后端获取）
+  loadCustomerServiceConfig() {
+    // mock模式下使用默认值
+    if (this.globalData.useMockData) {
+      return Promise.resolve();
+    }
+    
+    return this.request({ url: '/api/config/customer-service' })
+      .then(res => {
+        if (res.data && res.data.phone) {
+          this.globalData.customerServicePhone = res.data.phone;
+        }
+      })
+      .catch(err => {
+        console.warn('[App] 获取客服配置失败，使用默认值:', err.message);
+      });
   },
 
   // 拉取离线通知

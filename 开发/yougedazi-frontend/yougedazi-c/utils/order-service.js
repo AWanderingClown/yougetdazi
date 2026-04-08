@@ -96,15 +96,16 @@ function executeCancelOrder(orderId, onSuccess) {
  * @param {string} orderId - 订单ID（可选）
  */
 function showCustomerServiceOptions(orderId) {
-  const config = require('../config/backend-config.js');
-  const itemList = ['在线客服', `客服电话 ${config.customerService.phone}`];
+  const app = getApp();
+  const phone = app.globalData.customerServicePhone;
+  const itemList = ['在线客服', `客服电话 ${phone}`];
   
   wx.showActionSheet({
     itemList,
     success: (res) => {
       if (res.tapIndex === 1) {
         wx.makePhoneCall({ 
-          phoneNumber: config.customerService.phone 
+          phoneNumber: phone
         });
       } else {
         wx.showToast({ title: '正在连接客服...', icon: 'none' });

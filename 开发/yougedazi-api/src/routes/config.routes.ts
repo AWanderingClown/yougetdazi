@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { authenticate } from '../middleware/auth.js'
 import { authenticateAdmin } from '../middleware/admin-auth.js'
 import { configService, BusinessRulesSchema } from '../services/config.service.js'
+import type { CustomerServiceConfig } from '../services/config.service.js'
 import { ErrorCode } from '../types/index.js'
 
 /**
@@ -10,6 +11,38 @@ import { ErrorCode } from '../types/index.js'
  * 包括C端业务规则、地图Key等配置项
  */
 export default async function configRoutes(app: FastifyInstance) {
+  /**
+   * GET /api/config/customer-service
+   * 获取C端客服配置（动态）
+   *
+   * 功能：
+   * - 返回客服电话、是否在线等配置
+   * - C端启动时调用
+   * - 需要登陆认证
+   */
+  app.get(
+    '/api/config/customer-service',
+    { preHandler: [authenticate] },
+    async (_request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const config = await configService.getCustomerService()
+
+        return reply.send({
+          code: ErrorCode.SUCCESS,
+          message: 'ok',
+          data: config
+        })
+      } catch (error) {
+        app.log.error('获取客服配置失败', error)
+        return reply.status(500).send({
+          code: ErrorCode.INTERNAL_ERROR,
+          message: '获取配置失败',
+          errorKey: 'CONFIG_FETCH_FAILED'
+        })
+      }
+    }
+  )
+
   /**
    * GET /api/config/business-rules
    * 获取C端业务规则配置（动态）
