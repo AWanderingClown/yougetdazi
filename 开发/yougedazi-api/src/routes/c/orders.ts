@@ -333,6 +333,198 @@ export async function cOrderRoutes(app: FastifyInstance) {
   })
 
   /**
+   * GET /api/c/orders/:id/pay-countdown
+   * 获取订单支付倒计时
+   * 仅在 pending_payment 状态返回剩余秒数
+   */
+  app.get<{ Params: { id: string } }>('/api/c/orders/:id/pay-countdown', {
+    preHandler: [authenticate, requireUser],
+  }, async (request, reply) => {
+    const { id } = request.params
+    const userId = request.currentUser!.id
+
+    const order = await prisma.order.findUnique({
+      where: { id },
+      select: { user_id: true, status: true, created_at: true },
+    })
+    if (!order || order.user_id !== userId) {
+      return reply.status(404).send({
+        code:    ErrorCode.ORDER_NOT_FOUND,
+        message: '订单不存在',
+        errorKey: 'ORDER_NOT_FOUND',
+      })
+    }
+
+    if (order.status !== 'pending_payment') {
+      return reply.status(200).send({
+        code:    ErrorCode.SUCCESS,
+        message: 'ok',
+        data:    { remaining_seconds: null },
+      })
+    }
+
+    const PAYMENT_TIMEOUT_MS = 15 * 60 * 1000
+    const elapsed = Date.now() - new Date(order.created_at).getTime()
+    const remaining = Math.max(0, PAYMENT_TIMEOUT_MS - elapsed)
+
+    return reply.status(200).send({
+      code:    ErrorCode.SUCCESS,
+      message: 'ok',
+      data:    { remaining_seconds: Math.floor(remaining / 1000) },
+    })
+  })
+
+  /**
+   * GET /api/c/orders/:id/grab-countdown
+   * 获取悬赏订单抢单倒计时
+   * 仅在 waiting_grab 状态返回剩余秒数
+   */
+  app.get<{ Params: { id: string } }>('/api/c/orders/:id/grab-countdown', {
+    preHandler: [authenticate, requireUser],
+  }, async (request, reply) => {
+    const { id } = request.params
+    const userId = request.currentUser!.id
+
+    const order = await prisma.order.findUnique({
+      where: { id },
+      select: { user_id: true, status: true, created_at: true },
+    })
+    if (!order || order.user_id !== userId) {
+      return reply.status(404).send({
+        code:    ErrorCode.ORDER_NOT_FOUND,
+        message: '订单不存在',
+        errorKey: 'ORDER_NOT_FOUND',
+      })
+    }
+
+    if (order.status !== 'waiting_grab') {
+      return reply.status(200).send({
+        code:    ErrorCode.SUCCESS,
+        message: 'ok',
+        data:    { remaining_seconds: null },
+      })
+    }
+
+    const GRAB_TIMEOUT_MS = 30 * 60 * 1000
+    const elapsed = Date.now() - new Date(order.created_at).getTime()
+    const remaining = Math.max(0, GRAB_TIMEOUT_MS - elapsed)
+
+    return reply.status(200).send({
+      code:    ErrorCode.SUCCESS,
+      message: 'ok',
+      data:    { remaining_seconds: Math.floor(remaining / 1000) },
+    })
+  })
+
+  /**
+   * GET /api/c/orders/:id/service-status
+   * 获取服务状态和剩余时间
+   * 仅在 serving 状态返回详细信息
+   */
+  app.get<{ Params: { id: string } }>('/api/c/orders/:id/service-status', {
+    preHandler: [authenticate, requireUser],
+  }, async (request, reply) => {
+    const { id } = request.params
+    const userId = request.currentUser!.id
+
+    const order = await prisma.order.findUnique({
+      where: { id },
+      select: { user_id: true, status: true, duration: true, service_start_at: true },
+    })
+    if (!order || order.user_id !== userId) {
+      return reply.status(404).send({
+        code:    ErrorCode.ORDER_NOT_FOUND,
+        message: '订单不存在',
+        errorKey: 'ORDER_NOT_FOUND',
+      })
+    }
+
+    if (order.status !== 'serving') {
+      return reply.status(200).send({
+        code:    ErrorCode.SUCCESS,
+        message: 'ok',
+        data:    null,
+      })
+    }
+
+    const { remaining_seconds } = await orderService.getOrderTimer(id)
+    if (remaining_seconds === null) {
+      return reply.status(200).send({
+        code:    ErrorCode.SUCCESS,
+        message: 'ok',
+        data:    null,
+      })
+    }
+
+    const totalMs = order.duration * 60 * 60 * 1000
+    const elapsedMs = totalMs - remaining_seconds * 1000
+    const elapsedMinutes = Math.floor(elapsedMs / 60000)
+    const progressPercent = Math.min(100, Math.floor((elapsedMs / totalMs) * 100))
+
+    const remainingHours = Math.floor(remaining_seconds / 3600)
+    const remainingMinutes = Math.floor((remaining_seconds % 3600) / 60)
+    const remainingText = remainingHours > 0
+      ? `${remainingHours}:${String(remainingMinutes).padStart(2, '0')}:00`
+      : `${remainingMinutes}:${String(Math.floor(remaining_seconds % 60)).padStart(2, '0')}`
+
+    return reply.status(200).send({
+      code:    ErrorCode.SUCCESS,
+      message: 'ok',
+      data: {
+        remaining_seconds,
+        progress_percent: progressPercent,
+        remaining_text: remainingText,
+        show_renewal_hint: remaining_seconds < 15 * 60,
+        can_cancel_in_service: elapsedMinutes < 15,
+        elapsed_minutes: elapsedMinutes,
+        is_completed: remaining_seconds <= 0,
+      },
+    })
+  })
+
+  /**
+   * GET /api/c/orders/:id/can-cancel-free
+   * 获取订单是否可在2分钟内免费取消
+   * 仅在 accepted 状态返回判断结果
+   */
+  app.get<{ Params: { id: string } }>('/api/c/orders/:id/can-cancel-free', {
+    preHandler: [authenticate, requireUser],
+  }, async (request, reply) => {
+    const { id } = request.params
+    const userId = request.currentUser!.id
+
+    const order = await prisma.order.findUnique({
+      where: { id },
+      select: { user_id: true, status: true, accepted_at: true },
+    })
+    if (!order || order.user_id !== userId) {
+      return reply.status(404).send({
+        code:    ErrorCode.ORDER_NOT_FOUND,
+        message: '订单不存在',
+        errorKey: 'ORDER_NOT_FOUND',
+      })
+    }
+
+    if (order.status !== 'accepted' || !order.accepted_at) {
+      return reply.status(200).send({
+        code:    ErrorCode.SUCCESS,
+        message: 'ok',
+        data:    { can_cancel_free: false },
+      })
+    }
+
+    const CANCEL_FREE_PERIOD_MS = 2 * 60 * 1000
+    const elapsed = Date.now() - new Date(order.accepted_at).getTime()
+    const canCancelFree = elapsed < CANCEL_FREE_PERIOD_MS
+
+    return reply.status(200).send({
+      code:    ErrorCode.SUCCESS,
+      message: 'ok',
+      data:    { can_cancel_free: canCancelFree },
+    })
+  })
+
+  /**
    * POST /api/c/orders/:id/renew
    * C端续费（延长服务时长）
    * 
