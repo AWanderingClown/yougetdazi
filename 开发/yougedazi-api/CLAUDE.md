@@ -56,7 +56,7 @@
 
 **技术栈**：
 - Node.js 20 + Fastify 5
-- Prisma ORM 6
+- Prisma ORM 7 (with driverAdapters preview)
 - PostgreSQL 15
 - Redis 7
 

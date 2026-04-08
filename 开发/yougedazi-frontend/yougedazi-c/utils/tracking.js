@@ -4,6 +4,7 @@
  */
 
 const api = require('./api');
+const backendConfig = require('../config/backend-config.js');
 
 // 埋点配置
 const TRACKING_CONFIG = {
@@ -119,25 +120,32 @@ function trackPerformance(metric, value, params = {}) {
 function flush() {
   if (trackQueue.length === 0) return;
 
-  const data = [...trackQueue];
-  trackQueue = [];
+  // mock模式下跳过埋点上报
+  if (backendConfig.mode === 'mock') {
+    const data = [...trackQueue];
+    trackQueue = [];
+    console.log('[Tracking] Mock模式，跳过埋点上报，数据已丢弃:', data.length);
+    return;
+  }
 
   const app = getApp();
   if (!app || typeof app.request !== 'function') {
-    // App 尚未初始化完成，数据回滚等待下次上报
+    const data = [...trackQueue];
     trackQueue = [...data, ...trackQueue];
     return;
   }
-  
+
+  const data = [...trackQueue];
+  trackQueue = [];
+
   app.request({
     url: TRACKING_CONFIG.endpoint,
     method: 'POST',
     data: { events: data }
   }).catch(err => {
-    // 上报失败，数据回滚
+    const errMsg = err && err.message ? err.message : 'unknown error';
+    console.warn('[Tracking] 埋点上报失败:', errMsg);
     trackQueue = [...data, ...trackQueue];
-    const logger = require('./logger');
-    logger.error(logger.Categories.SYSTEM, '埋点上报失败', err);
   });
 }
 

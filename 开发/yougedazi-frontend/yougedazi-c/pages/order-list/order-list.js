@@ -4,7 +4,6 @@ const {
   CANCEL_RULE, 
   TIMER, 
   canCancelOrder, 
-  getOrderTimeStatus, 
   getPendingPaymentActions,
   getWaitingGrabActions,
   getAcceptedActions,
@@ -30,7 +29,14 @@ Page({
   },
 
   onLoad() {
-    this.loadOrders();
+    const savedTab = wx.getStorageSync('order_current_tab');
+    if (savedTab !== '' && savedTab !== undefined && savedTab !== null) {
+      this.setData({ currentTab: parseInt(savedTab) || 0 }, () => {
+        this.loadOrders();
+      });
+    } else {
+      this.loadOrders();
+    }
   },
 
   onShow() {
@@ -38,17 +44,14 @@ Page({
       this.getTabBar().setData({ selected: 1 });
     }
     
-    // 检查是否需要跳转到指定tab（仅在有明确标记时才切换）
     const defaultTab = wx.getStorageSync('order_default_tab');
     if (defaultTab !== '' && defaultTab !== undefined && defaultTab !== null) {
       this.setData({ currentTab: parseInt(defaultTab) || 0 }, () => {
-        // 在tab切换完成后刷新订单
         this.loadOrders();
       });
-      // 清除标记
       wx.removeStorageSync('order_default_tab');
+      wx.setStorageSync('order_current_tab', defaultTab);
     } else {
-      // 没有标记时，保持当前Tab并刷新订单
       this.loadOrders();
     }
   },
@@ -65,10 +68,8 @@ Page({
 
   // 切换Tab
   onTabChange(e) {
-    // 防止重复请求
     if (this.data.isLoading) return;
 
-    // 切换Tab时停止计时器
     if (this.serviceTimer) {
       clearInterval(this.serviceTimer);
       this.serviceTimer = null;
@@ -79,6 +80,7 @@ Page({
       currentTab: index,
       expandedOrderId: null
     });
+    wx.setStorageSync('order_current_tab', index);
     this.loadOrders();
   },
 
@@ -182,8 +184,8 @@ Page({
       let finalStatusClass = meta.cls;
 
       if (o.status === ORDER_STATUS.PENDING_PAYMENT) {
-        const timeStatus = getOrderTimeStatus(orderTime);
-        if (timeStatus.exceeded15Minutes) {
+        const timeStatus = o.time_status;
+        if (timeStatus && timeStatus.exceeded_15_minutes) {
           finalStatus = ORDER_STATUS.CANCELLED;
           finalStatusText = '已取消';
           finalStatusClass = 'status-secondary';
@@ -553,9 +555,6 @@ Page({
         break;
       case 'urge':
         this.handleUrge(orderid);
-        break;
-      case 'contact':
-        this.handleContact(orderid);
         break;
       case 'contact_service':
         this.handleContactService(orderid);

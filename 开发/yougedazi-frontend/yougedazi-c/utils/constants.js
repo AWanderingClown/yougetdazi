@@ -258,7 +258,7 @@ const BUTTONS = Object.freeze({
   PAY: Object.freeze({ text: '立即支付', action: 'pay', type: 'primary' }),
   CANCEL: Object.freeze({ text: '取消订单', action: 'cancel', type: 'default' }),
   DETAIL: Object.freeze({ text: '查看详情', action: 'detail', type: 'default' }),
-  CONTACT: Object.freeze({ text: '联系搭子', action: 'contact', type: 'primary' }),
+  CONTACT: Object.freeze({ text: '联系搭子', action: 'chat', type: 'primary' }),
   CHANGE: Object.freeze({ text: '换一换', action: 'change', type: 'default' }),
   REORDER: Object.freeze({ text: '再次下单', action: 'reorder', type: 'primary' }),
   CONTACT_SERVICE: Object.freeze({ text: '联系客服', action: 'contact_service', type: 'default' }),

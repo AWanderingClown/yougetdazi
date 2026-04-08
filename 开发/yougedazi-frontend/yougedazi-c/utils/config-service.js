@@ -51,6 +51,9 @@ class ConfigService {
 
     try {
       const app = getApp();
+      if (!app || typeof app.request !== 'function') {
+        throw new Error('App not initialized or request method unavailable');
+      }
       const res = await app.request({
         url: api.configApi.businessRules(),
         method: 'GET'
@@ -74,7 +77,8 @@ class ConfigService {
       }
     } catch (error) {
       this.error = error;
-      console.warn('[ConfigService] 获取业务规则失败，使用本地默认值:', error.message);
+      const errorMessage = error && error.message ? error.message : String(error || 'Unknown error');
+      console.warn('[ConfigService] 获取业务规则失败，使用本地默认值:', errorMessage);
     }
 
     // 标记已加载（无论成功或失败）

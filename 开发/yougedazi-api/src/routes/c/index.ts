@@ -4,6 +4,7 @@ import { cCompanionRoutes } from './dazis'
 import { cMessageRoutes } from './messages'
 import { cNotificationRoutes } from './notifications'
 import { cAnnouncementRoutes } from './announcements'
+import { cTrackingRoutes } from './tracking'
 
 /**
  * C端路由聚合入口
@@ -15,4 +16,5 @@ export async function cRoutes(app: FastifyInstance) {
   await app.register(cMessageRoutes)
   await app.register(cNotificationRoutes)
   await app.register(cAnnouncementRoutes)
+  await app.register(cTrackingRoutes)
 }

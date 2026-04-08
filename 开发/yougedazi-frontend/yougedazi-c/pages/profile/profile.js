@@ -1,4 +1,6 @@
 // pages/profile/profile.js - 个人中心
+const { showCustomerServiceOptions } = require('../../utils/order-service');
+
 Page({
   data: {
     userInfo: {
@@ -8,10 +10,9 @@ Page({
     },
     menuList: [
       { id: 1, name: '我的订单', icon: '📋', url: '/pages/order-list/order-list' },
-      { id: 2, name: '地址管理', icon: '📍', url: '/pages/address/address' },
-      { id: 3, name: '我的收藏', icon: '💜', url: '/pages/index/index' },
-      { id: 4, name: '客服中心', icon: '💬', url: '' },
-      { id: 5, name: '设置', icon: '⚙️', url: '/pages/settings/settings' }
+      { id: 2, name: '我的收藏', icon: '💜', url: '/pages/index/index' },
+      { id: 3, name: '客服中心', icon: '💬', url: '' },
+      { id: 4, name: '设置', icon: '⚙️', url: '/pages/settings/settings' }
     ]
   },
 
@@ -61,26 +62,19 @@ Page({
         });
         break;
         
-      case 2: // 地址管理
-        // 跳转到地址管理页
-        wx.navigateTo({
-          url: '/pages/address/address'
-        });
-        break;
-        
-      case 3: // 我的收藏
+      case 2: // 我的收藏
         // 跳转到首页
         wx.switchTab({
           url: '/pages/index/index'
         });
         break;
         
-      case 4: // 客服中心
+      case 3: // 客服中心
         // 弹出客服选项
         this.showCustomerService();
         break;
         
-      case 5: // 设置
+      case 4: // 设置
         wx.navigateTo({ url });
         break;
         

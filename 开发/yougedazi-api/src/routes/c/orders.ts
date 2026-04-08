@@ -164,11 +164,27 @@ export async function cOrderRoutes(app: FastifyInstance) {
       }),
     ])
 
+    const FIFTEEN_MIN_MS = 15 * 60 * 1000
+
+    const ordersWithTimeStatus = orders.map(order => {
+      const timeStatus = {
+        exceeded_15_minutes: false
+      }
+      if (order.status === 'pending_payment') {
+        const elapsed = Date.now() - new Date(order.created_at).getTime()
+        timeStatus.exceeded_15_minutes = elapsed > FIFTEEN_MIN_MS
+      }
+      return {
+        ...order,
+        time_status: timeStatus
+      }
+    })
+
     return reply.status(200).send({
       code:    ErrorCode.SUCCESS,
       message: 'ok',
       data: {
-        list:      orders,
+        list:      ordersWithTimeStatus,
         total,
         page,
         page_size,

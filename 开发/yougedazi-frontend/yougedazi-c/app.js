@@ -708,6 +708,15 @@ App({
           return;
         }
 
+        // 埋点上报 (POST /api/c/track)
+        if (url === '/api/c/track' && options.method === 'POST') {
+          resolve({
+            code: 0,
+            data: { count: (options.data && options.data.events) ? options.data.events.length : 0 }
+          });
+          return;
+        }
+
         // 默认返回空数据
         resolve({
           code: 0,
