@@ -66,7 +66,7 @@
       />
     </view>
     <!-- 图片发送入口 -->
-    <view class="image-btn" bindtap="sendImage">📷</view>
+    <view class="image-btn" bindtap="sendImage">[图片]</view>
     <view class="send-btn {{inputValue ? 'active' : ''}}" bindtap="sendMessage">
       <text>发送</text>
     </view>

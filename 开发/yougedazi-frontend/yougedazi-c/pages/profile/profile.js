@@ -9,10 +9,10 @@ Page({
       phone: '138****8888'
     },
     menuList: [
-      { id: 1, name: '我的订单', icon: '📋', url: '/pages/order-list/order-list' },
-      { id: 2, name: '我的收藏', icon: '💜', url: '/pages/index/index' },
-      { id: 3, name: '客服中心', icon: '💬', url: '' },
-      { id: 4, name: '设置', icon: '⚙️', url: '/pages/settings/settings' }
+      { id: 1, name: '我的订单', icon: '○', url: '/pages/order-list/order-list' },
+      { id: 2, name: '我的收藏', icon: '❤', url: '/pages/index/index' },
+      { id: 3, name: '客服中心', icon: '◎', url: '' },
+      { id: 4, name: '设置', icon: '⚙', url: '/pages/settings/settings' }
     ]
   },
 

@@ -160,7 +160,7 @@
                   <text class="quick-text">催一催</text>
                 </view>
                 <view class="quick-btn" catchtap="onActionTap" data-orderid="{{item.id}}" data-action="contact_service">
-                  <text class="quick-icon">📞</text>
+                  <text class="quick-icon">☎</text>
                   <text class="quick-text">联系客服</text>
                 </view>
               </view>
@@ -220,7 +220,7 @@
 
     <!-- 空状态 -->
     <view class="empty-state" wx:if="{{orders.length === 0 && !isLoading}}">
-      <text class="empty-emoji">📭</text>
+      <text class="empty-emoji">📬</text>
       <text class="empty-text">暂无{{tabs[currentTab]}}订单</text>
       <text class="empty-subtext">去首页看看有什么好玩的~</text>
       <view class="empty-btn" bindtap="goToHome">去逛逛</view>

@@ -27,14 +27,14 @@ Page({
     orderType: 'normal',
 
     statusConfig: {
-      pending_payment: { title: '待支付', desc: '请在15分钟内完成支付', icon: '⏳', bgColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
-      pending_accept: { title: '待接单', desc: '正在为您匹配合适的搭子', icon: '🔄', bgColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
-      waiting_grab: { title: '等待抢单', desc: '悬赏已发布，等待搭子抢单', icon: '📢', bgColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
-      accepted: { title: '搭子正在赶来', desc: '搭子已接单，正在前往服务地点', icon: '🚗', bgColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
-      departed: { title: '搭子已出发', desc: '搭子正在前往服务地点，请耐心等待', icon: '🚗', bgColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
-      serving: { title: '服务进行中', desc: '搭子正在为您提供服务', icon: '✨', bgColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
-      completed: { title: '已完成', desc: '订单已完成，感谢使用', icon: '🎉', bgColor: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)' },
-      cancelled: { title: '已取消', desc: '订单已取消', icon: '❌', bgColor: 'linear-gradient(135deg, #A8D8FF 0%, #D4A5FF 100%)' }
+      pending_payment: { title: '待支付', desc: '请在15分钟内完成支付', icon: '⏱', bgColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
+      pending_accept: { title: '待接单', desc: '正在为您匹配合适的搭子', icon: '↻', bgColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
+      waiting_grab: { title: '等待抢单', desc: '悬赏已发布，等待搭子抢单', icon: '📣', bgColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
+      accepted: { title: '搭子正在赶来', desc: '搭子已接单，正在前往服务地点', icon: '→', bgColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
+      departed: { title: '搭子已出发', desc: '搭子正在前往服务地点，请耐心等待', icon: '→', bgColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
+      serving: { title: '服务进行中', desc: '搭子正在为您提供服务', icon: '★', bgColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
+      completed: { title: '已完成', desc: '订单已完成，感谢使用', icon: '✔', bgColor: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)' },
+      cancelled: { title: '已取消', desc: '订单已取消', icon: '✘', bgColor: 'linear-gradient(135deg, #A8D8FF 0%, #D4A5FF 100%)' }
     },
 
     payCountdown: '29:59',

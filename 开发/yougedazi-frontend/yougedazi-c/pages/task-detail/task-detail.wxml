@@ -53,7 +53,7 @@
   <!-- 底部操作区 -->
   <view class="bottom-section" wx:if="{{!isLoading && taskInfo}}">
     <view class="tips">
-      <text class="tips-icon">💡</text>
+      <text class="tips-icon">提示</text>
       <text class="tips-text">此任务需要搭子身份才能抢单</text>
     </view>
     
@@ -65,7 +65,7 @@
 
   <!-- 错误状态 -->
   <view class="error-state" wx:if="{{!isLoading && !taskInfo}}">
-    <text class="error-icon">⚠️</text>
+    <text class="error-icon">⚠</text>
     <text class="error-text">任务不存在或已过期</text>
     <button class="btn-secondary" bindtap="onGoHome">返回首页</button>
   </view>

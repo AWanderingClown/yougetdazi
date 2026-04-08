@@ -88,14 +88,14 @@ function extractOrderInfo(order, acceptedLog, paidRecord) {
 function generateTimeLine(order, formatTimeFn) {
   const timeLine = [];
   const statusMap = {
-    [ORDER_STATUS.PENDING_PAYMENT]: { text: '订单创建', icon: '📝' },
-    'paid': { text: '支付成功', icon: '💰' },
-    [ORDER_STATUS.PENDING_ACCEPT]: { text: '等待接单', icon: '⏳' },
-    [ORDER_STATUS.ACCEPTED]: { text: '搭子已接单', icon: '✅' },
-    [ORDER_STATUS.DEPARTED]: { text: '搭子已出发', icon: '🚗' },
-    [ORDER_STATUS.SERVING]: { text: '服务进行中', icon: '✨' },
-    [ORDER_STATUS.COMPLETED]: { text: '订单完成', icon: '🎉' },
-    [ORDER_STATUS.CANCELLED]: { text: '订单已取消', icon: '❌' }
+    [ORDER_STATUS.PENDING_PAYMENT]: { text: '订单创建', icon: '📄' },
+    'paid': { text: '支付成功', icon: '￥' },
+    [ORDER_STATUS.PENDING_ACCEPT]: { text: '等待接单', icon: '⏱' },
+    [ORDER_STATUS.ACCEPTED]: { text: '搭子已接单', icon: '✔' },
+    [ORDER_STATUS.DEPARTED]: { text: '搭子已出发', icon: '→' },
+    [ORDER_STATUS.SERVING]: { text: '服务进行中', icon: '★' },
+    [ORDER_STATUS.COMPLETED]: { text: '订单完成', icon: '✔' },
+    [ORDER_STATUS.CANCELLED]: { text: '订单已取消', icon: '✘' }
   };
 
   // 根据订单状态和时间生成时间轴
@@ -103,7 +103,7 @@ function generateTimeLine(order, formatTimeFn) {
     timeLine.push({
       status: 'created',
       text: '订单创建',
-      icon: '📝',
+      icon: '📄',
       time: formatTimeFn(order.created_at),
       isActive: true
     });
@@ -115,7 +115,7 @@ function generateTimeLine(order, formatTimeFn) {
       timeLine.push({
         status: 'paid',
         text: '支付成功',
-        icon: '💰',
+        icon: '￥',
         time: formatTimeFn(paidRecord.pay_time),
         isActive: true
       });

@@ -58,7 +58,7 @@
           <text class="age">{{companionInfo.age}}岁</text>
         </view>
         <view class="location-row">
-          <text class="location-icon">📍</text>
+          <text class="location-icon">⌖</text>
           <text>{{companionInfo.location}} · {{companionInfo.distance}}</text>
         </view>
       </view>

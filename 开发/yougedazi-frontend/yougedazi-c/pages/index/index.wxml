@@ -17,7 +17,7 @@
     
     <!-- 正常搜索框 -->
     <view class="search-box" bindtap="onSearchTap" wx:if="{{!isSearching}}">
-      <text class="search-icon">🔍</text>
+      <text class="search-icon">⊙</text>
       <text class="search-placeholder">搜索搭子名称或服务类型</text>
     </view>
     
@@ -105,7 +105,7 @@
         
         <!-- 第三行：位置距离 -->
         <view class="location-row">
-          <text class="location-icon">📍</text>
+          <text class="location-icon">⌖</text>
           <text class="distance">{{item.location || '厦门市'}} · 距离您{{item.distance}}</text>
         </view>
       </view>
@@ -122,7 +122,7 @@
     <!-- 错误状态 -->
     <view class="error-state" wx:if="{{isError}}">
       <view class="error-icon">
-        <text>⚠️</text>
+        <text>⚠</text>
       </view>
       <text class="error-message">{{errorMessage}}</text>
       <view class="retry-btn" bindtap="onRetryLoad">

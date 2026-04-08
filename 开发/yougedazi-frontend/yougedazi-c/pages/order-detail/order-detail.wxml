@@ -41,7 +41,7 @@
         </view>
       </view>
       <view class="distance-box" wx:if="{{companionInfo.distance}}">
-        <text class="distance-icon">📍</text>
+        <text class="distance-icon">⌖</text>
         <text class="distance-text">{{companionInfo.distance}}km</text>
       </view>
     </view>
