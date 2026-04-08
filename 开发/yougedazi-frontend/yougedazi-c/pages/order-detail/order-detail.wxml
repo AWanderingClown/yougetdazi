@@ -25,7 +25,7 @@
   </view>
 
   <!-- 搭子信息卡片 -->
-  <view class="companion-card" wx:if="{{status !== 'pending_payment' && status !== 'pending' && status !== 'waiting_grab' && status !== 'cancelled'}}">
+  <view class="companion-card" wx:if="{{status === 'accepted' || status === 'departed' || status === 'serving'}}">
     <view class="companion-header">
       <image class="companion-avatar" src="{{companionInfo.avatar}}" mode="aspectFill"/>
       <view class="companion-info">
@@ -46,15 +46,15 @@
       </view>
     </view>
     
-    <!-- 预计到达时间（已接单状态显示） -->
-    <view class="arrival-info" wx:if="{{status === 'accepted'}}">
+    <!-- 预计到达时间（已接单、搭子已出发状态显示） -->
+    <view class="arrival-info" wx:if="{{status === 'accepted' || status === 'departed'}}">
       <text class="arrival-label">预计到达</text>
       <text class="arrival-time">{{companionInfo.estimatedArrival}}</text>
     </view>
   </view>
 
-  <!-- 地图区域（已接单、服务中状态显示） -->
-  <view class="map-section" wx:if="{{status === 'accepted' || status === 'serving'}}">
+  <!-- 地图区域（已接单、搭子已出发、服务中状态显示） -->
+  <view class="map-section" wx:if="{{status === 'accepted' || status === 'departed' || status === 'serving'}}">
     <map 
       id="orderMap"
       class="order-map"
@@ -83,7 +83,7 @@
       </view>
 
       <!-- 实时位置信息 -->
-      <view class="map-info-box" wx:if="{{status === 'accepted'}}">
+      <view class="map-info-box" wx:if="{{status === 'accepted' || status === 'departed'}}">
         <view class="info-item" wx:if="{{distanceToCompanion > 0}}">
           <text class="info-label">距离您</text>
           <text class="info-value">{{distanceToCompanionText || distanceToCompanion + '米'}}</text>
@@ -98,7 +98,7 @@
         </view>
       </view>
 
-      <view class="arrival-badge" wx:if="{{status === 'accepted'}}">
+      <view class="arrival-badge" wx:if="{{status === 'accepted' || status === 'departed'}}">
         <text class="arrival-badge-text">搭子正在赶来</text>
       </view>
     </view>
