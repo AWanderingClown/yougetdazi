@@ -24,7 +24,6 @@
       data-url="{{item.url}}"
       data-name="{{item.name}}"
     >
-      <text class="menu-icon">{{item.icon}}</text>
       <text class="menu-name">{{item.name}}</text>
       <text class="menu-arrow">›</text>
     </view>
