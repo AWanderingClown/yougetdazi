@@ -17,7 +17,7 @@
     
     <!-- 正常搜索框 -->
     <view class="search-box" bindtap="onSearchTap" wx:if="{{!isSearching}}">
-      <text class="search-icon">⊙</text>
+      <text class="search-icon"></text>
       <text class="search-placeholder">搜索搭子名称或服务类型</text>
     </view>
     
@@ -84,7 +84,6 @@
       <!-- 左侧头像 -->
       <view class="avatar-section">
         <image class="companion-avatar" src="{{item.avatar}}" mode="aspectFill"></image>
-        <view class="online-status {{item.isOnline ? 'online' : 'offline'}}"></view>
       </view>
       
       <!-- 中间信息 -->
@@ -105,7 +104,7 @@
         
         <!-- 第三行：位置距离 -->
         <view class="location-row">
-          <text class="location-icon">⌖</text>
+          <text class="location-icon"></text>
           <text class="distance">{{item.location || '厦门市'}} · 距离您{{item.distance}}</text>
         </view>
       </view>

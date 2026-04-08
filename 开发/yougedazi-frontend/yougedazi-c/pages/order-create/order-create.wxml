@@ -76,7 +76,7 @@
     </view>
     <view class="address-selector" bindtap="onSelectAddress">
       <view class="address-display">
-        <text class="address-icon">⌖</text>
+        <text class="address-icon"></text>
         <text class="address-text" wx:if="{{selectedAddress}}">{{selectedAddress}}</text>
         <text class="address-placeholder" wx:else>请选择您的位置</text>
       </view>
