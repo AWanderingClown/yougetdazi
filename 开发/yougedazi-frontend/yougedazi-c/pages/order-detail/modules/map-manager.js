@@ -146,8 +146,6 @@ class MapManager {
 
       if (onLocationUpdate) onLocationUpdate();
     }, LBS.UPDATE_INTERVAL);
-
-    this.page.setData({ companionLocationRefreshTimer: this.locationRefreshTimer });
   }
 
   /**
