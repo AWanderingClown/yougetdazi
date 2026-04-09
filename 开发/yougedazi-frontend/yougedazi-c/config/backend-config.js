@@ -1,7 +1,7 @@
 // config/backend-config.js - 后端配置
 module.exports = {
-  mode: 'mock',  // 临时使用mock模式，后端域名未部署
-  realBaseUrl: 'https://api.ppmate.com',
+  mode: 'mixed',  // 混合模式：部分API走真实后端
+  realBaseUrl: 'http://192.168.10.4:3000',
   api: {
     prefix: '/api/c',
     orders: '/api/c/orders',
