@@ -52,20 +52,20 @@ function buildCompanionWhereClause(params: z.infer<typeof CompanionListQuerySche
 }
 
 /**
- * 构建排序条件
+ * 构建排序条件（SQL片段，用于原生查询）
  */
-function buildOrderBy(sortBy: string) {
+function buildOrderByClause(sortBy: string): string {
   switch (sortBy) {
     case 'rating':
-      return [{ rating: 'desc' as const }, { total_orders: 'desc' as const }]
+      return 'c.rating DESC, c.total_orders DESC'
     case 'orders':
-      return [{ total_orders: 'desc' as const }, { rating: 'desc' as const }]
+      return 'c.total_orders DESC, c.rating DESC'
     case 'price_asc':
-      return [{ services: { _min: { hourly_price: 'asc' as const } } }]
+      return '(SELECT MIN(cs.hourly_price) FROM companion_services cs WHERE cs.companion_id = c.id AND cs.is_active = true) ASC'
     case 'price_desc':
-      return [{ services: { _min: { hourly_price: 'desc' as const } } }]
+      return '(SELECT MAX(cs.hourly_price) FROM companion_services cs WHERE cs.companion_id = c.id AND cs.is_active = true) DESC'
     default:
-      return [{ rating: 'desc' as const }, { total_orders: 'desc' as const }]
+      return 'c.rating DESC, c.total_orders DESC'
   }
 }
 
@@ -97,44 +97,128 @@ export async function cCompanionRoutes(app: FastifyInstance) {
 
     const params = parseResult.data
     const skip = (params.page - 1) * params.page_size
+    const userId = request.currentUser!.id
 
     try {
-      const where = buildCompanionWhereClause(params)
+      // 构建排序子句
+      const orderByClause = buildOrderByClause(params.sort_by)
 
-      // 并行查询列表和总数
-      const [companions, total] = await Promise.all([
-        prisma.companion.findMany({
-          where,
-          select: {
-            id: true,
-            nickname: true,
-            avatar: true,
-            gender: true,
-            phone: true,
-            is_online: true,
-            is_working: true,
-            total_orders: true,
-            rating: true,
-            deposit_level: true,
-            services: {
-              where: { is_active: true },
-              select: {
-                id: true,
-                service_name: true,
-                hourly_price: true,
-                description: true,
-              },
-            },
-          },
-          orderBy: buildOrderBy(params.sort_by),
-          skip,
-          take: params.page_size,
-        }),
-        prisma.companion.count({ where }),
-      ])
+      // 构建筛选条件
+      const whereConditions: string[] = [`c.audit_status = 'approved'`]
+      const queryParams: unknown[] = []
+      let paramIndex = 1
+
+      if (params.is_online !== undefined) {
+        whereConditions.push(`c.is_online = $${paramIndex++}`)
+        queryParams.push(params.is_online === 'true')
+      }
+
+      if (params.service_id) {
+        whereConditions.push(` EXISTS (SELECT 1 FROM companion_services cs WHERE cs.companion_id = c.id AND cs.is_active = true AND cs.id = $${paramIndex++})`)
+        queryParams.push(params.service_id)
+      }
+
+      if (params.min_price !== undefined) {
+        whereConditions.push(` EXISTS (SELECT 1 FROM companion_services cs WHERE cs.companion_id = c.id AND cs.is_active = true AND cs.hourly_price >= $${paramIndex++})`)
+        queryParams.push(params.min_price)
+      }
+
+      if (params.max_price !== undefined) {
+        whereConditions.push(` EXISTS (SELECT 1 FROM companion_services cs WHERE cs.companion_id = c.id AND cs.is_active = true AND cs.hourly_price <= $${paramIndex++})`)
+        queryParams.push(params.max_price)
+      }
+
+      // 构建 WHERE 条件（直接拼接简单条件，userId 用参数化）
+      const conditions: string[] = [`c.audit_status = 'approved'`]
+      const paramsList: unknown[] = [userId]
+
+      if (params.is_online !== undefined) {
+        conditions.push(`c.is_online = $${paramsList.length + 1}`)
+        paramsList.push(params.is_online === 'true')
+      }
+
+      if (params.service_id) {
+        conditions.push(`EXISTS (SELECT 1 FROM companion_services cs WHERE cs.companion_id = c.id AND cs.is_active = true AND cs.id = $${paramsList.length + 1})`)
+        paramsList.push(params.service_id)
+      }
+
+      if (params.min_price !== undefined) {
+        conditions.push(`EXISTS (SELECT 1 FROM companion_services cs WHERE cs.companion_id = c.id AND cs.is_active = true AND cs.hourly_price >= $${paramsList.length + 1})`)
+        paramsList.push(params.min_price)
+      }
+
+      if (params.max_price !== undefined) {
+        conditions.push(`EXISTS (SELECT 1 FROM companion_services cs WHERE cs.companion_id = c.id AND cs.is_active = true AND cs.hourly_price <= $${paramsList.length + 1})`)
+        paramsList.push(params.max_price)
+      }
+
+      const whereStr = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
+
+      // 列表查询
+      const listQuery = `
+        SELECT 
+          c.id, c.nickname, c.avatar, c.gender, c.phone,
+          c.is_online, c.is_working, c.total_orders, c.rating, c.deposit_level,
+          (cl.id IS NOT NULL) as is_liked
+        FROM companions c
+        LEFT JOIN companion_likes cl ON c.id = cl.companion_id AND cl.user_id = $1
+        ${whereStr}
+        ORDER BY is_liked DESC, ${orderByClause}
+        LIMIT $${paramsList.length + 1} OFFSET $${paramsList.length + 2}
+      `
+      paramsList.push(params.page_size, skip)
+
+      const companionsRaw = await prisma.$queryRawUnsafe<Array<{
+        id: string
+        nickname: string
+        avatar: string | null
+        gender: number
+        phone: string | null
+        is_online: boolean
+        is_working: boolean
+        total_orders: number
+        rating: number
+        deposit_level: number
+        is_liked: boolean
+      }>>(listQuery, ...paramsList)
+
+      // COUNT 查询
+      const countQuery = `
+        SELECT COUNT(*) as count
+        FROM companions c
+        LEFT JOIN companion_likes cl ON c.id = cl.companion_id AND cl.user_id = $1
+        ${whereStr}
+      `
+      const countParams = paramsList.slice(0, -2)
+      const total = await prisma.$queryRawUnsafe<Array<{ count: bigint }>>(countQuery, ...countParams)
+
+      // 查询服务详情
+      const companionIds = companionsRaw.map(c => c.id)
+      const servicesRaw = await prisma.companionService.findMany({
+        where: {
+          companion_id: { in: companionIds },
+          is_active: true,
+        },
+        select: {
+          id: true,
+          companion_id: true,
+          service_name: true,
+          hourly_price: true,
+          description: true,
+        },
+      })
+
+      // 按 companion_id 分组服务
+      const servicesMap = new Map<string, typeof servicesRaw>()
+      for (const service of servicesRaw) {
+        if (!servicesMap.has(service.companion_id)) {
+          servicesMap.set(service.companion_id, [])
+        }
+        servicesMap.get(service.companion_id)!.push(service)
+      }
 
       // 格式化响应数据
-      const formattedList = companions.map(companion => ({
+      const formattedList = companionsRaw.map(companion => ({
         id: companion.id,
         nickname: companion.nickname,
         avatar: companion.avatar,
@@ -145,7 +229,8 @@ export async function cCompanionRoutes(app: FastifyInstance) {
         total_orders: companion.total_orders,
         rating: companion.rating,
         deposit_level: companion.deposit_level,
-        services: companion.services.map(service => ({
+        is_liked: companion.is_liked,
+        services: (servicesMap.get(companion.id) || []).map(service => ({
           service_id: service.id,
           name: service.service_name,
           hourly_price: service.hourly_price,
@@ -158,10 +243,10 @@ export async function cCompanionRoutes(app: FastifyInstance) {
         message: 'ok',
         data: {
           list: formattedList,
-          total,
+          total: Number(total[0]?.count || 0),
           page: params.page,
           page_size: params.page_size,
-          has_more: skip + companions.length < total,
+          has_more: skip + companionsRaw.length < Number(total[0]?.count || 0),
         },
       })
     } catch (err) {
@@ -279,6 +364,151 @@ export async function cCompanionRoutes(app: FastifyInstance) {
         code: ErrorCode.INTERNAL_ERROR,
         message: '服务器内部错误',
         errorKey: 'INTERNAL_ERROR',
+      })
+    }
+  })
+
+  /**
+   * POST /api/c/companions/:id/like
+   * 心动/收藏搭子
+   */
+  app.post<{ Params: { id: string } }>('/api/c/companions/:id/like', {
+    preHandler: [authenticate, requireUser],
+  }, async (request, reply) => {
+    const { id: companionId } = request.params
+    const userId = request.currentUser!.id
+
+    try {
+      const companion = await prisma.companion.findUnique({
+        where: { id: companionId, audit_status: 'approved' },
+        select: { id: true },
+      })
+
+      if (!companion) {
+        return reply.status(404).send({
+          code: ErrorCode.NOT_FOUND,
+          message: '陪玩师不存在或未通过审核',
+        })
+      }
+
+      const existing = await prisma.companionLike.findUnique({
+        where: { user_id_companion_id: { user_id: userId, companion_id: companionId } },
+      })
+
+      if (existing) {
+        return reply.status(400).send({
+          code: ErrorCode.VALIDATION_ERROR,
+          message: '已心动过该搭子',
+        })
+      }
+
+      await prisma.companionLike.create({
+        data: { user_id: userId, companion_id: companionId },
+      })
+
+      return reply.status(201).send({
+        code: ErrorCode.SUCCESS,
+        message: '心动成功',
+      })
+    } catch (err) {
+      app.log.error(err, '心动失败')
+      return reply.status(500).send({
+        code: ErrorCode.INTERNAL_ERROR,
+        message: '服务器内部错误',
+      })
+    }
+  })
+
+  /**
+   * DELETE /api/c/companions/:id/like
+   * 取消心动
+   */
+  app.delete<{ Params: { id: string } }>('/api/c/companions/:id/like', {
+    preHandler: [authenticate, requireUser],
+  }, async (request, reply) => {
+    const { id: companionId } = request.params
+    const userId = request.currentUser!.id
+
+    try {
+      const existing = await prisma.companionLike.findUnique({
+        where: { user_id_companion_id: { user_id: userId, companion_id: companionId } },
+      })
+
+      if (!existing) {
+        return reply.status(404).send({
+          code: ErrorCode.NOT_FOUND,
+          message: '未心动过该搭子',
+        })
+      }
+
+      await prisma.companionLike.delete({
+        where: { id: existing.id },
+      })
+
+      return reply.status(200).send({
+        code: ErrorCode.SUCCESS,
+        message: '已取消心动',
+      })
+    } catch (err) {
+      app.log.error(err, '取消心动失败')
+      return reply.status(500).send({
+        code: ErrorCode.INTERNAL_ERROR,
+        message: '服务器内部错误',
+      })
+    }
+  })
+
+  /**
+   * GET /api/c/likes
+   * 获取心动列表（用于展示和排序）
+   */
+  app.get('/api/c/likes', {
+    preHandler: [authenticate, requireUser],
+  }, async (request, reply) => {
+    const userId = request.currentUser!.id
+
+    try {
+      const likes = await prisma.companionLike.findMany({
+        where: { user_id: userId },
+        orderBy: { created_at: 'desc' },
+        select: {
+          companion_id: true,
+          created_at: true,
+          companion: {
+            select: {
+              id: true,
+              nickname: true,
+              avatar: true,
+              gender: true,
+              is_online: true,
+              rating: true,
+              total_orders: true,
+            },
+          },
+        },
+      })
+
+      const list = likes.map(like => ({
+        companion_id: like.companion_id,
+        liked_at: like.created_at,
+        nickname: like.companion.nickname,
+        avatar: like.companion.avatar,
+        gender: like.companion.gender === 1 ? 'male' : like.companion.gender === 2 ? 'female' : 'unknown',
+        is_online: like.companion.is_online,
+        rating: like.companion.rating,
+        total_orders: like.companion.total_orders,
+      }))
+
+      return reply.status(200).send({
+        code: ErrorCode.SUCCESS,
+        message: 'ok',
+        data: { list, total: list.length },
+      })
+    } catch (err) {
+      app.log.error(err, '获取心动列表失败')
+      return reply.status(500).send({
+        code: ErrorCode.INTERNAL_ERROR,
+        message: '服务器内部错误',
       })
     }
   })

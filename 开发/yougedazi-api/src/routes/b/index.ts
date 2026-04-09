@@ -5,6 +5,7 @@ import { bEarningsRoutes } from './earnings'
 import { bNotificationRoutes } from './notifications'
 import { bProfileRoutes } from './profile'
 import { bWithdrawalRoutes } from './withdrawal'
+import { bMessageRoutes } from './messages'
 
 /**
  * B端路由聚合入口
@@ -17,4 +18,5 @@ export async function bRoutes(app: FastifyInstance) {
   await app.register(bNotificationRoutes)
   await app.register(bProfileRoutes)
   await app.register(bWithdrawalRoutes)
+  await app.register(bMessageRoutes)
 }

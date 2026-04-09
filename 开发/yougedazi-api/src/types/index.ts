@@ -167,6 +167,7 @@ export const ErrorCode = {
   // 消息
   MESSAGE_SEND_FAILED:     50010,
   SESSION_NOT_FOUND:       40410,
+  REPLY_BLOCKED:           40305,
   
   // 通知
   NOTIFICATION_NOT_FOUND:  40420,

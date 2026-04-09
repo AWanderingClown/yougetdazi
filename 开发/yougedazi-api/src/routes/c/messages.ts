@@ -255,6 +255,38 @@ export async function cMessageRoutes(app: FastifyInstance) {
         })
       }
 
+      // 心动权限拦截：心动过的搭子，需有订单才能发送消息
+      const like = await prisma.companionLike.findUnique({
+        where: {
+          user_id_companion_id: {
+            user_id:      userId,
+            companion_id: companion_id,
+          },
+        },
+      })
+
+      if (like) {
+        // 检查是否有有效订单
+        const validOrder = await prisma.order.findFirst({
+          where: {
+            user_id:      userId,
+            companion_id: companion_id,
+            status: {
+              in: ['pending_accept', 'accepted', 'preparing', 'departed', 'serving'],
+            },
+          },
+          select: { id: true },
+        })
+
+        if (!validOrder) {
+          return reply.status(403).send({
+            code:     ErrorCode.REPLY_BLOCKED,
+            message:  '您需要下单后才能联系搭子',
+            errorKey: 'REPLY_BLOCKED',
+          })
+        }
+      }
+
       // 使用事务确保数据一致性
       const result = await prisma.$transaction(async (tx) => {
         // 查找或创建会话
