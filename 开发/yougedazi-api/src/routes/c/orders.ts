@@ -1005,18 +1005,25 @@ export async function cOrderRoutes(app: FastifyInstance) {
 
       const excludeCompanionId = order.companion_id
 
-      const availableCompanions = await prisma.companion.findMany({
-        where: {
-          audit_status: 'approved',
-          is_online:    true,
-          id: excludeCompanionId ? { not: excludeCompanionId } : undefined,
-          companion_services: {
-            some: {
-              id:    order.service_id || undefined,
-              status: 'active',
-            },
-          },
+      const serviceFilter = {
+        some: {
+          status: 'active' as const,
+          ...(order.service_id ? { id: order.service_id } : {}),
         },
+      }
+
+      const companionWhere: Parameters<typeof prisma.companion.findMany>[0]['where'] = {
+        audit_status: 'approved',
+        is_online:    true,
+        companion_services: serviceFilter,
+      }
+
+      if (excludeCompanionId) {
+        companionWhere.id = { not: excludeCompanionId }
+      }
+
+      const availableCompanions = await prisma.companion.findMany({
+        where: companionWhere,
         select: {
           id:       true,
           nickname: true,
@@ -1034,7 +1041,7 @@ export async function cOrderRoutes(app: FastifyInstance) {
         })
       }
 
-      const randomIndex = Math.floor(Math.random() * availableCompanions.length)
+      const randomIndex = crypto.randomInt(0, availableCompanions.length)
       const newCompanion = availableCompanions[randomIndex]
 
       const updatedOrder = await prisma.order.update({

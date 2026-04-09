@@ -3,10 +3,18 @@ import { z } from 'zod'
 import { authenticate, requireUser } from '../../middleware/auth'
 import { ErrorCode } from '../../types/index'
 import { prisma } from '../../lib/prisma'
-import { createReadStream, createWriteStream } from 'fs'
-import { mkdir, writeFile } from 'fs/promises'
+import { createWriteStream } from 'fs'
+import { mkdir } from 'fs/promises'
 import { join } from 'path'
 import { pipeline } from 'stream/promises'
+
+const MAX_AVATAR_SIZE = 2 * 1024 * 1024
+
+const ALLOWED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+
+const AvatarUrlSchema = z.object({
+  avatar_url: z.string().url({ message: '无效的 URL 格式' }),
+})
 
 const UpdateProfileSchema = z.object({
   nickname: z.string().min(1).max(32).optional(),
@@ -100,7 +108,7 @@ export async function cProfileRoutes(app: FastifyInstance) {
   /**
    * POST /api/c/profile/avatar
    * 上传头像（支持URL或文件上传）
-   * 
+   *
    * 方式1: URL方式 - body: { avatar_url: "https://..." }
    * 方式2: 文件上传 - multipart/form-data with file field "avatar"
    */
@@ -112,25 +120,20 @@ export async function cProfileRoutes(app: FastifyInstance) {
     const contentType = request.headers['content-type'] || ''
 
     if (contentType.includes('application/json')) {
-      const body = request.body as { avatar_url?: string }
-      if (!body.avatar_url) {
+      const parseResult = AvatarUrlSchema.safeParse(request.body)
+      if (!parseResult.success) {
         return reply.status(400).send({
-          code:    ErrorCode.VALIDATION_ERROR,
-          message: '缺少 avatar_url 参数',
+          code:     ErrorCode.VALIDATION_ERROR,
+          message:  '参数校验失败',
+          details:  parseResult.error.flatten(),
         })
       }
 
-      const urlParse = z.string().url().safeParse(body.avatar_url)
-      if (!urlParse.success) {
-        return reply.status(400).send({
-          code:    ErrorCode.VALIDATION_ERROR,
-          message: '无效的 URL 格式',
-        })
-      }
+      const { avatar_url } = parseResult.data
 
       const user = await prisma.user.update({
         where: { id: userId },
-        data: { avatar: body.avatar_url },
+        data: { avatar: avatar_url },
         select: { id: true, avatar: true },
       })
 
@@ -150,13 +153,53 @@ export async function cProfileRoutes(app: FastifyInstance) {
         })
       }
 
-      const ext = file.mimetype.split('/')[1] || 'jpg'
-      const filename = `${userId}_${Date.now()}.${ext}`
-      const uploadDir = join(process.cwd(), 'uploads', 'avatars')
-      const filepath = join(uploadDir, filename)
+      const mimeTypeWithoutParams = file.mimetype.split(';')[0].trim()
+      if (!ALLOWED_AVATAR_TYPES.includes(mimeTypeWithoutParams)) {
+        return reply.status(400).send({
+          code:    ErrorCode.VALIDATION_ERROR,
+          message: '不支持的图片格式，仅支持 jpg、png、gif、webp',
+        })
+      }
 
-      await mkdir(uploadDir, { recursive: true })
-      await pipeline(file.file, createWriteStream(filepath))
+      const extMap: Record<string, string> = {
+        'image/jpeg': 'jpg',
+        'image/png':  'png',
+        'image/gif':  'gif',
+        'image/webp': 'webp',
+      }
+      const ext = extMap[mimeTypeWithoutParams] || 'jpg'
+
+      const timestamp = Date.now()
+      const filename = `${userId}_${timestamp}.${ext}`
+      const uploadPath = join(process.cwd(), 'uploads', 'avatars', filename)
+      let totalSize = 0
+
+      try {
+        await new Promise<void>((resolve, reject) => {
+          const writeStream = createWriteStream(uploadPath)
+          const onData = (chunk: Buffer) => {
+            totalSize += chunk.length
+            if (totalSize > MAX_AVATAR_SIZE) {
+              writeStream.destroy()
+              file.file.removeListener('data', onData)
+              reject(new Error('FILE_TOO_LARGE'))
+            }
+          }
+          file.file.on('data', onData)
+          pipeline(file.file, writeStream)
+            .then(() => resolve())
+            .catch((err) => reject(err))
+        })
+      } catch (err: unknown) {
+        const error = err as { message?: string }
+        if (error.message === 'FILE_TOO_LARGE') {
+          return reply.status(400).send({
+            code:    ErrorCode.VALIDATION_ERROR,
+            message: '图片大小不能超过 2MB',
+          })
+        }
+        throw err
+      }
 
       const avatarUrl = `/uploads/avatars/${filename}`
       await prisma.user.update({

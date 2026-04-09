@@ -1,8 +1,28 @@
 import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { authenticateAdmin, requireAdminRole } from '../../middleware/admin-auth'
+import { authenticateAdmin } from '../../middleware/admin-auth'
 import { ErrorCode } from '../../types/index'
 import { prisma } from '../../lib/prisma'
+
+const safeDateString = (dateStr: string | undefined): Date | null => {
+  if (!dateStr) return null
+  const date = new Date(dateStr)
+  return isNaN(date.getTime()) ? null : date
+}
+
+const escapeHtml = (str: string): string => {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+}
+
+const AnnouncementListQuerySchema = z.object({
+  page:      z.coerce.number().int().min(1).default(1),
+  page_size: z.coerce.number().int().min(1).max(100).default(20),
+})
 
 const CreateCompanionAnnouncementSchema = z.object({
   title:         z.string().min(2).max(100),
@@ -25,18 +45,41 @@ const CreateUserAnnouncementSchema = z.object({
 export async function adminAnnouncementRoutes(app: FastifyInstance) {
   /**
    * GET /api/admin/announcements/companion
-   * B端公告列表
+   * B端公告列表（分页）
    */
   app.get('/api/admin/announcements/companion', {
     preHandler: [authenticateAdmin],
-  }, async (_request, reply) => {
-    const announcements = await prisma.announcement.findMany({
-      orderBy: { created_at: 'desc' },
-    })
+  }, async (request, reply) => {
+    const parseResult = AnnouncementListQuerySchema.safeParse(request.query)
+    if (!parseResult.success) {
+      return reply.status(400).send({
+        code:    ErrorCode.VALIDATION_ERROR,
+        message: '参数校验失败',
+      })
+    }
+
+    const { page, page_size } = parseResult.data
+    const skip = (page - 1) * page_size
+
+    const [announcements, total] = await Promise.all([
+      prisma.announcement.findMany({
+        orderBy: { created_at: 'desc' },
+        skip,
+        take: page_size,
+      }),
+      prisma.announcement.count(),
+    ])
+
     return reply.status(200).send({
       code:    ErrorCode.SUCCESS,
       message: 'ok',
-      data:    announcements,
+      data: {
+        list:      announcements,
+        total,
+        page,
+        page_size,
+        has_more:  skip + announcements.length < total,
+      },
     })
   })
 
@@ -57,14 +100,30 @@ export async function adminAnnouncementRoutes(app: FastifyInstance) {
     }
 
     const data = parseResult.data
+    const publishedAt = safeDateString(data.published_at)
+    const expiresAt = safeDateString(data.expires_at)
+
+    if (data.published_at && publishedAt === null) {
+      return reply.status(400).send({
+        code:    ErrorCode.VALIDATION_ERROR,
+        message: '发布时间格式无效',
+      })
+    }
+    if (data.expires_at && expiresAt === null) {
+      return reply.status(400).send({
+        code:    ErrorCode.VALIDATION_ERROR,
+        message: '过期时间格式无效',
+      })
+    }
+
     const announcement = await prisma.announcement.create({
       data: {
-        title:         data.title,
-        content:       data.content,
+        title:          escapeHtml(data.title),
+        content:        escapeHtml(data.content),
         target_audience: 'companion',
         is_active:     data.is_active,
-        published_at:  data.published_at ? new Date(data.published_at) : new Date(),
-        expires_at:    data.expires_at ? new Date(data.expires_at) : null,
+        published_at:  publishedAt ?? new Date(),
+        expires_at:    expiresAt,
         sort_order:    data.sort_order,
       },
     })
@@ -93,18 +152,41 @@ export async function adminAnnouncementRoutes(app: FastifyInstance) {
 
   /**
    * GET /api/admin/announcements/user
-   * C端公告列表
+   * C端公告列表（分页）
    */
   app.get('/api/admin/announcements/user', {
     preHandler: [authenticateAdmin],
-  }, async (_request, reply) => {
-    const announcements = await prisma.userAnnouncement.findMany({
-      orderBy: { created_at: 'desc' },
-    })
+  }, async (request, reply) => {
+    const parseResult = AnnouncementListQuerySchema.safeParse(request.query)
+    if (!parseResult.success) {
+      return reply.status(400).send({
+        code:    ErrorCode.VALIDATION_ERROR,
+        message: '参数校验失败',
+      })
+    }
+
+    const { page, page_size } = parseResult.data
+    const skip = (page - 1) * page_size
+
+    const [announcements, total] = await Promise.all([
+      prisma.userAnnouncement.findMany({
+        orderBy: { created_at: 'desc' },
+        skip,
+        take: page_size,
+      }),
+      prisma.userAnnouncement.count(),
+    ])
+
     return reply.status(200).send({
       code:    ErrorCode.SUCCESS,
       message: 'ok',
-      data:    announcements,
+      data: {
+        list:      announcements,
+        total,
+        page,
+        page_size,
+        has_more:  skip + announcements.length < total,
+      },
     })
   })
 
@@ -125,13 +207,29 @@ export async function adminAnnouncementRoutes(app: FastifyInstance) {
     }
 
     const data = parseResult.data
+    const publishedAt = safeDateString(data.published_at)
+    const expiresAt = safeDateString(data.expires_at)
+
+    if (data.published_at && publishedAt === null) {
+      return reply.status(400).send({
+        code:    ErrorCode.VALIDATION_ERROR,
+        message: '发布时间格式无效',
+      })
+    }
+    if (data.expires_at && expiresAt === null) {
+      return reply.status(400).send({
+        code:    ErrorCode.VALIDATION_ERROR,
+        message: '过期时间格式无效',
+      })
+    }
+
     const announcement = await prisma.userAnnouncement.create({
       data: {
-        title:        data.title,
-        content:      data.content,
+        title:        escapeHtml(data.title),
+        content:      escapeHtml(data.content),
         is_active:    data.is_active,
-        published_at: data.published_at ? new Date(data.published_at) : new Date(),
-        expires_at:   data.expires_at ? new Date(data.expires_at) : null,
+        published_at: publishedAt ?? new Date(),
+        expires_at:   expiresAt,
         sort_order:   data.sort_order,
       },
     })
