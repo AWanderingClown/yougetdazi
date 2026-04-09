@@ -937,4 +937,154 @@ export async function cOrderRoutes(app: FastifyInstance) {
       })
     }
   })
+
+  /**
+   * POST /api/c/orders/:id/switch-companion
+   * 换一换 - 为悬赏单重新分配搭子
+   * 
+   * 适用条件：
+   * - 悬赏单（order_type = 'reward'）
+   * - 当前状态为 waiting_grab（等待抢单）
+   * 
+   * 业务逻辑：
+   * 1. 如果已有待接单的搭子，先释放该搭子
+   * 2. 从匹配池获取新的搭子
+   * 3. 分配新搭子给订单
+   * 4. 发送WebSocket通知
+   */
+  app.post<{ Params: { id: string } }>('/api/c/orders/:id/switch-companion', {
+    preHandler: [authenticate, requireUser],
+  }, async (request, reply) => {
+    const { id } = request.params
+    const userId = request.currentUser!.id
+
+    try {
+      const order = await prisma.order.findUnique({
+        where: { id },
+        select: {
+          id:          true,
+          user_id:     true,
+          companion_id: true,
+          order_type:  true,
+          status:      true,
+          service_id:  true,
+        },
+      })
+
+      if (!order) {
+        return reply.status(404).send({
+          code:     ErrorCode.ORDER_NOT_FOUND,
+          message:  '订单不存在',
+          errorKey: 'ORDER_NOT_FOUND',
+        })
+      }
+
+      if (order.user_id !== userId) {
+        return reply.status(403).send({
+          code:     ErrorCode.FORBIDDEN,
+          message:  '无权操作此订单',
+          errorKey: 'FORBIDDEN',
+        })
+      }
+
+      if (order.order_type !== 'reward') {
+        return reply.status(400).send({
+          code:     ErrorCode.VALIDATION_ERROR,
+          message:  '只有悬赏单支持换一换',
+          errorKey: 'INVALID_ORDER_TYPE',
+        })
+      }
+
+      if (order.status !== 'waiting_grab') {
+        return reply.status(400).send({
+          code:     ErrorCode.VALIDATION_ERROR,
+          message:  '当前状态不支持换一换',
+          errorKey: 'INVALID_ORDER_STATUS',
+        })
+      }
+
+      const excludeCompanionId = order.companion_id
+
+      const availableCompanions = await prisma.companion.findMany({
+        where: {
+          audit_status: 'approved',
+          is_online:    true,
+          id: excludeCompanionId ? { not: excludeCompanionId } : undefined,
+          companion_services: {
+            some: {
+              id:    order.service_id || undefined,
+              status: 'active',
+            },
+          },
+        },
+        select: {
+          id:       true,
+          nickname: true,
+          avatar:   true,
+          rating:   true,
+        },
+        orderBy: { rating: 'desc' },
+        take:    10,
+      })
+
+      if (availableCompanions.length === 0) {
+        return reply.status(400).send({
+          code:    ErrorCode.ORDER_CANNOT_MATCH,
+          message: '暂无可用搭子，请稍后再试',
+        })
+      }
+
+      const randomIndex = Math.floor(Math.random() * availableCompanions.length)
+      const newCompanion = availableCompanions[randomIndex]
+
+      const updatedOrder = await prisma.order.update({
+        where: { id },
+        data: {
+          companion_id: newCompanion.id,
+          accepted_at: null,
+        },
+        select: {
+          id:          true,
+          companion_id: true,
+          status:      true,
+          companion: {
+            select: {
+              id:       true,
+              nickname: true,
+              avatar:   true,
+            },
+          },
+        },
+      })
+
+      if (excludeCompanionId) {
+        dispatchPushEvents(
+          [{ companionId: excludeCompanionId, event: PUSH_EVENTS.ORDER_CANCELLED, orderId: id }],
+          'system'
+        )
+      }
+
+      dispatchPushEvents(
+        [{ companionId: newCompanion.id, event: PUSH_EVENTS.NEW_ORDER, orderId: id }],
+        'companion'
+      )
+
+      return reply.status(200).send({
+        code:    ErrorCode.SUCCESS,
+        message: '换一换成功',
+        data:    {
+          order_id:      updatedOrder.id,
+          companion_id: updatedOrder.companion_id,
+          companion:     updatedOrder.companion,
+        },
+      })
+    } catch (err: unknown) {
+      app.log.error(err, '换一换失败')
+      return reply.status(500).send({
+        code:     ErrorCode.INTERNAL_ERROR,
+        message:  '服务器内部错误',
+        errorKey: 'INTERNAL_ERROR',
+      })
+    }
+  })
 }

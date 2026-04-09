@@ -5,6 +5,7 @@ import { adminUserRoutes } from './users'
 import { adminStatsRoutes } from './stats'
 import { adminFinanceRoutes } from './finance'
 import { configRoutes } from './config'
+import { adminAnnouncementRoutes } from './announcements'
 
 /**
  * Admin 路由聚合入口
@@ -18,4 +19,5 @@ export async function adminRoutes(app: FastifyInstance) {
   await app.register(adminStatsRoutes)
   await app.register(adminFinanceRoutes)
   await app.register(configRoutes)
+  await app.register(adminAnnouncementRoutes)
 }

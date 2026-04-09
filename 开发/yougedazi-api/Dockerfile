@@ -6,7 +6,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # 生产依赖（不安装 devDependencies）
-RUN npm ci --only=production
+RUN npm install --omit=dev
 
 # 复制构建产物和 Prisma 文件
 COPY dist/ ./dist/

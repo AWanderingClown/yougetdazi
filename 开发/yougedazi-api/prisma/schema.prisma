@@ -19,7 +19,6 @@ enum OrderStatus {
   pending_accept   // 待接单（15min 超时全额退款）
   waiting_grab     // 等待抢单（悬赏单专用）
   accepted         // 已接单
-  preparing        // 准备中（出发前）
   departed         // 已出发（路上）
   serving          // 服务中（Redis 倒计时权威）
   completed        // 已完成（终态）
@@ -260,6 +259,7 @@ model Order {
   // 时间节点
   payment_deadline  DateTime?  @db.Timestamptz   // 支付截止时间（30min）
   accept_deadline   DateTime?  @db.Timestamptz   // 接单截止时间（15min）
+  accepted_at       DateTime?  @db.Timestamptz   // 接单时间
   service_start_at  DateTime?  @db.Timestamptz   // 服务开始时间
   service_end_at    DateTime?  @db.Timestamptz   // 服务结束时间（预计）
   completed_at      DateTime?  @db.Timestamptz   // 实际完成时间
@@ -595,14 +595,14 @@ model AdminOperationLog {
 }
 
 // ============================================================
-// 公告
+// B端公告（陪玩师公告）
 // ============================================================
 
 model Announcement {
   id              String   @id @default(uuid())
   title           String
   content         String
-  target_audience NotificationTarget   @default(all)     // all / user / companion
+  target_audience NotificationTarget   @default(all)     // all / companion (C端用user_announcements)
   is_active       Boolean  @default(true)
   published_at    DateTime? @db.Timestamptz
   expires_at      DateTime? @db.Timestamptz
@@ -613,6 +613,26 @@ model Announcement {
 
   @@index([target_audience, is_active, published_at])
   @@map("announcements")
+}
+
+// ============================================================
+// C端公告（用户公告）- 分表独立
+// ============================================================
+
+model UserAnnouncement {
+  id          String   @id @default(uuid())
+  title       String
+  content     String
+  is_active   Boolean  @default(true)
+  published_at DateTime? @db.Timestamptz
+  expires_at  DateTime? @db.Timestamptz
+  sort_order  Int      @default(0)
+
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @updatedAt @db.Timestamptz
+
+  @@index([is_active, published_at])
+  @@map("user_announcements")
 }
 
 // ============================================================
