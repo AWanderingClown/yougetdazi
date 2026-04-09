@@ -177,7 +177,7 @@ Page({
       price: c.services && c.services.length > 0 ? c.services[0].price : 0,
       rating: c.rating || 0,
       totalOrders: c.total_orders || 0,
-      isLiked: false,
+      isLiked: c.is_liked || false,
       location: c.city || '',
       distance: c.distance ? c.distance.toFixed(1) + 'km' : '',
       distanceValue: c.distance || 0

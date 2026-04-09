@@ -252,6 +252,15 @@ Page({
       const logger = require('../../utils/logger');
       logger.error(logger.Categories.NETWORK, '消息发送失败', err);
       
+      if (err.errorKey === 'REPLY_BLOCKED') {
+        wx.showToast({
+          title: '您需要下单后才能联系搭子',
+          icon: 'none',
+          duration: 3000
+        });
+        return;
+      }
+      
       if (retryCount < MAX_RETRY) {
         // 自动重试
         this.updateMessageStatus(message.id, MESSAGE_STATUS.SENDING, retryCount + 1);
