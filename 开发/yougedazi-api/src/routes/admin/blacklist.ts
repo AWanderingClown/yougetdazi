@@ -4,15 +4,13 @@ import { authenticateAdmin } from '../../middleware/admin-auth'
 import { ErrorCode } from '../../types/index'
 import { prisma } from '../../lib/prisma'
 
-// ============================================================
-// Admin 黑名单管理路由
-// ============================================================
-
 export async function adminBlacklistRoutes(app: FastifyInstance) {
   /**
    * GET /api/admin/blacklist
-   * 黑名单列表（已禁用用户）
+   * 黑名单列表（已禁用用户，只读视图）
    * 权限：所有角色可查
+   *
+   * 说明：用户禁用/解禁请使用 /api/admin/users/:id/ban 和 /api/admin/users/:id/unban
    */
   app.get('/api/admin/blacklist', {
     preHandler: [authenticateAdmin],
@@ -72,159 +70,4 @@ export async function adminBlacklistRoutes(app: FastifyInstance) {
       },
     })
   })
-
-  /**
-   * POST /api/admin/blacklist
-   * 添加黑名单（禁用用户）
-   * 权限：operator 及以上
-   */
-  app.post<{ Body: { user_id: string; ban_reason: string } }>('/api/admin/blacklist', {
-    preHandler: [authenticateAdmin],
-  }, async (request, reply) => {
-    const parseResult = z.object({
-      user_id: z.string().uuid(),
-      ban_reason: z.string().max(500),
-    }).safeParse(request.body)
-
-    if (!parseResult.success) {
-      return reply.status(400).send({
-        code: ErrorCode.VALIDATION_ERROR,
-        message: '参数校验失败',
-      })
-    }
-
-    const { user_id, ban_reason } = parseResult.data
-
-    // 检查用户是否存在
-    const user = await prisma.user.findUnique({ where: { id: user_id } })
-    if (!user) {
-      return reply.status(404).send({
-        code: ErrorCode.NOT_FOUND,
-        message: '用户不存在',
-      })
-    }
-
-    // 禁用用户
-    const updated = await prisma.user.update({
-      where: { id: user_id },
-      data: {
-        status: 'banned',
-        ban_reason,
-        banned_at: new Date(),
-        banned_by: request.currentAdmin?.id,
-      },
-      select: {
-        id: true,
-        nickname: true,
-        status: true,
-        ban_reason: true,
-        banned_at: true,
-      },
-    })
-
-    return reply.status(200).send({
-      code: ErrorCode.SUCCESS,
-      message: '用户已禁用',
-      data: updated,
-    })
-  })
-
-  /**
-   * DELETE /api/admin/blacklist/:user_id
-   * 移出黑名单（解禁用户）
-   * 权限：operator 及以上
-   */
-  app.delete<{ Params: { user_id: string } }>('/api/admin/blacklist/:user_id', {
-    preHandler: [authenticateAdmin],
-  }, async (request, reply) => {
-    const { user_id } = request.params
-
-    // 检查用户是否存在
-    const user = await prisma.user.findUnique({ where: { id: user_id } })
-    if (!user) {
-      return reply.status(404).send({
-        code: ErrorCode.NOT_FOUND,
-        message: '用户不存在',
-      })
-    }
-
-    // 解禁用户
-    const updated = await prisma.user.update({
-      where: { id: user_id },
-      data: {
-        status: 'active',
-        ban_reason: null,
-        banned_at: null,
-        banned_by: null,
-      },
-      select: {
-        id: true,
-        nickname: true,
-        status: true,
-        banned_at: true,
-      },
-    })
-
-    return reply.status(200).send({
-      code: ErrorCode.SUCCESS,
-      message: '用户已解禁',
-      data: updated,
-    })
-  })
-
-  /**
-   * PATCH /api/admin/blacklist/:user_id
-   * 更新黑名单原因
-   * 权限：operator 及以上
-   */
-  app.patch<{ Params: { user_id: string }; Body: { ban_reason: string } }>(
-    '/api/admin/blacklist/:user_id',
-    { preHandler: [authenticateAdmin] },
-    async (request, reply) => {
-      const paramsResult = z.object({
-        user_id: z.string().uuid(),
-      }).safeParse(request.params)
-
-      const bodyResult = z.object({
-        ban_reason: z.string().max(500),
-      }).safeParse(request.body)
-
-      if (!paramsResult.success || !bodyResult.success) {
-        return reply.status(400).send({
-          code: ErrorCode.VALIDATION_ERROR,
-          message: '参数校验失败',
-        })
-      }
-
-      const { user_id } = paramsResult.data
-      const { ban_reason } = bodyResult.data
-
-      // 检查用户是否存在且被禁用
-      const user = await prisma.user.findUnique({ where: { id: user_id } })
-      if (!user || user.status !== 'banned') {
-        return reply.status(404).send({
-          code: ErrorCode.NOT_FOUND,
-          message: '该用户不在黑名单中',
-        })
-      }
-
-      // 更新禁用原因
-      const updated = await prisma.user.update({
-        where: { id: user_id },
-        data: { ban_reason },
-        select: {
-          id: true,
-          nickname: true,
-          ban_reason: true,
-          banned_at: true,
-        },
-      })
-
-      return reply.status(200).send({
-        code: ErrorCode.SUCCESS,
-        message: '禁用原因已更新',
-        data: updated,
-      })
-    }
-  )
 }

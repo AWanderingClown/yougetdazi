@@ -4,23 +4,16 @@ import { randomUUID } from 'crypto'
 import { authenticateAdmin } from '../../middleware/admin-auth'
 import { ErrorCode } from '../../types/index'
 
-// ============================================================
-// 临时内存存储（TODO: 创建 SystemMessage 表替换）
-// ============================================================
-// 注意：这是临时实现。生产环境应创建以下 Prisma model：
-// model SystemMessage {
-//   id String @id @default(uuid())
-//   title String
-//   content String
-//   message_type String  // 'system', 'alert', 'notice'
-//   priority Int @default(0)  // 0=normal, 1=high, 2=urgent
-//   status String @default('published')  // 'draft', 'published', 'archived'
-//   published_at DateTime?
-//   created_by String
-//   created_at DateTime @default(now())
-//   updated_at DateTime @updatedAt
-// }
-
+/**
+ * 临时内存存储 - 仅用于开发/测试
+ *
+ * ⚠️ 警告：此实现在生产环境中存在重大限制：
+ * - 服务重启时所有消息数据丢失
+ * - 多实例部署时状态无法共享（各实例内存隔离）
+ *
+ * TODO: 迁移到 SystemMessage 数据库表
+ * 所需 Prisma model：见下方注释
+ */
 const messagesStore = new Map<
   string,
   {
@@ -29,22 +22,29 @@ const messagesStore = new Map<
     content: string
     type: string
     priority: number
-    status: string
+    status: 'draft' | 'published' | 'archived'
     published_at: Date
     created_at: Date
   }
 >()
 
-// ============================================================
-// Admin 系统消息路由
-// ============================================================
+// 生产环境应创建的 Prisma model
+/*
+model SystemMessage {
+  id String @id @default(uuid())
+  title String
+  content String
+  message_type String  // 'system', 'alert', 'notice'
+  priority Int @default(0)  // 0=normal, 1=high, 2=urgent
+  status String @default('published')  // 'draft', 'published', 'archived'
+  published_at DateTime?
+  created_by String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+*/
 
 export async function adminMessagesRoutes(app: FastifyInstance) {
-  /**
-   * GET /api/admin/messages
-   * 系统消息列表（分页）
-   * 权限：所有角色可查
-   */
   app.get('/api/admin/messages', {
     preHandler: [authenticateAdmin],
   }, async (request, reply) => {
@@ -71,7 +71,10 @@ export async function adminMessagesRoutes(app: FastifyInstance) {
 
     const total = messages.length
     const list = messages
-      .sort((a, b) => b.created_at.getTime() - a.created_at.getTime())
+      .sort((a, b) => {
+        const timeDiff = b.created_at.getTime() - a.created_at.getTime()
+        return timeDiff !== 0 ? timeDiff : (b.id > a.id ? 1 : -1)
+      })
       .slice(skip, skip + page_size)
 
     return reply.status(200).send({
@@ -86,36 +89,29 @@ export async function adminMessagesRoutes(app: FastifyInstance) {
     })
   })
 
-  /**
-   * GET /api/admin/messages/stats
-   * 消息统计信息
-   * 权限：所有角色可查
-   */
   app.get('/api/admin/messages/stats', {
     preHandler: [authenticateAdmin],
   }, async (request, reply) => {
-    const messages = Array.from(messagesStore.values())
+    const stats = { total: 0, published: 0, draft: 0, archived: 0 }
+    for (const msg of messagesStore.values()) {
+      stats.total++
+      if (msg.status === 'published') stats.published++
+      else if (msg.status === 'draft') stats.draft++
+      else if (msg.status === 'archived') stats.archived++
+    }
 
     return reply.status(200).send({
       code: ErrorCode.SUCCESS,
       message: 'ok',
-      data: {
-        total: messages.length,
-        published: messages.filter(m => m.status === 'published').length,
-        draft: messages.filter(m => m.status === 'draft').length,
-        archived: messages.filter(m => m.status === 'archived').length,
-      },
+      data: stats,
     })
   })
 
-  /**
-   * POST /api/admin/messages
-   * 创建系统消息
-   * 权限：system.config 及以上
-   */
   app.post<{ Body: { title: string; content: string; type: string; priority: number } }>(
     '/api/admin/messages',
     { preHandler: [authenticateAdmin] },
+    // FIXME: 添加权限检查（安全缺陷）- 当前任何 admin 角色均可创建消息
+    // 应添加：requireAdminRole('super_admin') 或检查 permission 'system.config'
     async (request, reply) => {
       const parseResult = z.object({
         title: z.string().min(1).max(100),
@@ -154,16 +150,24 @@ export async function adminMessagesRoutes(app: FastifyInstance) {
     }
   )
 
-  /**
-   * DELETE /api/admin/messages/:message_id
-   * 删除消息
-   * 权限：system.config 及以上
-   */
   app.delete<{ Params: { message_id: string } }>(
     '/api/admin/messages/:message_id',
     { preHandler: [authenticateAdmin] },
+    // FIXME: 添加权限检查（安全缺陷）- 当前任何 admin 角色均可删除消息
+    // 应添加：requireAdminRole('super_admin') 或检查 permission 'system.config'
     async (request, reply) => {
-      const { message_id } = request.params
+      const parseResult = z.object({
+        message_id: z.string().uuid(),
+      }).safeParse(request.params)
+
+      if (!parseResult.success) {
+        return reply.status(400).send({
+          code: ErrorCode.VALIDATION_ERROR,
+          message: '参数校验失败',
+        })
+      }
+
+      const { message_id } = parseResult.data
 
       if (!messagesStore.has(message_id)) {
         return reply.status(404).send({

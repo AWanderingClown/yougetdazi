@@ -1,0 +1,130 @@
+/**
+ * 权限和角色定义的唯一数据源
+ *
+ * 所有权限/角色相关的数据必须从此文件导入，不应在其他地方重复定义。
+ * 如需新增权限或角色，仅在此文件修改，其他文件自动生效。
+ */
+
+export const PERMISSION_CODES = {
+  DASHBOARD_VIEW: 'dashboard.view',
+  USERS_VIEW: 'users.view',
+  USERS_DETAIL: 'users.detail',
+  USERS_BAN: 'users.ban',
+  COMPANIONS_VIEW: 'companions.view',
+  COMPANIONS_DETAIL: 'companions.detail',
+  COMPANIONS_AUDIT: 'companions.audit',
+  COMPANIONS_DEPOSIT: 'companions.deposit',
+  ORDERS_VIEW: 'orders.view',
+  ORDERS_DETAIL: 'orders.detail',
+  ORDERS_DISPUTE: 'orders.dispute',
+  FINANCE_VIEW: 'finance.view',
+  FINANCE_WITHDRAW: 'finance.withdraw',
+  FINANCE_REFUND: 'finance.refund',
+  REVIEWS_AUDIT: 'reviews.audit',
+  SYSTEM_CONFIG: 'system.config',
+  RISK_MANAGE: 'risk.manage',
+  SERVICE_MANAGE: 'service.manage',
+  MARKETING_MANAGE: 'marketing.manage',
+  DATA_VIEW: 'data.view',
+  SETTINGS_EDIT: 'settings.edit',
+} as const
+
+export type PermissionCode = typeof PERMISSION_CODES[keyof typeof PERMISSION_CODES]
+
+export const PERMISSION_DEFINITIONS: Record<PermissionCode, { name: string; category: string; description: string }> = {
+  [PERMISSION_CODES.DASHBOARD_VIEW]: { name: '仪表盘', category: '数据分析', description: '查看仪表盘数据' },
+  [PERMISSION_CODES.USERS_VIEW]: { name: '用户列表', category: '用户管理', description: '查看C端用户列表' },
+  [PERMISSION_CODES.USERS_DETAIL]: { name: '用户详情', category: '用户管理', description: '查看用户详细信息' },
+  [PERMISSION_CODES.USERS_BAN]: { name: '用户禁用', category: '用户管理', description: '禁用/解禁用户' },
+  [PERMISSION_CODES.COMPANIONS_VIEW]: { name: '搭子列表', category: '搭子管理', description: '查看B端搭子列表' },
+  [PERMISSION_CODES.COMPANIONS_DETAIL]: { name: '搭子详情', category: '搭子管理', description: '查看搭子详细信息' },
+  [PERMISSION_CODES.COMPANIONS_AUDIT]: { name: '搭子审核', category: '搭子管理', description: '审核搭子入驻申请' },
+  [PERMISSION_CODES.COMPANIONS_DEPOSIT]: { name: '保证金管理', category: '搭子管理', description: '管理搭子保证金' },
+  [PERMISSION_CODES.ORDERS_VIEW]: { name: '订单列表', category: '订单管理', description: '查看订单列表' },
+  [PERMISSION_CODES.ORDERS_DETAIL]: { name: '订单详情', category: '订单管理', description: '查看订单详细信息' },
+  [PERMISSION_CODES.ORDERS_DISPUTE]: { name: '纠纷处理', category: '订单管理', description: '处理订单纠纷' },
+  [PERMISSION_CODES.FINANCE_VIEW]: { name: '财务数据', category: '财务管理', description: '查看财务数据' },
+  [PERMISSION_CODES.FINANCE_WITHDRAW]: { name: '提现审核', category: '财务管理', description: '审核提现申请' },
+  [PERMISSION_CODES.FINANCE_REFUND]: { name: '退款管理', category: '财务管理', description: '处理退款事项' },
+  [PERMISSION_CODES.REVIEWS_AUDIT]: { name: '评价审核', category: '内容审核', description: '审核和管理评价' },
+  [PERMISSION_CODES.SYSTEM_CONFIG]: { name: '系统配置', category: '系统管理', description: '修改系统配置' },
+  [PERMISSION_CODES.RISK_MANAGE]: { name: '风控管理', category: '风险管理', description: '管理风控规则和记录' },
+  [PERMISSION_CODES.SERVICE_MANAGE]: { name: '客服管理', category: '客服中心', description: '管理工单和知识库' },
+  [PERMISSION_CODES.MARKETING_MANAGE]: { name: '营销管理', category: '营销运营', description: '管理优惠券和活动' },
+  [PERMISSION_CODES.DATA_VIEW]: { name: '数据分析', category: '数据分析', description: '查看数据统计和报表' },
+  [PERMISSION_CODES.SETTINGS_EDIT]: { name: '设置编辑', category: '系统设置', description: '编辑系统设置' },
+}
+
+export const ROLE_PERMISSIONS = {
+  super_admin: {
+    name: '超级管理员',
+    description: '拥有系统所有权限',
+    permissions: [
+      PERMISSION_CODES.DASHBOARD_VIEW,
+      PERMISSION_CODES.USERS_VIEW,
+      PERMISSION_CODES.USERS_DETAIL,
+      PERMISSION_CODES.USERS_BAN,
+      PERMISSION_CODES.COMPANIONS_VIEW,
+      PERMISSION_CODES.COMPANIONS_DETAIL,
+      PERMISSION_CODES.COMPANIONS_AUDIT,
+      PERMISSION_CODES.COMPANIONS_DEPOSIT,
+      PERMISSION_CODES.ORDERS_VIEW,
+      PERMISSION_CODES.ORDERS_DETAIL,
+      PERMISSION_CODES.ORDERS_DISPUTE,
+      PERMISSION_CODES.FINANCE_VIEW,
+      PERMISSION_CODES.FINANCE_WITHDRAW,
+      PERMISSION_CODES.FINANCE_REFUND,
+      PERMISSION_CODES.REVIEWS_AUDIT,
+      PERMISSION_CODES.SYSTEM_CONFIG,
+      PERMISSION_CODES.RISK_MANAGE,
+      PERMISSION_CODES.SERVICE_MANAGE,
+      PERMISSION_CODES.MARKETING_MANAGE,
+      PERMISSION_CODES.DATA_VIEW,
+      PERMISSION_CODES.SETTINGS_EDIT,
+    ],
+  },
+  operator: {
+    name: '运营人员',
+    description: '运营和审核权限',
+    permissions: [
+      PERMISSION_CODES.DASHBOARD_VIEW,
+      PERMISSION_CODES.USERS_VIEW,
+      PERMISSION_CODES.USERS_DETAIL,
+      PERMISSION_CODES.USERS_BAN,
+      PERMISSION_CODES.COMPANIONS_VIEW,
+      PERMISSION_CODES.COMPANIONS_DETAIL,
+      PERMISSION_CODES.COMPANIONS_AUDIT,
+      PERMISSION_CODES.ORDERS_VIEW,
+      PERMISSION_CODES.ORDERS_DETAIL,
+      PERMISSION_CODES.ORDERS_DISPUTE,
+      PERMISSION_CODES.REVIEWS_AUDIT,
+      PERMISSION_CODES.RISK_MANAGE,
+      PERMISSION_CODES.SERVICE_MANAGE,
+      PERMISSION_CODES.DATA_VIEW,
+    ],
+  },
+  finance: {
+    name: '财务人员',
+    description: '财务管理权限',
+    permissions: [
+      PERMISSION_CODES.DASHBOARD_VIEW,
+      PERMISSION_CODES.FINANCE_VIEW,
+      PERMISSION_CODES.FINANCE_WITHDRAW,
+      PERMISSION_CODES.FINANCE_REFUND,
+      PERMISSION_CODES.COMPANIONS_DEPOSIT,
+      PERMISSION_CODES.DATA_VIEW,
+    ],
+  },
+  viewer: {
+    name: '查看人员',
+    description: '仅限查看权限',
+    permissions: [
+      PERMISSION_CODES.DASHBOARD_VIEW,
+      PERMISSION_CODES.USERS_VIEW,
+      PERMISSION_CODES.COMPANIONS_VIEW,
+      PERMISSION_CODES.ORDERS_VIEW,
+      PERMISSION_CODES.FINANCE_VIEW,
+      PERMISSION_CODES.DATA_VIEW,
+    ],
+  },
+} as const
