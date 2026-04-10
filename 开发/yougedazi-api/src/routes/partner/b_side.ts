@@ -4,6 +4,8 @@ import { authenticatePartner, requirePartnerType } from '../../plugins/partner-a
 import { ErrorCode } from '../../types/index'
 import { prisma } from '../../lib/prisma'
 
+const ID_CARD_REGEX = /^[1-9]\d{5}(19|20)\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{3}[\dXx]$/
+
 const CompanionQuerySchema = z.object({
   audit_status: z.enum(['pending', 'approved', 'rejected']).optional(),
   keyword: z.string().max(50).optional(),
@@ -18,7 +20,10 @@ const CreateCompanionSchema = z.object({
   phone: z.string().max(20).optional(),
   gender: z.number().int().min(0).max(2).optional(),
   real_name: z.string().max(50).optional(),
-  id_card_no: z.string().max(18).optional(),
+  id_card_no: z.string().max(18).refine(
+    (val) => !val || ID_CARD_REGEX.test(val),
+    { message: '身份证号格式不正确' }
+  ).optional(),
   id_card_front: z.string().max(255).optional(),
   id_card_back: z.string().max(255).optional(),
   service_name: z.string().max(100).optional(),
@@ -31,10 +36,57 @@ const UpdateCompanionSchema = z.object({
   avatar: z.string().url().optional(),
   phone: z.string().max(20).optional(),
   real_name: z.string().max(50).optional(),
-  id_card_no: z.string().max(18).optional(),
+  id_card_no: z.string().max(18).refine(
+    (val) => !val || ID_CARD_REGEX.test(val),
+    { message: '身份证号格式不正确' }
+  ).optional(),
   id_card_front: z.string().max(255).optional(),
   id_card_back: z.string().max(255).optional(),
 })
+
+async function checkCompanionExists(openid: string): Promise<boolean> {
+  const existing = await prisma.companion.findUnique({
+    where: { openid },
+    select: { id: true },
+  })
+  return !!existing
+}
+
+async function createCompanionWithService(
+  partnerId: string,
+  data: z.infer<typeof CreateCompanionSchema>
+) {
+  return prisma.$transaction(async (tx) => {
+    const newCompanion = await tx.companion.create({
+      data: {
+        openid: data.openid,
+        nickname: data.nickname,
+        avatar: data.avatar,
+        phone: data.phone,
+        gender: data.gender,
+        real_name: data.real_name,
+        id_card_no: data.id_card_no,
+        id_card_front: data.id_card_front,
+        id_card_back: data.id_card_back,
+        partner_id: partnerId,
+        audit_status: 'pending',
+      },
+    })
+
+    if (data.service_name && data.hourly_price) {
+      await tx.companionService.create({
+        data: {
+          companion_id: newCompanion.id,
+          service_name: data.service_name,
+          hourly_price: data.hourly_price,
+          min_duration: data.min_duration ?? 1,
+        },
+      })
+    }
+
+    return newCompanion
+  })
+}
 
 export async function partnerBSideRoutes(app: FastifyInstance) {
   app.addHook('preHandler', authenticatePartner)
@@ -55,9 +107,7 @@ export async function partnerBSideRoutes(app: FastifyInstance) {
     const { audit_status, keyword, page, page_size } = parseResult.data
     const skip = (page - 1) * page_size
 
-    const where: Record<string, unknown> = {
-      partner_id: partnerId,
-    }
+    const where: Record<string, unknown> = { partner_id: partnerId }
 
     if (audit_status) where.audit_status = audit_status
     if (keyword) {
@@ -93,12 +143,7 @@ export async function partnerBSideRoutes(app: FastifyInstance) {
     return reply.status(200).send({
       code: ErrorCode.SUCCESS,
       message: 'ok',
-      data: {
-        total,
-        page,
-        page_size,
-        list: companions,
-      },
+      data: { total, page, page_size, list: companions },
     })
   })
 
@@ -118,11 +163,7 @@ export async function partnerBSideRoutes(app: FastifyInstance) {
 
     const data = parseResult.data
 
-    const existing = await prisma.companion.findUnique({
-      where: { openid: data.openid },
-      select: { id: true },
-    })
-    if (existing) {
+    if (await checkCompanionExists(data.openid)) {
       return reply.status(409).send({
         code: ErrorCode.CONFLICT,
         message: '该openid已存在',
@@ -130,36 +171,7 @@ export async function partnerBSideRoutes(app: FastifyInstance) {
       })
     }
 
-    const companion = await prisma.$transaction(async (tx) => {
-      const newCompanion = await tx.companion.create({
-        data: {
-          openid: data.openid,
-          nickname: data.nickname,
-          avatar: data.avatar,
-          phone: data.phone,
-          gender: data.gender,
-          real_name: data.real_name,
-          id_card_no: data.id_card_no,
-          id_card_front: data.id_card_front,
-          id_card_back: data.id_card_back,
-          partner_id: partnerId,
-          audit_status: 'pending',
-        },
-      })
-
-      if (data.service_name && data.hourly_price) {
-        await tx.companionService.create({
-          data: {
-            companion_id: newCompanion.id,
-            service_name: data.service_name,
-            hourly_price: data.hourly_price,
-            min_duration: data.min_duration ?? 1,
-          },
-        })
-      }
-
-      return newCompanion
-    })
+    const companion = await createCompanionWithService(partnerId, data)
 
     return reply.status(201).send({
       code: ErrorCode.SUCCESS,
@@ -176,9 +188,7 @@ export async function partnerBSideRoutes(app: FastifyInstance) {
 
     const companion = await prisma.companion.findUnique({
       where: { id },
-      include: {
-        services: { where: { is_active: true } },
-      },
+      include: { services: { where: { is_active: true } } },
     })
 
     if (!companion) {
@@ -219,7 +229,7 @@ export async function partnerBSideRoutes(app: FastifyInstance) {
       return reply.status(404).send({
         code: ErrorCode.NOT_FOUND,
         message: '搭子不存在',
-        errorKey: 'NOT_FOUND',
+        errorKey: 'FORBIDDEN',
       })
     }
 

@@ -8,7 +8,14 @@ const LoginSchema = z.object({
 })
 
 export async function partnerAuthRoutes(app: FastifyInstance) {
-  app.post('/api/partner/auth/login', async (request, reply) => {
+  app.post('/api/partner/auth/login', {
+    config: {
+      rateLimit: {
+        max: 10,
+        timeWindow: 60 * 1000,
+      },
+    },
+  }, async (request, reply) => {
     const parseResult = LoginSchema.safeParse(request.body)
     if (!parseResult.success) {
       return reply.status(400).send({
@@ -35,7 +42,7 @@ export async function partnerAuthRoutes(app: FastifyInstance) {
     if (partner.status !== 'active') {
       return reply.status(403).send({
         code: ErrorCode.PARTNER_INACTIVE,
-        message: `合作商状态异常：${partner.status}`,
+        message: '合作商状态异常，无法登录',
         errorKey: 'PARTNER_INACTIVE',
       })
     }

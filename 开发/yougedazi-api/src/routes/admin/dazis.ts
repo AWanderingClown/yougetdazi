@@ -11,6 +11,11 @@ const CompanionQuerySchema = z.object({
   page_size:    z.coerce.number().int().min(1).max(100).default(20),
 })
 
+const PendingQuerySchema = z.object({
+  page:      z.coerce.number().int().min(1).default(1),
+  page_size: z.coerce.number().int().min(1).max(100).default(20),
+})
+
 export async function adminCompanionRoutes(app: FastifyInstance) {
   /**
    * GET /api/admin/companions
@@ -199,8 +204,16 @@ export async function adminCompanionRoutes(app: FastifyInstance) {
   app.get('/api/admin/companions/pending', {
     preHandler: [authenticateAdmin],
   }, async (request, reply) => {
-    const { page = 1, page_size = 20 } = request.query as { page?: number; page_size?: number }
-    const skip = ((page as number) - 1) * (page_size as number)
+    const parseResult = PendingQuerySchema.safeParse(request.query)
+    if (!parseResult.success) {
+      return reply.status(400).send({
+        code: ErrorCode.VALIDATION_ERROR,
+        message: '参数校验失败',
+      })
+    }
+
+    const { page, page_size } = parseResult.data
+    const skip = (page - 1) * page_size
 
     const [total, companions] = await Promise.all([
       prisma.companion.count({
@@ -209,7 +222,7 @@ export async function adminCompanionRoutes(app: FastifyInstance) {
       prisma.companion.findMany({
         where: { audit_status: 'pending' },
         skip,
-        take: page_size as number,
+        take: page_size,
         orderBy: { created_at: 'asc' },
         select: {
           id: true,
