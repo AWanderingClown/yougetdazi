@@ -75,7 +75,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { mockSettlement, mockCommissions, mockWithdrawals } from '@/utils/mockData'
-import { WITHDRAW_STATUS_MAP, getStatusInfo } from '@/utils/index'
+import { WITHDRAW_STATUS_MAP, getStatusInfo, formatMoney, PAGE_SIZE, MOCK_DELAY } from '@/utils/index'
 import FinanceCard from '@/components/common/FinanceCard.vue'
 import DataTable from '@/components/common/DataTable.vue'
 import FormDialog from '@/components/common/FormDialog.vue'
@@ -86,8 +86,8 @@ const activeTab = ref('commission')
 const showWithdrawDialog = ref(false)
 const withdrawFormRef = ref(null)
 const settlement = reactive({ ...mockSettlement })
-const commissionPagination = reactive({ page: 1, pageSize: 10, total: 0 })
-const withdrawalPagination = reactive({ page: 1, pageSize: 10, total: 0 })
+const commissionPagination = reactive({ page: 1, pageSize: PAGE_SIZE, total: 0 })
+const withdrawalPagination = reactive({ page: 1, pageSize: PAGE_SIZE, total: 0 })
 const commissionList = ref([])
 const withdrawalList = ref([])
 const withdrawForm = reactive({ amount: 1000 })
@@ -99,14 +99,13 @@ const rateTiers = [
   { range: '200,000+', rate: '32%', desc: '优秀档位' }
 ]
 
-const formatNumber = (num) => num.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const getWithdrawStatusType = (status) => getStatusInfo(WITHDRAW_STATUS_MAP, status).type
 const getWithdrawStatusText = (status) => getStatusInfo(WITHDRAW_STATUS_MAP, status).text
 
 const loadData = async () => {
   loading.value = true
   try {
-    await new Promise(resolve => setTimeout(resolve, 500))
+    await new Promise(resolve => setTimeout(resolve, MOCK_DELAY.MEDIUM))
     commissionList.value = mockCommissions
     withdrawalList.value = mockWithdrawals
     commissionPagination.total = mockCommissions.length
@@ -131,7 +130,7 @@ const submitWithdraw = async () => {
   }
   submitting.value = true
   try {
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    await new Promise(resolve => setTimeout(resolve, MOCK_DELAY.LONG))
     ElMessage.success('提现申请提交成功')
     showWithdrawDialog.value = false
     loadData()

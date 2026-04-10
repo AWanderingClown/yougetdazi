@@ -48,10 +48,10 @@ defineProps({
       color: #fff;
     }
 
-    &.blue { background: linear-gradient(135deg, #7d67ea, #9a59b8); }
-    &.green { background: linear-gradient(135deg, #67C23A, #95d475); }
-    &.orange { background: linear-gradient(135deg, #E6A23C, #eebe77); }
-    &.red { background: linear-gradient(135deg, #F56C6C, #f89898); }
+    &.blue { background: linear-gradient(135deg, var(--color-primary), #9a59b8); }
+    &.green { background: linear-gradient(135deg, var(--color-success), #95d475); }
+    &.orange { background: linear-gradient(135deg, var(--color-warning), #eebe77); }
+    &.red { background: linear-gradient(135deg, var(--color-danger), #f89898); }
     &.cyan { background: linear-gradient(135deg, #36cfc9, #5cdbd3); }
   }
 

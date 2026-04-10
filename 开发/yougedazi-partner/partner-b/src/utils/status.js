@@ -22,7 +22,7 @@ export const COMPANION_STATUS = {
 export const COMPANION_STATUS_MAP = {
   [COMPANION_STATUS.ONLINE]: { type: 'success', text: '在线' },
   [COMPANION_STATUS.BUSY]: { type: 'warning', text: '忙碌' },
-  [COMPANION_STATUS.OFFLINE]: { type: 'info', text: ' ' },
+  [COMPANION_STATUS.OFFLINE]: { type: 'info', text: '离线' },
   [COMPANION_STATUS.DISABLED]: { type: 'danger', text: '已禁用' }
 }
 

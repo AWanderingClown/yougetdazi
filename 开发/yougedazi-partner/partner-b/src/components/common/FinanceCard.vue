@@ -27,10 +27,10 @@ defineProps({
   display: flex;
   align-items: center;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-  &.primary { background: linear-gradient(135deg, #7d67ea, #9a59b8); }
-  &.warning { background: linear-gradient(135deg, #E6A23C, #eebe77); }
-  &.success { background: linear-gradient(135deg, #67C23A, #95d475); }
-  &.info { background: linear-gradient(135deg, #909399, #b1b3b8); }
+  &.primary { background: linear-gradient(135deg, var(--color-primary), #9a59b8); }
+  &.warning { background: linear-gradient(135deg, var(--color-warning), #eebe77); }
+  &.success { background: linear-gradient(135deg, var(--color-success), #95d475); }
+  &.info { background: linear-gradient(135deg, var(--color-info), #b1b3b8); }
   .finance-icon {
     width: 56px; height: 56px; border-radius: 12px;
     background: rgba(255, 255, 255, 0.2);

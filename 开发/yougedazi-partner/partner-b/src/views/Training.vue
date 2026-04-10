@@ -66,13 +66,14 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { mockTrainingMaterials } from '@/utils/mockData'
+import { TRAINING_TYPE, TRAINING_TYPE_MAP, getStatusInfo, MOCK_DELAY } from '@/utils/index'
 import MaterialCard from '@/components/common/MaterialCard.vue'
 
 const categories = reactive([
   { value: 'all', label: '全部资料', icon: 'Document', unread: 0 },
-  { value: 'rule', label: '平台规则', icon: 'Warning', unread: 0 },
-  { value: 'standard', label: '服务标准', icon: 'Notebook', unread: 0 },
-  { value: 'guide', label: '操作指南', icon: 'QuestionFilled', unread: 0 }
+  { value: TRAINING_TYPE.RULE, label: '平台规则', icon: 'Warning', unread: 0 },
+  { value: TRAINING_TYPE.STANDARD, label: '服务标准', icon: 'Notebook', unread: 0 },
+  { value: TRAINING_TYPE.GUIDE, label: '操作指南', icon: 'QuestionFilled', unread: 0 }
 ])
 
 const currentCategory = ref('all')
@@ -85,12 +86,12 @@ const filteredMaterials = computed(() => currentCategory.value === 'all' ? mater
 const totalCount = computed(() => materials.value.length)
 const readCount = computed(() => materials.value.filter(m => m.isRead).length)
 const readProgress = computed(() => totalCount.value === 0 ? 0 : Math.round((readCount.value / totalCount.value) * 100))
-const getTypeTagType = (type) => ({ rule: 'danger', standard: 'warning', guide: 'success' })[type] || 'info'
-const getTypeLabel = (type) => ({ rule: '平台规则', standard: '服务标准', guide: '操作指南' })[type] || '其他'
+const getTypeTagType = (type) => getStatusInfo(TRAINING_TYPE_MAP, type).type
+const getTypeLabel = (type) => getStatusInfo(TRAINING_TYPE_MAP, type).text
 
 const loadData = async () => {
   try {
-    await new Promise(resolve => setTimeout(resolve, 300))
+    await new Promise(resolve => setTimeout(resolve, MOCK_DELAY.SHORT))
     materials.value = mockTrainingMaterials
     categories.forEach(cat => {
       if (cat.value !== 'all') cat.unread = materials.value.filter(m => m.type === cat.value && !m.isRead).length

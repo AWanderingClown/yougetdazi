@@ -2,10 +2,11 @@ import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import router from '@/router'
+import { API_TIMEOUT } from '@/constants'
 
 const service = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
-  timeout: 30000
+  timeout: API_TIMEOUT
 })
 
 let isRedirecting = false

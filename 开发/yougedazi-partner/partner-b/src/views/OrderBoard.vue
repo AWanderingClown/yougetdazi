@@ -107,23 +107,16 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
 import { mockOrders } from '@/utils/mockData'
-import { ORDER_STATUS_MAP, getStatusInfo } from '@/utils/index'
+import { ORDER_STATUS_MAP, SERVICE_TYPE_MAP, getStatusInfo, MOCK_DELAY, PAGE_SIZE } from '@/utils/index'
 import StatCard from '@/components/common/StatCard.vue'
 import SearchFilter from '@/components/common/SearchFilter.vue'
 import DataTable from '@/components/common/DataTable.vue'
 import FormDialog from '@/components/common/FormDialog.vue'
 
-const SERVICE_TYPE_MAP = {
-  '游戏陪玩': { type: 'primary' },
-  '语音聊天': { type: 'success' },
-  '线下活动': { type: 'warning' },
-  '才艺展示': { type: 'danger' }
-}
-
 const loading = ref(false)
 const stats = reactive({ today: 86, week: 586, month: 2156, pending: 12 })
 const filterForm = reactive({ status: '', type: '', companion: '', dateRange: [] })
-const pagination = reactive({ page: 1, pageSize: 10, total: 0 })
+const pagination = reactive({ page: 1, pageSize: PAGE_SIZE, total: 0 })
 const orderList = ref([])
 const detailDialogVisible = ref(false)
 const complaintDialogVisible = ref(false)
@@ -138,7 +131,7 @@ const hasComplaint = () => Math.random() > 0.8
 const loadData = async () => {
   loading.value = true
   try {
-    await new Promise(resolve => setTimeout(resolve, 500))
+    await new Promise(resolve => setTimeout(resolve, MOCK_DELAY.MEDIUM))
     orderList.value = mockOrders
     pagination.total = mockOrders.length
   } catch (error) {

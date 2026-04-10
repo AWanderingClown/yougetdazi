@@ -138,17 +138,11 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import dayjs from 'dayjs'
 import { mockSubAccounts, mockRoles, mockLogs } from '@/utils/mockData'
-import { ROLE_MAP, getStatusInfo } from '@/utils/index'
+import { ROLE_MAP, LOG_TYPE_MAP, getStatusInfo, PAGE_SIZE } from '@/utils/index'
 import StatCard from '@/components/common/StatCard.vue'
 import DataTable from '@/components/common/DataTable.vue'
 import SearchFilter from '@/components/common/SearchFilter.vue'
 import FormDialog from '@/components/common/FormDialog.vue'
-
-const LOG_TYPE_MAP = {
-  '审核通过': { type: 'success' },
-  '更新状态': { type: 'primary' },
-  '申请提现': { type: 'warning' }
-}
 
 const loading = ref(false)
 const saving = ref(false)
@@ -158,7 +152,7 @@ const isEdit = ref(false)
 const formDialogRef = ref(null)
 
 const stats = reactive({ total: 0, active: 0, inactive: 0 })
-const pagination = reactive({ page: 1, pageSize: 10, total: 0 })
+const pagination = reactive({ page: 1, pageSize: PAGE_SIZE, total: 0 })
 const accountList = ref([])
 const roleList = ref([])
 const logList = ref([])

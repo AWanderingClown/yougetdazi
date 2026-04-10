@@ -128,7 +128,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import dayjs from 'dayjs'
 import { mockCompanions, mockApplications } from '@/utils/mockData'
-import { COMPANION_STATUS_MAP, getStatusInfo } from '@/utils/index'
+import { COMPANION_STATUS, COMPANION_STATUS_MAP, getStatusInfo, PAGE_SIZE, MOCK_DELAY } from '@/utils/index'
 import StatCard from '@/components/common/StatCard.vue'
 import SearchFilter from '@/components/common/SearchFilter.vue'
 import DataTable from '@/components/common/DataTable.vue'
@@ -137,7 +137,7 @@ import FormDialog from '@/components/common/FormDialog.vue'
 const loading = ref(false)
 const activeTab = ref('list')
 const filterForm = reactive({ status: '', nickname: '' })
-const pagination = reactive({ page: 1, pageSize: 10, total: 0 })
+const pagination = reactive({ page: 1, pageSize: PAGE_SIZE, total: 0 })
 const companionList = ref([])
 const applicationList = ref([])
 const totalCompanions = ref(0)
@@ -155,11 +155,11 @@ const formatDate = (date) => dayjs(date).format('YYYY-MM-DD')
 const loadData = async () => {
   loading.value = true
   try {
-    await new Promise(resolve => setTimeout(resolve, 500))
+    await new Promise(resolve => setTimeout(resolve, MOCK_DELAY.MEDIUM))
     companionList.value = mockCompanions
     applicationList.value = mockApplications
     totalCompanions.value = mockCompanions.length
-    onlineCompanions.value = mockCompanions.filter(c => c.status === 'online').length
+    onlineCompanions.value = mockCompanions.filter(c => c.status === COMPANION_STATUS.ONLINE).length
     pendingApplications.value = mockApplications.length
     pagination.total = mockCompanions.length
   } catch (error) {

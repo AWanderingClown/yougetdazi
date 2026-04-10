@@ -15,6 +15,17 @@ export {
   getStatusInfo
 } from './status'
 
+export {
+  PAGE_SIZE,
+  PAGE_SIZES,
+  API_TIMEOUT,
+  MOCK_DELAY,
+  SERVICE_TYPE,
+  SERVICE_TYPE_MAP,
+  LOG_TYPE,
+  LOG_TYPE_MAP
+} from '../constants'
+
 /**
  * 格式化金额
  * @param {number} amount - 金额
