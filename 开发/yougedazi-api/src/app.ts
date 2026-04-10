@@ -12,6 +12,7 @@ import { authRoutes } from './routes/auth/index.js'
 import { cRoutes } from './routes/c/index.js'
 import { bRoutes } from './routes/b/index.js'
 import { adminRoutes } from './routes/admin/index.js'
+import { partnerRoutes } from './routes/partner/index.js'
 import { webhookRoutes } from './routes/webhook/wxpay.js'
 import locationRoutes from './routes/location.routes.js'
 import configRoutes from './routes/config.routes.js'
@@ -94,6 +95,15 @@ export async function buildApp() {
     verify:        { algorithms: ['HS256'] },
   })
 
+  // Partner JWT（合作商标识，secret: PARTNER_JWT_SECRET，decoratorName: partnerJwt，request.partnerJwtVerify）
+  await app.register(jwt, {
+    secret:        process.env.PARTNER_JWT_SECRET!,
+    decoratorName: 'partnerJwt',
+    namespace:     'partner',
+    sign:          { algorithm: 'HS256' },
+    verify:        { algorithms: ['HS256'] },
+  })
+
   // 请求/响应数据格式转换（驼峰命名 ↔ 下划线命名）
   await app.register(requestFormatter, {
     transformRequest: true,
@@ -150,6 +160,7 @@ export async function buildApp() {
   await app.register(cRoutes)
   await app.register(bRoutes)
   await app.register(adminRoutes)
+  await app.register(partnerRoutes)
   await app.register(configRoutes)
   await app.register(webhookRoutes)
   await app.register(locationRoutes)
@@ -183,6 +194,7 @@ if (isMainEntry) {
     'REDIS_URL',
     'JWT_SECRET',
     'ADMIN_JWT_SECRET',
+    'PARTNER_JWT_SECRET',
     'WX_C_APP_ID',
     'WX_C_APP_SECRET',
     'WX_B_APP_ID',

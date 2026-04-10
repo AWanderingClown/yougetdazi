@@ -88,6 +88,18 @@ enum AdminRole {
   viewer
 }
 
+enum PartnerType {
+  C_SIDE  // C端合作商
+  B_SIDE  // B端合作商
+}
+
+enum PartnerStatus {
+  pending      // 待审核
+  active       // 已激活
+  suspended    // 暂停
+  deactivated // 已注销
+}
+
 enum RenewalStatus {
   pending
   paid
@@ -125,10 +137,12 @@ model User {
   banned_by  String?                           // admin_user.id
   banned_at  DateTime?  @db.Timestamptz
 
+  partner_id String?                           // 合作商ID
   created_at DateTime @default(now()) @db.Timestamptz
   updated_at DateTime @updatedAt @db.Timestamptz
 
   // 关联
+  partner    Partner?   @relation(fields: [partner_id], references: [id])
   orders           Order[]          @relation("UserOrders")
   message_sessions MessageSession[] @relation("UserSessions")
   sent_messages    Message[]        @relation("UserMessages")
@@ -137,6 +151,7 @@ model User {
 
   @@index([openid])
   @@index([status])
+  @@index([partner_id])
   @@map("users")
 }
 
@@ -168,10 +183,12 @@ model Companion {
   verified_by      String?                           // 审核人 admin_user.id
   verified_at      DateTime?    @db.Timestamptz
 
+  partner_id       String?                           // 合作商ID
   created_at DateTime @default(now()) @db.Timestamptz
   updated_at DateTime @updatedAt @db.Timestamptz
 
   // 关联
+  partner          Partner?   @relation(fields: [partner_id], references: [id])
   services              CompanionService[]
   audit_records         CompanionAuditRecord[]
   orders                Order[]                @relation("CompanionOrders")
@@ -186,6 +203,7 @@ model Companion {
   @@index([openid])
   @@index([audit_status])
   @@index([is_online, audit_status])
+  @@index([partner_id])
   @@map("companions")
 }
 
@@ -824,4 +842,39 @@ model SystemMessage {
   @@index([status])
   @@index([created_at])
   @@map("system_messages")
+}
+
+// ============================================================
+// 合作商表
+// ============================================================
+
+model Partner {
+  id           String        @id @default(uuid())
+  name         String                                   // 合作商名称
+  type         PartnerType                              // C_SIDE 或 B_SIDE
+  status       PartnerStatus  @default(pending)        // 审核状态
+
+  // 登录凭证
+  secret_key   String        @unique                    // 合作商密钥（用于JWT签名）
+
+  // 联系方式
+  contact_name String?                                  // 联系人姓名
+  contact_phone String?                                 // 联系人电话
+  contact_wx    String?                                 // 联系人微信
+
+  // 审核信息
+  verified_by  String?                                  // 审核人 admin_user.id
+  verified_at  DateTime?  @db.Timestamptz
+  reject_reason String?                                 // 拒绝原因
+
+  created_at   DateTime   @default(now()) @db.Timestamptz
+  updated_at   DateTime   @updatedAt @db.Timestamptz
+
+  // 关联
+  users       User[]
+  companions   Companion[]
+
+  @@index([type])
+  @@index([status])
+  @@map("partners")
 }

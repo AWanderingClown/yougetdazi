@@ -28,6 +28,10 @@ export type DepositLevel = 'none' | 'basic' | 'premium'
 
 export type MessageType = 'text' | 'image' | 'system'
 
+export type PartnerType = 'C_SIDE' | 'B_SIDE'
+
+export type PartnerStatus = 'pending' | 'active' | 'suspended' | 'deactivated'
+
 // ============================================================
 // 统一响应类型
 // ============================================================
@@ -72,7 +76,15 @@ export interface AdminJwtPayload {
   exp: number
 }
 
-export type JwtPayload = ClientJwtPayload | AdminJwtPayload
+export interface PartnerJwtPayload {
+  sub: string                          // partnerId
+  type: PartnerType                     // C_SIDE 或 B_SIDE
+  iss: 'ppmate-partner'
+  iat: number
+  exp: number
+}
+
+export type JwtPayload = ClientJwtPayload | AdminJwtPayload | PartnerJwtPayload
 
 // ============================================================
 // Fastify Request 扩展
@@ -90,6 +102,11 @@ declare module 'fastify' {
       sign(payload: object, options?: object): string
       verify<T = unknown>(token: string, options?: object): T
     }
+    /** Partner JWT 实例（合作商，secret: PARTNER_JWT_SECRET） */
+    partnerJwt: {
+      sign(payload: object, options?: object): string
+      verify<T = unknown>(token: string, options?: object): T
+    }
   }
   interface FastifyRequest {
     /** C端/B端认证后挂载 */
@@ -102,10 +119,17 @@ declare module 'fastify' {
       id: string
       role: AdminRole
     }
+    /** Partner 认证后挂载 */
+    currentPartner?: {
+      id: string
+      type: PartnerType
+    }
     /** 客户端 JWT 验证方法（namespace: client） */
     clientJwtVerify<T = unknown>(options?: object): Promise<T>
     /** Admin JWT 验证方法（namespace: admin） */
     adminJwtVerify<T = unknown>(options?: object): Promise<T>
+    /** Partner JWT 验证方法（namespace: partner） */
+    partnerJwtVerify<T = unknown>(options?: object): Promise<T>
   }
 }
 
@@ -174,6 +198,12 @@ export const ErrorCode = {
 
   // 配置
   CONFIG_NOT_FOUND:        40430,
+
+  // 合作商
+  PARTNER_NOT_FOUND:      40440,
+  PARTNER_INACTIVE:       40310,
+  PARTNER_TYPE_MISMATCH:  40311,
+  PARTNER_LOGIN_FAILED:   40106,
 }
 
 export type ErrorCodeValue = typeof ErrorCode[keyof typeof ErrorCode]

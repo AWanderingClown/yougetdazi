@@ -192,6 +192,58 @@ export async function adminCompanionRoutes(app: FastifyInstance) {
   })
 
   /**
+   * GET /api/admin/companions/pending
+   * 待审核搭子列表（包含合作商信息）
+   * 权限：super_admin, operator
+   */
+  app.get('/api/admin/companions/pending', {
+    preHandler: [authenticateAdmin],
+  }, async (request, reply) => {
+    const { page = 1, page_size = 20 } = request.query as { page?: number; page_size?: number }
+    const skip = ((page as number) - 1) * (page_size as number)
+
+    const [total, companions] = await Promise.all([
+      prisma.companion.count({
+        where: { audit_status: 'pending' },
+      }),
+      prisma.companion.findMany({
+        where: { audit_status: 'pending' },
+        skip,
+        take: page_size as number,
+        orderBy: { created_at: 'asc' },
+        select: {
+          id: true,
+          nickname: true,
+          avatar: true,
+          phone: true,
+          partner_id: true,
+          created_at: true,
+          partner: {
+            select: {
+              id: true,
+              name: true,
+              type: true,
+              contact_name: true,
+              contact_phone: true,
+            },
+          },
+        },
+      }),
+    ])
+
+    return reply.status(200).send({
+      code: ErrorCode.SUCCESS,
+      message: 'ok',
+      data: {
+        total,
+        page,
+        page_size,
+        list: companions,
+      },
+    })
+  })
+
+  /**
    * GET /api/admin/companions/:id/audit-records
    * 审核历史记录
    */
