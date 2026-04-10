@@ -804,3 +804,24 @@ model SystemConfig {
   @@index([key])
   @@map("system_configs")
 }
+
+// ============================================================
+// 系统消息表
+// ============================================================
+
+model SystemMessage {
+  id           String   @id @default(uuid())
+  title        String   @db.VarChar(100)               // 消息标题
+  content      String   @db.Text                       // 消息内容
+  message_type String   @default("system")             // 消息类型：'system', 'alert', 'notice'
+  priority     Int      @default(0)                    // 优先级：0=normal, 1=high, 2=urgent
+  status       String   @default("published")          // 状态：'draft', 'published', 'archived'
+  published_at DateTime? @db.Timestamptz              // 发布时间
+  created_by   String?                                 // 创建人admin_user.id
+  created_at   DateTime @default(now()) @db.Timestamptz
+  updated_at   DateTime @updatedAt @db.Timestamptz
+
+  @@index([status])
+  @@index([created_at])
+  @@map("system_messages")
+}
