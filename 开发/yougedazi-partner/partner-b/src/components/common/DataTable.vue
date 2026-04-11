@@ -20,8 +20,8 @@
 
     <div class="pagination-wrapper" v-if="showPagination && data && data.length > 0">
       <el-pagination
-        v-model:current-page="currentPage"
-        v-model:page-size="pageSize"
+        :current-page="currentPage"
+        :page-size="pageSize"
         :page-sizes="PAGE_SIZES"
         :total="total"
         layout="total, sizes, prev, pager, next"

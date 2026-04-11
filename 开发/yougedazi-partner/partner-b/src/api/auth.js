@@ -30,6 +30,18 @@ export const getGuildInfo = () => {
   })
 }
 
+// 刷新Token
+export const refresh = (data) => {
+  if (MOCK_ENABLED) {
+    return Promise.resolve({ token: 'mock_token_' + Date.now() })
+  }
+  return request({
+    url: '/partner/auth/refresh',
+    method: 'post',
+    data
+  })
+}
+
 // 修改密码
 export const changePassword = (data) => {
   if (MOCK_ENABLED) {
