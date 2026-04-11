@@ -126,7 +126,7 @@ const complaintForm = reactive({ reason: '', remark: '' })
 const getStatusType = (status) => getStatusInfo(ORDER_STATUS_MAP, status).type
 const getStatusText = (status) => getStatusInfo(ORDER_STATUS_MAP, status).text
 const getServiceTypeType = (type) => SERVICE_TYPE_MAP[type]?.type || ''
-const hasComplaint = () => Math.random() > 0.8
+const hasComplaint = (row) => !!row.hasComplaint
 
 const loadData = async () => {
   loading.value = true

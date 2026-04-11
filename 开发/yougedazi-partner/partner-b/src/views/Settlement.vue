@@ -117,15 +117,22 @@ const loadData = async () => {
     loading.value = false
   }
 }
+const yuanToCentStr = (yuan) => {
+  const str = String(yuan || '0')
+  const [int, dec = ''] = str.split('.')
+  const padded = (dec + '00').slice(0, 2)
+  return int + padded
+}
+
 const submitWithdraw = async () => {
   const valid = await withdrawFormRef.value?.formRef.validate().catch(() => false)
   if (!valid) {
-    submitting.value = false
     return
   }
-  if (withdrawForm.amount > settlement.availableBalance) {
+  const withdrawCent = yuanToCentStr(withdrawForm.amount)
+  const availableCent = yuanToCentStr(settlement.availableBalance)
+  if (withdrawCent > availableCent) {
     ElMessage.warning('提现金额不能大于可提现余额')
-    submitting.value = false
     return
   }
   submitting.value = true

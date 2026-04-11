@@ -1,9 +1,24 @@
 <template>
   <div class="data-table">
-    <el-table :data="data" v-loading="loading" stripe v-bind="$attrs">
+    <div v-if="error" class="error-state">
+      <el-empty :description="error">
+        <slot name="error">
+          <el-button type="primary" @click="$emit('retry')">重新加载</el-button>
+        </slot>
+      </el-empty>
+    </div>
+
+    <div v-else-if="!data || data.length === 0" class="empty-state">
+      <el-empty :description="emptyText">
+        <slot name="empty" />
+      </el-empty>
+    </div>
+
+    <el-table v-else :data="data" v-loading="loading" stripe v-bind="$attrs">
       <slot />
     </el-table>
-    <div class="pagination-wrapper" v-if="showPagination">
+
+    <div class="pagination-wrapper" v-if="showPagination && data && data.length > 0">
       <el-pagination
         v-model:current-page="currentPage"
         v-model:page-size="pageSize"
@@ -27,10 +42,12 @@ const props = defineProps({
   total: { type: Number, default: 0 },
   page: { type: Number, default: 1 },
   pageSize: { type: Number, default: PAGE_SIZE },
-  showPagination: { type: Boolean, default: true }
+  showPagination: { type: Boolean, default: true },
+  error: { type: String, default: null },
+  emptyText: { type: String, default: '暂无数据' }
 })
 
-const emit = defineEmits(['update:page', 'update:pageSize', 'size-change', 'page-change'])
+const emit = defineEmits(['update:page', 'update:pageSize', 'size-change', 'page-change', 'retry'])
 
 const currentPage = computed({
   get: () => props.page,
@@ -40,6 +57,16 @@ const currentPage = computed({
 
 <style scoped>
 .data-table {
+  .error-state,
+  .empty-state {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 300px;
+    background: #fff;
+    border-radius: 4px;
+  }
+
   .pagination-wrapper {
     margin-top: 20px;
     display: flex;

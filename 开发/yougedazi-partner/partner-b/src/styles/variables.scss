@@ -24,9 +24,11 @@ $bg-white: #FFFFFF;
 // 侧边栏
 $sidebar-width: 220px;
 $sidebar-collapsed-width: 64px;
-$sidebar-bg: #1a1a2e;
-$sidebar-text: #b8b9c0;
+$sidebar-bg: #304156;
+$sidebar-text: #bfcbd9;
 $sidebar-active: #7d67ea;
+$sidebar-hover: #263445;
+$sidebar-border: #1f2d3d;
 
 // 顶部导航
 $header-height: 60px;
@@ -51,6 +53,7 @@ $shadow-light: 0 2px 4px rgba(0, 0, 0, 0.05);
 // CSS 变量（可在 JS 和 CSS 中使用）
 :root {
   --color-primary: #{$primary};
+  --color-primary-gradient: linear-gradient(135deg, #7d67ea 0%, #9a59b8 100%);
   --color-success: #{$success};
   --color-warning: #{$warning};
   --color-danger: #{$danger};
@@ -58,4 +61,12 @@ $shadow-light: 0 2px 4px rgba(0, 0, 0, 0.05);
   --color-text-primary: #{$text-primary};
   --color-text-regular: #{$text-regular};
   --color-text-secondary: #{$text-secondary};
+  --shadow-base: #{$shadow-base};
+  --shadow-light: #{$shadow-light};
+  --chart-colors: #7d67ea, #67C23A, #E6A23C, #F56C6C, #909399};
+  --sidebar-bg: #{$sidebar-bg};
+  --sidebar-text: #{$sidebar-text};
+  --sidebar-active: #{$sidebar-active};
+  --sidebar-hover: #{$sidebar-hover};
+  --sidebar-border: #{$sidebar-border};
 }

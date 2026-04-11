@@ -113,7 +113,7 @@
       </el-tab-pane>
     </el-tabs>
 
-    <FormDialog v-model="accountDialogVisible" :title="isEdit ? '编辑子账号' : '添加子账号'" :model="accountForm" :rules="accountRules" :loading="saving" @confirm="saveAccount">
+    <FormDialog v-model="accountDialogVisible" :title="isEdit ? '编辑子账号' : '添加子账号'" :model="accountForm" :rules="effectiveRules" :loading="saving" @confirm="saveAccount">
       <el-form-item label="账号" prop="username">
         <el-input v-model="accountForm.username" placeholder="请输入登录账号" :disabled="isEdit" />
       </el-form-item>
@@ -139,10 +139,13 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import dayjs from 'dayjs'
 import { mockSubAccounts, mockRoles, mockLogs } from '@/utils/mockData'
 import { ROLE_MAP, LOG_TYPE_MAP, getStatusInfo, PAGE_SIZE } from '@/utils/index'
+import { getSubAccountList, createSubAccount, updateSubAccount, deleteSubAccount } from '@/api/team'
 import StatCard from '@/components/common/StatCard.vue'
 import DataTable from '@/components/common/DataTable.vue'
 import SearchFilter from '@/components/common/SearchFilter.vue'
 import FormDialog from '@/components/common/FormDialog.vue'
+
+const MOCK_ENABLED = import.meta.env.DEV
 
 const loading = ref(false)
 const saving = ref(false)
@@ -160,12 +163,19 @@ const selectedRole = ref('admin')
 const selectedPermissions = ref([])
 const logFilter = reactive({ operator: '', dateRange: [] })
 const accountForm = reactive({ id: null, username: '', name: '', role: '', password: '' })
-const accountRules = {
+const accountRules = reactive({
   username: [{ required: true, message: '请输入账号', trigger: 'blur' }],
   name: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
   role: [{ required: true, message: '请选择角色', trigger: 'change' }],
   password: [{ required: true, message: '请输入初始密码', trigger: 'blur' }]
-}
+})
+const effectiveRules = computed(() => {
+  if (isEdit.value) {
+    const { password, ...rest } = accountRules
+    return rest
+  }
+  return accountRules
+})
 
 const permissionCategories = [
   { key: 'companion', label: '搭子管理', permissions: [{ value: 'companion:view', label: '查看搭子' }, { value: 'companion:audit', label: '审核入驻' }, { value: 'companion:edit', label: '编辑搭子' }] },
@@ -211,9 +221,60 @@ const showAddAccountDialog = () => {
   accountForm.password = ''
   accountDialogVisible.value = true
 }
-const saveAccount = () => { ElMessage.success(isEdit.value ? '账号更新成功' : '账号创建成功'); accountDialogVisible.value = false; loadData() }
-const resetPassword = (row) => ElMessageBox.confirm(`确定要重置 ${row.name} 的密码吗？`, '提示', { type: 'warning' }).then(() => ElMessage.success('密码已重置，新密码将通过短信发送'))
-const deleteAccount = (row) => { ElMessage.success(`${row.name} 的账号已删除`); loadData() }
+const saveAccount = async () => {
+  saving.value = true
+  try {
+    if (isEdit.value) {
+      if (MOCK_ENABLED) {
+        await new Promise(r => setTimeout(r, 300))
+      } else {
+        await updateSubAccount(accountForm.id, accountForm)
+      }
+      ElMessage.success('账号更新成功')
+    } else {
+      if (MOCK_ENABLED) {
+        await new Promise(r => setTimeout(r, 300))
+      } else {
+        await createSubAccount(accountForm)
+      }
+      ElMessage.success('账号创建成功')
+    }
+    accountDialogVisible.value = false
+    loadData()
+  } catch (e) {
+    ElMessage.error('保存失败')
+  } finally {
+    saving.value = false
+  }
+}
+
+const resetPassword = async (row) => {
+  try {
+    await ElMessageBox.confirm(`确定要重置 ${row.name} 的密码吗？`, '提示', { type: 'warning' })
+    if (MOCK_ENABLED) {
+      await new Promise(r => setTimeout(r, 300))
+    } else {
+      await updateSubAccount(row.id, { resetPassword: true })
+    }
+    ElMessage.success('密码已重置，新密码将通过短信发送')
+  } catch (e) {
+    if (e !== 'cancel') ElMessage.error('重置失败')
+  }
+}
+
+const deleteAccount = async (row) => {
+  try {
+    if (MOCK_ENABLED) {
+      await new Promise(r => setTimeout(r, 300))
+    } else {
+      await deleteSubAccount(row.id)
+    }
+    ElMessage.success(`${row.name} 的账号已删除`)
+    loadData()
+  } catch (e) {
+    ElMessage.error('删除失败')
+  }
+}
 const handleRoleSelect = (roleName) => { selectedRole.value = roleName; const role = roleList.value.find(r => r.name === roleName); if (role) selectedPermissions.value = role.permissions }
 const searchLogs = () => ElMessage.success('日志搜索完成')
 const resetLogFilter = () => { logFilter.operator = ''; logFilter.dateRange = [] }

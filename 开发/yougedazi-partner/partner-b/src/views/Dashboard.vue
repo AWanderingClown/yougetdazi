@@ -70,58 +70,54 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import dayjs from 'dayjs'
 import * as echarts from 'echarts'
-import { mockDashboardStats, mockActivityTrend, mockOrderTypes, mockPendingTasks } from '@/utils/mockData'
+import { useDashboardStatsStore } from '@/stores/dashboardStats'
+import { useDashboardAnalyticsStore } from '@/stores/dashboardAnalytics'
+import { usePendingTasksStore } from '@/stores/pendingTasks'
 import StatCard from '@/components/common/StatCard.vue'
 import ChartCard from '@/components/common/ChartCard.vue'
 
 const router = useRouter()
-const stats = ref(null)
-const activityTrend = ref(null)
-const orderTypes = ref(null)
-const pendingTasks = ref(null)
+const statsStore = useDashboardStatsStore()
+const analyticsStore = useDashboardAnalyticsStore()
+const tasksStore = usePendingTasksStore()
+
 const trendPeriod = ref('week')
 const updateTime = ref('')
-const loading = ref(false)
 
-const onlineRate = computed(() => stats.value?.totalCompanions === 0 ? 0 : Math.round((stats.value?.onlineCompanions / stats.value?.totalCompanions) * 100))
-const formatNumber = (num) => num.toLocaleString()
+const stats = computed(() => statsStore.stats)
+const activityTrend = computed(() => analyticsStore.activityTrend)
+const orderTypes = computed(() => analyticsStore.orderTypes)
+const pendingTasks = computed(() => tasksStore.tasks || { newApplications: 0, pendingComplaints: 0 })
+const loading = computed(() => statsStore.loading || analyticsStore.loading || tasksStore.loading)
 
-const loadData = async () => {
-  loading.value = true
-  try {
-    await new Promise(resolve => setTimeout(resolve, 300))
-    stats.value = mockDashboardStats
-    activityTrend.value = mockActivityTrend
-    orderTypes.value = mockOrderTypes
-    pendingTasks.value = mockPendingTasks
-    updateTime.value = dayjs().format('YYYY-MM-DD HH:mm:ss')
-  } catch (error) {
-    ElMessage.error('加载数据失败')
-    console.error('loadData error:', error)
-  } finally {
-    loading.value = false
-  }
-}
+const onlineRate = computed(() => {
+  const total = stats.value?.totalCompanions
+  if (!total) return 0
+  return Math.round((stats.value?.onlineCompanions / total) * 100)
+})
+
+const formatNumber = (num) => num?.toLocaleString() || '0'
+
+const themeColor = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#7d67ea'
+const chartColors = ['#7d67ea', '#67C23A', '#E6A23C', '#F56C6C', '#909399']
 
 const trendOption = computed(() => ({
   tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
   legend: { data: ['在线搭子数', '订单数'], bottom: 0 },
   grid: { left: '3%', right: '4%', bottom: '15%', top: '10%', containLabel: true },
-  xAxis: { type: 'category', boundaryGap: false, data: activityTrend.value.dates },
+  xAxis: { type: 'category', boundaryGap: false, data: activityTrend.value?.dates || [] },
   yAxis: [
     { type: 'value', name: '在线人数', position: 'left' },
     { type: 'value', name: '订单数', position: 'right' }
   ],
   series: [
     {
-      name: '在线搭子数', type: 'line', smooth: true, data: activityTrend.value.onlineCounts,
+      name: '在线搭子数', type: 'line', smooth: true,       data: activityTrend.value?.onlineCounts || [],
       areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: 'rgba(125, 103, 234, 0.3)' }, { offset: 1, color: 'rgba(125, 103, 234, 0.05)' }]) },
-      itemStyle: { color: '#7d67ea' }
+      itemStyle: { color: themeColor }
     },
-    { name: '订单数', type: 'line', smooth: true, yAxisIndex: 1, data: activityTrend.value.orderCounts, itemStyle: { color: '#67C23A' } }
+    { name: '订单数', type: 'line', smooth: true, yAxisIndex: 1, data: activityTrend.value?.orderCounts || [], itemStyle: { color: '#67C23A' } }
   ]
 }))
 
@@ -133,15 +129,22 @@ const pieOption = computed(() => ({
     itemStyle: { borderRadius: 10, borderColor: '#fff', borderWidth: 2 },
     label: { show: false },
     emphasis: { label: { show: true, fontSize: 14, fontWeight: 'bold' } },
-    data: orderTypes.value
+    data: orderTypes.value || []
   }],
-  color: ['#7d67ea', '#67C23A', '#E6A23C', '#F56C6C', '#909399']
+  color: chartColors
 }))
 
 const goToCompanions = () => router.push('/companions')
 const goToOrders = () => router.push('/orders')
 
-onMounted(loadData)
+onMounted(async () => {
+  await Promise.all([
+    statsStore.fetchStats(),
+    analyticsStore.fetchAll(),
+    tasksStore.fetchTasks()
+  ])
+  updateTime.value = new Date().toLocaleString()
+})
 </script>
 
 <style scoped lang="scss">

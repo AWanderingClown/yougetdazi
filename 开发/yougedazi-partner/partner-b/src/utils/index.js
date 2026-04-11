@@ -120,3 +120,15 @@ export const deepClone = (obj) => {
   }
   return obj
 }
+
+/**
+ * HTML转义（防止XSS）
+ * @param {string} str - 原始字符串
+ * @returns {string}
+ */
+export const escapeHtml = (str) => {
+  if (str === null || str === undefined) return ''
+  const div = document.createElement('div')
+  div.textContent = String(str)
+  return div.innerHTML
+}

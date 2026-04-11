@@ -44,3 +44,30 @@ export const getApplyList = (params) => {
     params
   })
 }
+
+// 创建搭子
+export const createCompanion = (data) => {
+  return request({
+    url: '/partner/companions',
+    method: 'post',
+    data
+  })
+}
+
+// 更新搭子信息
+export const updateCompanion = (id, data) => {
+  return request({
+    url: `/partner/companions/${id}`,
+    method: 'put',
+    data
+  })
+}
+
+// 切换搭子状态(启用/禁用)
+export const toggleCompanionStatus = (id, data) => {
+  return request({
+    url: `/partner/companions/${id}/status`,
+    method: 'put',
+    data
+  })
+}

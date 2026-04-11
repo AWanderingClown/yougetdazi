@@ -45,7 +45,7 @@ const visible = computed({
 })
 
 const handleConfirm = async () => {
-  const valid = await formRef.value?.validate().catch(() => false)
+  const valid = await (formRef.value ? formRef.value.validate().catch(() => false) : false)
   if (valid) {
     emit('confirm')
   }

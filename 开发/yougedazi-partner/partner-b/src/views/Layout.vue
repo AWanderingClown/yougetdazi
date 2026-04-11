@@ -14,9 +14,9 @@
         :default-active="activeMenu"
         class="sidebar-menu"
         router
-        background-color="#304156"
-        text-color="#bfcbd9"
-        active-text-color="#7d67ea"
+        background-color="var(--sidebar-bg)"
+        text-color="var(--sidebar-text)"
+        active-text-color="var(--sidebar-active)"
       >
         <el-menu-item v-for="item in menuItems" :key="item.path" :index="item.path">
           <el-icon>
@@ -128,13 +128,13 @@ const handleCommand = (command) => {
 }
 
 .sidebar {
-  background-color: #304156;
+  background-color: var(--sidebar-bg);
   
   .logo-area {
     display: flex;
     align-items: center;
     padding: 16px;
-    border-bottom: 1px solid #1f2d3d;
+    border-bottom: 1px solid var(--sidebar-border);
     
     .guild-info {
       margin-left: 12px;
@@ -158,7 +158,7 @@ const handleCommand = (command) => {
     
     :deep(.el-menu-item) {
       &:hover {
-        background-color: #263445 !important;
+        background-color: var(--sidebar-hover) !important;
       }
       
       .el-icon {
@@ -190,7 +190,7 @@ const handleCommand = (command) => {
       color: #606266;
       
       &:hover {
-        color: #7d67ea;
+        color: var(--color-primary);
       }
     }
     

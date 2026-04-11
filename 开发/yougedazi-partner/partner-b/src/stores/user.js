@@ -1,29 +1,26 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { login, getGuildInfo } from '@/api/auth'
-import Cookies from 'js-cookie'
+import { login, getGuildInfo, refresh } from '@/api/auth'
+import { ElMessage } from 'element-plus'
 
-const TOKEN_KEY = 'partner_b_token'
+const SESSION_TOKEN_KEY = 'partner_b_session'
 
 export const useUserStore = defineStore('user', () => {
-  // State
-  const token = ref(Cookies.get(TOKEN_KEY) || '')
+  const token = ref(sessionStorage.getItem(SESSION_TOKEN_KEY) || '')
   const guildInfo = ref(null)
   const loading = ref(false)
 
-  // Getters
   const isLoggedIn = computed(() => !!token.value)
   const guildId = computed(() => guildInfo.value?.id)
   const guildName = computed(() => guildInfo.value?.name)
   const permissions = computed(() => guildInfo.value?.permissions || [])
 
-  // Actions
   const setToken = (newToken) => {
     token.value = newToken
     if (newToken) {
-      Cookies.set(TOKEN_KEY, newToken, { expires: 7 })
+      sessionStorage.setItem(SESSION_TOKEN_KEY, newToken)
     } else {
-      Cookies.remove(TOKEN_KEY)
+      sessionStorage.removeItem(SESSION_TOKEN_KEY)
     }
   }
 
@@ -46,6 +43,18 @@ export const useUserStore = defineStore('user', () => {
       guildInfo.value = res
     } catch (error) {
       console.error('获取公会信息失败:', error)
+      ElMessage.error('获取公会信息失败，请刷新页面')
+    }
+  }
+
+  const refreshToken = async () => {
+    try {
+      const res = await refresh({ token: token.value })
+      setToken(res.token)
+      return res.token
+    } catch (error) {
+      logout()
+      throw error
     }
   }
 
@@ -55,7 +64,8 @@ export const useUserStore = defineStore('user', () => {
   }
 
   const hasPermission = (permission) => {
-    return permissions.value.includes(permission) || permissions.value.includes('all')
+    const perms = permissions.value
+    return perms.includes('all') || perms.includes(permission)
   }
 
   return {
@@ -69,6 +79,7 @@ export const useUserStore = defineStore('user', () => {
     setToken,
     loginAction,
     fetchGuildInfo,
+    refreshToken,
     logout,
     hasPermission
   }

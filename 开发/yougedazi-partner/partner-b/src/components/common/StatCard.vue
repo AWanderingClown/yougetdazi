@@ -32,7 +32,7 @@ defineProps({
   padding: 20px;
   display: flex;
   align-items: center;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-light);
 
   .stat-icon {
     width: 48px;

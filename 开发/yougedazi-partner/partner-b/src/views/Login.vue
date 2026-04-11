@@ -89,6 +89,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { OfficeBuilding, Lock } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
+import { escapeHtml } from '@/utils/index'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -139,8 +140,8 @@ const handleLogin = async () => {
     ElMessage.success('登录成功')
     router.push('/dashboard')
   } catch (error) {
-    const msg = error?.response?.data?.message || error?.message || '登录失败，请检查账号密码'
-    ElMessage.error(msg)
+    const raw = error?.response?.data?.message || error?.message || '登录失败，请检查账号密码'
+    ElMessage.error(escapeHtml(raw))
     loginForm.password = ''
   } finally {
     loading.value = false

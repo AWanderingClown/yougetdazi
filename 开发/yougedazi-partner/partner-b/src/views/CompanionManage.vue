@@ -116,8 +116,8 @@
       </div>
     </el-dialog>
 
-    <FormDialog v-model="showApplyDialog" title="添加搭子" :model="applyForm" @confirm="submitApply">
-      <el-form-item label="搭子账号"><el-input v-model="applyForm.account" placeholder="请输入搭子在平台的注册账号" /></el-form-item>
+    <FormDialog v-model="showApplyDialog" title="添加搭子" :model="applyForm" :rules="applyRules" @confirm="submitApply">
+      <el-form-item label="搭子账号" prop="account"><el-input v-model="applyForm.account" placeholder="请输入搭子在平台的注册账号" /></el-form-item>
       <el-form-item label="邀请备注"><el-input v-model="applyForm.remark" type="textarea" :rows="3" placeholder="可选，给搭子的邀请留言" /></el-form-item>
     </FormDialog>
   </div>
@@ -147,6 +147,7 @@ const detailDialogVisible = ref(false)
 const showApplyDialog = ref(false)
 const currentCompanion = ref(null)
 const applyForm = reactive({ account: '', remark: '' })
+const applyRules = { account: [{ required: true, message: '请输入搭子账号', trigger: 'blur' }] }
 
 const getStatusType = (status) => getStatusInfo(COMPANION_STATUS_MAP, status).type
 const getStatusText = (status) => getStatusInfo(COMPANION_STATUS_MAP, status).text
@@ -175,13 +176,38 @@ const resetFilter = () => { filterForm.status = ''; filterForm.nickname = ''; ha
 const viewDetail = (row) => { currentCompanion.value = row; detailDialogVisible.value = true }
 const viewOrders = (row) => ElMessage.info(`查看 ${row.nickname} 的订单`)
 const handleCommand = (command, row) => {
-  if (command === 'enable') ElMessage.success(`已启用 ${row.nickname} 的账号`)
-  else if (command === 'disable') ElMessageBox.confirm(`确定要禁用 ${row.nickname} 的账号吗？`, '提示', { type: 'warning' }).then(() => ElMessage.success('账号已禁用'))
-  else ElMessage.info('编辑功能开发中')
+  if (command === 'enable') {
+    ElMessage.success(`已启用 ${row.nickname} 的账号`)
+  } else if (command === 'disable') {
+    ElMessageBox.confirm(`确定要禁用 ${row.nickname} 的账号吗？`, '提示', { type: 'warning' })
+      .then(() => ElMessage.success('账号已禁用'))
+  } else {
+    ElMessage.info('编辑功能开发中')
+  }
 }
-const handleAudit = (row, action) => { const actionText = action === 'pass' ? '通过' : '拒绝'; ElMessageBox.confirm(`确定要${actionText} ${row.nickname} 的入驻申请吗？`, '审核确认', { type: action === 'pass' ? 'success' : 'warning' }).then(() => { ElMessage.success(`已${actionText}申请`); loadData() }) }
+
+const handleAudit = (row, action) => {
+  const actionText = action === 'pass' ? '通过' : '拒绝'
+  const confirmType = action === 'pass' ? 'success' : 'warning'
+  ElMessageBox.confirm(`确定要${actionText} ${row.nickname} 的入驻申请吗？`, '审核确认', { type: confirmType })
+    .then(() => {
+      ElMessage.success(`已${actionText}申请`)
+      loadData()
+    })
+}
+
 const viewApplication = (row) => ElMessage.info(`查看 ${row.nickname} 的详细资料`)
-const submitApply = () => { if (!applyForm.account) { ElMessage.warning('请输入搭子账号'); return }; ElMessage.success('邀请已发送'); showApplyDialog.value = false; applyForm.account = ''; applyForm.remark = '' }
+
+const submitApply = () => {
+  if (!applyForm.account) {
+    ElMessage.warning('请输入搭子账号')
+    return
+  }
+  ElMessage.success('邀请已发送')
+  showApplyDialog.value = false
+  applyForm.account = ''
+  applyForm.remark = ''
+}
 
 onMounted(loadData)
 </script>

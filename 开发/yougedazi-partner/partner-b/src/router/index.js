@@ -9,6 +9,12 @@ const routes = [
     meta: { public: true }
   },
   {
+    path: '/403',
+    name: 'Forbidden',
+    component: () => import('@/views/Error403.vue'),
+    meta: { public: true }
+  },
+  {
     path: '/',
     component: () => import('@/views/Layout.vue'),
     redirect: '/dashboard',
@@ -23,25 +29,25 @@ const routes = [
         path: 'companions',
         name: 'CompanionManage',
         component: () => import('@/views/CompanionManage.vue'),
-        meta: { title: '搭子管理', icon: 'UserFilled' }
+        meta: { title: '搭子管理', icon: 'UserFilled', permission: 'companion:read' }
       },
       {
         path: 'orders',
         name: 'OrderBoard',
         component: () => import('@/views/OrderBoard.vue'),
-        meta: { title: '订单看板', icon: 'List' }
+        meta: { title: '订单看板', icon: 'List', permission: 'order:read' }
       },
       {
         path: 'settlement',
         name: 'Settlement',
         component: () => import('@/views/Settlement.vue'),
-        meta: { title: '结算中心', icon: 'Money' }
+        meta: { title: '结算中心', icon: 'Money', permission: 'settlement:read' }
       },
       {
         path: 'team',
         name: 'TeamManage',
         component: () => import('@/views/TeamManage.vue'),
-        meta: { title: '团队管理', icon: 'User' }
+        meta: { title: '团队管理', icon: 'User', permission: 'team:read' }
       },
       {
         path: 'training',
@@ -53,7 +59,9 @@ const routes = [
   },
   {
     path: '/:pathMatch(.*)*',
-    redirect: '/'
+    name: 'NotFound',
+    component: () => import('@/views/Error404.vue'),
+    meta: { public: true }
   }
 ]
 
@@ -68,6 +76,8 @@ router.beforeEach((to, from, next) => {
   
   if (!to.meta.public && !userStore.token) {
     next('/login')
+  } else if (to.meta.permission && !userStore.hasPermission(to.meta.permission)) {
+    next('/403')
   } else {
     next()
   }
